@@ -1,0 +1,13 @@
+# Grunt intermediate storage (http://gruntjs.com/creating-plugins#storing-task-files)
+.grunt
+
+# Dependency directories
+node_modules/
+
+# Visual Studio user-specific project files
+*.suo
+*.csproj.user
+
+# Project build output
+assembly/*
+dist/*
