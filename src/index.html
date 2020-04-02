@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	
+    <title>COVID-19 By County</title>
+	<link rel="stylesheet" type="text/css" href="styles/index.css" />
+</head>
+<body>
+	<div v-cloak id="Everything">
+		<h1>COVID-19 By County</h1>
+
+		<div id="MapContainer">
+			<object id="SvgObject" type="image/svg+xml" data="/images/Usa_counties_large.svg">
+				Browser not supported.
+			</object>
+		</div>
+
+		<div id="WaitBox" v-bind:style="{ display: waitMessageDisplay }">
+			<div id="WaitMessageBox">{{ waitMessage }}</div>
+		</div>
+	</div>
+	<script type="text/javascript" src="/components/vue.js"></script>
+	<script type="text/javascript" src="/components/papaparse.js"></script>
+	<script type="text/javascript" src="/components/Concert.js"></script>
+	<script type="text/javascript" src="/scripts/app.js"></script>
+</body>
+</html>

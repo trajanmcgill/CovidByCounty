@@ -1,0 +1,34 @@
+{
+	"root": true,
+	
+	"env":
+	{
+		"browser": true,
+		"es6": true
+    },
+	
+	"extends": "eslint:recommended",
+	
+	"globals": { "Concert": "readonly", "Vue": "readonly", "Papa": "readonly" },
+	
+	"parserOptions": { "ecmaVersion": 2018 },
+	
+	"rules":
+	{
+		"no-bitwise": ["error"],
+		"eqeqeq": ["error", "smart"],
+		"guard-for-in": ["error"],
+		"wrap-iife": ["error", "inside"],
+		"comma-style": ["error", "last"],
+		"comma-dangle": ["error", "never"],
+		"new-cap": ["error", { "capIsNew": false }],
+		"no-caller": ["error"],
+		"no-empty": ["error", {"allowEmptyCatch": true}],
+		"no-new": ["error"],
+		"quotes": ["error", "double"],
+		"no-mixed-spaces-and-tabs": ["error", "smart-tabs"],
+		"strict": ["error", "function"],
+		"no-use-before-define": ["error", { "variables": true, "classes": true, "functions": false }],
+		"no-unused-vars": ["error", { "varsIgnorePattern": "app" }]
+    }
+}
