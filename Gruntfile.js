@@ -176,6 +176,11 @@ module.exports = function(grunt)
 						{ expand: true, cwd: "dist/prod/", src: "**/*.min.css", dest: "dist/prod/", rename: stripMinOrFull },
 						{ expand: true, cwd: "dist/prod/", src: "**/*.min.js", dest: "dist/prod/", rename: stripMinOrFull }
 					]
+				},
+
+				quickDevSrcDeployment:
+				{
+					files: [ { expand: true, cwd: "src/", src: ["**/*"], dest: "dist/dev/" } ]
 				}
 			}, // end copy task defitions
 
@@ -282,6 +287,14 @@ module.exports = function(grunt)
 			"copy:deployAssembledFiles", // copy all assembly files into dev and prod directories
 			"copy:selectEnvironment",  // copy, in prod directory, *.min.js to *.js and *.min.css to *.css, and in dev directory, *.full.js to *.js and *.full.css to *.css
 			"clean:removeFullAndMinFiles", // clean all .min.css, .min.js, .full.css, and .full.js files from dev and prod directories
+			"copy:deployComponents", // copy external components into dev and prod directories
+			"addBuildNumbers:allOutputHTML" // add a build number url parameter to all src and href parameters in all the finished html files, for browser cache-busting purposes
+		]);
+	
+	grunt.registerTask(
+		"quickbuild_dev",
+		[
+			"copy:quickDevSrcDeployment", // copy source files into dist/dev directory
 			"copy:deployComponents", // copy external components into dev and prod directories
 			"addBuildNumbers:allOutputHTML" // add a build number url parameter to all src and href parameters in all the finished html files, for browser cache-busting purposes
 		]);
