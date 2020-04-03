@@ -28,7 +28,6 @@
 		"quotes": ["error", "double"],
 		"no-mixed-spaces-and-tabs": ["error", "smart-tabs"],
 		"strict": ["error", "function"],
-		"no-use-before-define": ["error", { "variables": true, "classes": true, "functions": false }],
-		"no-unused-vars": ["error", { "varsIgnorePattern": "app" }]
+		"no-use-before-define": ["error", { "variables": true, "classes": true, "functions": false }]
     }
 }

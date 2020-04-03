@@ -294,12 +294,21 @@ module.exports = function(grunt)
 	grunt.registerTask(
 		"quickbuild_dev",
 		[
+			"lint_src", // check source
 			"copy:quickDevSrcDeployment", // copy source files into dist/dev directory
 			"copy:deployComponents", // copy external components into dev and prod directories
 			"addBuildNumbers:allOutputHTML" // add a build number url parameter to all src and href parameters in all the finished html files, for browser cache-busting purposes
 		]);
 	
-	grunt.registerTask("rebuild_all", ["clean_all", "build_all"]);
+	grunt.registerTask(
+		"superquickbuild_dev",
+		[
+			"copy:quickDevSrcDeployment", // copy source files into dist/dev directory
+			"copy:deployComponents", // copy external components into dev and prod directories
+			"addBuildNumbers:allOutputHTML" // add a build number url parameter to all src and href parameters in all the finished html files, for browser cache-busting purposes
+		]);
+
+		grunt.registerTask("rebuild_all", ["clean_all", "build_all"]);
 
 	grunt.registerTask("default", ["lint_src", "rebuild_all"]);
 };
