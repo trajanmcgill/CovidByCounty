@@ -6,6 +6,7 @@ const FactType =
 	DeathsPerCapita: 3,
 	DeathsPerCase: 4
 };
+
 const DataViewType =
 {
 	InstantaneousValue: 0,
@@ -160,6 +161,9 @@ let appLogic = (function()
 	"use strict";
 
 	const TimelineDateBoxWidth = 90, TimelineStartingOffset = 541;
+	const DefaultAnimationTimeRatio = 200;
+
+	let animationTimeRatio = DefaultAnimationTimeRatio;
 
 
 	let loadHandlers = [], windowHandlerSet = false;
@@ -184,8 +188,15 @@ let appLogic = (function()
 	} // end whenDocumentLoaded()
 	
 
-	function buildDataAnimation(allCountyData, fact, dataView, animationTimeRatio, colorationHue, exceededRangeColor, scaleMax)
+	function buildDataAnimation(allCountyData, fact, dataView, colorationHue, exceededRangeColor, scaleMax)
 	{
+		const BtnSeekStart = document.getElementById("BtnSeekStart");
+		const BtnStepBack = document.getElementById("BtnStepBack");
+		const BtnPlay = document.getElementById("BtnPlay");
+		const BtnStepForward = document.getElementById("BtnStepForward");
+		const BtnPause = document.getElementById("BtnPause");
+		const BtnSeekEnd = document.getElementById("BtnSeekEnd");
+		const AnimationSlider = document.getElementById("AnimationSlider");
 		const msPerDay = 1000 * 60 * 60 * 24;
 
 		if(scaleMax === null)
@@ -302,7 +313,27 @@ let appLogic = (function()
 					}
 			});
 		
-		document.getElementById("BtnPlay").onclick = function() { sequence.run(); };
+		//  WORKING HERE
+		BtnSeekStart.onclick = function() { sequence.seek(sequence.getStartTime()); };
+		BtnStepBack.onclick =
+			function()
+			{
+				sequence.stop();
+				let seekDay = Math.max(Math.round(sequence.getCurrentTime() / animationTimeRatio) - 1, 0);
+				sequence.seek(seekDay * animationTimeRatio);
+			}
+		BtnPlay.onclick = function() { sequence.run(); };
+		BtnStepForward.onclick =
+			function()
+			{
+				sequence.stop();
+				let seekDay = Math.min(Math.round(sequence.getCurrentTime() / animationTimeRatio) + 1, totalDays);
+				sequence.seek(seekDay * animationTimeRatio);
+			}
+		BtnPause.onclick = function() { sequence.stop(); };
+		BtnSeekEnd.onclick = function() { sequence.seek(sequence.getEndTime()); };
+		AnimationSlider.onchange = function(eventObject) { sequence.stop(); sequence.seek(parseInt(eventObject.target.value, 10) * animationTimeRatio); };
+		
 		/*
 		let cook = allCountyData.c17031, dailyCaseRecords = cook.dailyCaseRecords;
 		let times = [0], values = ["hsl(" + colorationHue + ", 100%, 100%)"];
@@ -401,7 +432,7 @@ let appLogic = (function()
 												allCountyData,
 												FactType.Cases,
 												DataViewType.InstantaneousValue,
-												200, 0, "hsl(50, 100%, 50%)", 100);
+												0, "hsl(50, 100%, 50%)", 100);
 					
 											vueObject.waitMessageDisplay = "none";
 										});

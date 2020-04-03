@@ -113,6 +113,11 @@ li.TimeLineDateBox
 	height: 25px;
 }
 
+#ControlButtonsContainer
+{
+	text-align: center;
+}
+
 #SvgObject
 {
 	width: 990px;
