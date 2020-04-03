@@ -10,10 +10,33 @@
 	<div v-cloak id="Everything">
 		<h1>COVID-19 By County</h1>
 
-		<div id="MapContainer">
-			<object id="SvgObject" type="image/svg+xml" data="/images/Usa_counties_large.svg">
-				Browser not supported.
-			</object>
+		<div id="MapColumn">
+			<div id="MapContainer">
+				<object id="SvgObject" type="image/svg+xml" data="/images/Usa_counties_large.svg">
+					Browser not supported.
+				</object>
+			</div>
+			<div id="TimelineContainer">
+				<ul id="Timeline">
+					<li v-for="item in dateList" class="TimeLineDateBox">
+						{{ item.month }}
+						<br>
+						{{ item.dayOfMonth }}
+					</li>
+				</ul>
+				<div id="TimelineFrame">
+					<div id="TimelineCoverLeft" class="TimelineCover"></div>
+					<div id="TimelineDateFrame"></div>
+					<div id="TimelineCoverRight" class="TimelineCover"></div>
+				</div>
+			</div>
+			<input id="AnimationSlider" type="range" min="0" v-bind:max="dateList.length" value="0">
+			<div id="ControlButtonsContainer">
+				<button id="BtnSeekStart" type="button">|&lt;</button>
+				<button id="BtnPlay" type="button">></button>
+				<button id="BtnPause" type="button">||</button>
+				<button id="BtnSeekEnd" type="button">>|</button>
+			</div>
 		</div>
 
 		<div id="WaitBox" v-bind:style="{ display: waitMessageDisplay }">
