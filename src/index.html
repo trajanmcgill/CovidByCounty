@@ -10,34 +10,362 @@
 	<div v-cloak id="Everything">
 		<h1>COVID-19 By County</h1>
 
-		<div id="MapColumn">
-			<div id="MapContainer">
-				<object id="SvgObject" type="image/svg+xml" data="/images/Usa_counties_large.svg">
-					Browser not supported.
-				</object>
-			</div>
-			<div id="TimelineContainer">
-				<ul id="Timeline">
-					<li v-for="item in dateList" class="TimeLineDateBox">
-						{{ item.month }}
-						<br>
-						{{ item.dayOfMonth }}
-					</li>
-				</ul>
-				<div id="TimelineFrame">
-					<div id="TimelineCoverLeft" class="TimelineCover"></div>
-					<div id="TimelineDateFrame"></div>
-					<div id="TimelineCoverRight" class="TimelineCover"></div>
+		<div id="ColumnsContainer">
+			<div id="MapColumn">
+				<div id="MapContainer">
+					<object id="SvgObject" type="image/svg+xml" data="/images/Usa_counties_large.svg">
+						Browser not supported.
+					</object>
+				</div>
+				<div id="TimelineContainer">
+					<ul id="Timeline">
+						<li v-for="item in dateList" class="TimeLineDateBox">
+							{{ item.month }}
+							<br>
+							{{ item.dayOfMonth }}
+						</li>
+					</ul>
+					<div id="TimelineFrame">
+						<div id="TimelineCoverLeft" class="TimelineCover"></div>
+						<div id="TimelineDateFrame"></div>
+						<div id="TimelineCoverRight" class="TimelineCover"></div>
+					</div>
+				</div>
+				<input id="AnimationSlider" type="range" min="0" v-bind:max="dateList.length" value="0">
+				<div id="ControlButtonsContainer">
+					<button id="BtnSeekStart" type="button">|&lt;</button>
+					<button id="BtnStepBack" type="button">&lt;</button>
+					<button id="BtnPlay" type="button">&#9658;</button>
+					<button id="BtnStepForward" type="button">></button>
+					<button id="BtnPause" type="button">||</button>
+					<button id="BtnSeekEnd" type="button">>|</button>
 				</div>
 			</div>
-			<input id="AnimationSlider" type="range" min="0" v-bind:max="dateList.length" value="0">
-			<div id="ControlButtonsContainer">
-				<button id="BtnSeekStart" type="button">|&lt;</button>
-				<button id="BtnStepBack" type="button">&lt;</button>
-				<button id="BtnPlay" type="button">&#9658;</button>
-				<button id="BtnStepForward" type="button">></button>
-				<button id="BtnPause" type="button">||</button>
-				<button id="BtnSeekEnd" type="button">>|</button>
+			<div id="InformationPanel">
+				<div class="InformationCard TitleCard">
+					<h3>{{ displayDate }}</h3>
+				</div>
+				<div v-for="item in infoCards" class="InformationCard">
+					<h4>{{ item.placeName }}</h4>
+					<table class="CountyInfoCardTable">
+						<thead>
+							<tr>
+								<th></th>
+								<th>{{ item.col1Title }}</th>
+								<th>{{ item.col2Title }}</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td>{{ item.row1Title }}</td>
+								<td>{{ item.row1Data1 }}</td>
+								<td>{{ item.row1Data2 }}</td>
+							</tr>
+							<tr>
+								<td>{{ item.row2Title }}</td>
+								<td>{{ item.row2Data1 }}</td>
+								<td>{{ item.row2Data2 }}</td>
+							</tr>
+							<tr>
+								<td>{{ item.row3Title }}</td>
+								<td>{{ item.row3Data1 }}</td>
+								<td>{{ item.row3Data2 }}</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+				<!--
+				<div class="InformationCard">
+					<h4>Cook County, Illinois</h4>
+					<table class="CountyInfoCardTable">
+						<thead>
+							<tr>
+								<th></th>
+								<th>Absolute</th>
+								<th>Per 100,000<br>People</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td>Confirmed Cases</td>
+								<td>4,000</td>
+								<td>386.90</td>
+							</tr>
+							<tr>
+								<td>Deaths</td>
+								<td>400</td>
+								<td>38.69</td>
+							</tr>
+							<tr>
+								<td>Deaths / Confirmed Case</td>
+								<td>0.10</td>
+								<td>n/a</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+				<div class="InformationCard">
+					<h4>Sangamon County, Illinois</h4>
+					<table class="CountyInfoCardTable">
+						<thead>
+							<tr>
+								<th></th>
+								<th>Absolute</th>
+								<th>Per 100,000<br>People</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td>Confirmed Cases</td>
+								<td>4,000</td>
+								<td>386.90</td>
+							</tr>
+							<tr>
+								<td>Deaths</td>
+								<td>400</td>
+								<td>38.69</td>
+							</tr>
+							<tr>
+								<td>Deaths / Confirmed Case</td>
+								<td>0.10</td>
+								<td></td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+				<div class="InformationCard">
+					<h4>McHenry County, Illinois</h4>
+					<table class="CountyInfoCardTable">
+						<thead>
+							<tr>
+								<th></th>
+								<th>Absolute</th>
+								<th>Per 100,000<br>People</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td>Confirmed Cases</td>
+								<td>4,000</td>
+								<td>386.90</td>
+							</tr>
+							<tr>
+								<td>Deaths</td>
+								<td>400</td>
+								<td>38.69</td>
+							</tr>
+							<tr>
+								<td>Deaths / Confirmed Case</td>
+								<td>0.10</td>
+								<td></td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+				<div class="InformationCard">
+					<h4>Cook County, Illinois</h4>
+					<table class="CountyInfoCardTable">
+						<thead>
+							<tr>
+								<th></th>
+								<th>Absolute</th>
+								<th>Per 100,000<br>People</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td>Confirmed Cases</td>
+								<td>4,000</td>
+								<td>386.90</td>
+							</tr>
+							<tr>
+								<td>Deaths</td>
+								<td>400</td>
+								<td>38.69</td>
+							</tr>
+							<tr>
+								<td>Deaths / Confirmed Case</td>
+								<td>0.10</td>
+								<td></td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+				<div class="InformationCard">
+					<h4>Sangamon County, Illinois</h4>
+					<table class="CountyInfoCardTable">
+						<thead>
+							<tr>
+								<th></th>
+								<th>Absolute</th>
+								<th>Per 100,000<br>People</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td>Confirmed Cases</td>
+								<td>4,000</td>
+								<td>386.90</td>
+							</tr>
+							<tr>
+								<td>Deaths</td>
+								<td>400</td>
+								<td>38.69</td>
+							</tr>
+							<tr>
+								<td>Deaths / Confirmed Case</td>
+								<td>0.10</td>
+								<td></td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+				<div class="InformationCard">
+					<h4>McHenry County, Illinois</h4>
+					<table class="CountyInfoCardTable">
+						<thead>
+							<tr>
+								<th></th>
+								<th>Absolute</th>
+								<th>Per 100,000<br>People</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td>Confirmed Cases</td>
+								<td>4,000</td>
+								<td>386.90</td>
+							</tr>
+							<tr>
+								<td>Deaths</td>
+								<td>400</td>
+								<td>38.69</td>
+							</tr>
+							<tr>
+								<td>Deaths / Confirmed Case</td>
+								<td>0.10</td>
+								<td></td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+				<div class="InformationCard">
+					<h4>Cook County, Illinois</h4>
+					<table class="CountyInfoCardTable">
+						<thead>
+							<tr>
+								<th></th>
+								<th>Absolute</th>
+								<th>Per 100,000<br>People</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td>Confirmed Cases</td>
+								<td>4,000</td>
+								<td>386.90</td>
+							</tr>
+							<tr>
+								<td>Deaths</td>
+								<td>400</td>
+								<td>38.69</td>
+							</tr>
+							<tr>
+								<td>Deaths / Confirmed Case</td>
+								<td>0.10</td>
+								<td></td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+				<div class="InformationCard">
+					<h4>Sangamon County, Illinois</h4>
+					<table class="CountyInfoCardTable">
+						<thead>
+							<tr>
+								<th></th>
+								<th>Absolute</th>
+								<th>Per 100,000<br>People</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td>Confirmed Cases</td>
+								<td>4,000</td>
+								<td>386.90</td>
+							</tr>
+							<tr>
+								<td>Deaths</td>
+								<td>400</td>
+								<td>38.69</td>
+							</tr>
+							<tr>
+								<td>Deaths / Confirmed Case</td>
+								<td>0.10</td>
+								<td></td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+				<div class="InformationCard">
+					<h4>McHenry County, Illinois</h4>
+					<table class="CountyInfoCardTable">
+						<thead>
+							<tr>
+								<th></th>
+								<th>Absolute</th>
+								<th>Per 100,000<br>People</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td>Confirmed Cases</td>
+								<td>4,000</td>
+								<td>386.90</td>
+							</tr>
+							<tr>
+								<td>Deaths</td>
+								<td>400</td>
+								<td>38.69</td>
+							</tr>
+							<tr>
+								<td>Deaths / Confirmed Case</td>
+								<td>0.10</td>
+								<td></td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+				<div class="InformationCard">
+					<h4>McHenry County, Illinois</h4>
+					<table class="CountyInfoCardTable">
+						<thead>
+							<tr>
+								<th></th>
+								<th>Absolute</th>
+								<th>Per 100,000<br>People</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td>Confirmed Cases</td>
+								<td>4,000</td>
+								<td>386.90</td>
+							</tr>
+							<tr>
+								<td>Deaths</td>
+								<td>400</td>
+								<td>38.69</td>
+							</tr>
+							<tr>
+								<td>Deaths / Confirmed Case</td>
+								<td>0.10</td>
+								<td></td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+			-->
 			</div>
 		</div>
 

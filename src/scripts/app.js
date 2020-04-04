@@ -9,7 +9,7 @@ const FactType =
 
 const DataViewType =
 {
-	InstantaneousValue: 0,
+	CumulativeValue: 0,
 	GrowthAbsolute: 1,
 	GrowthLogarithmicBase: 2
 };
@@ -257,7 +257,7 @@ let appLogic = (function()
 							else
 								throw "Invalid fact parameter";
 							
-							if (dataView === DataViewType.InstantaneousValue)
+							if (dataView === DataViewType.CumulativeValue)
 							{
 								if (currentFactValue <= scaleMax)
 									keyFrameValue = Concert.Calculators.Color(currentFactValue / scaleMax, keyFrameValues[0], "hsl(" + colorationHue + ", 100%, 50%)");
@@ -402,8 +402,39 @@ let appLogic = (function()
 					waitMessage: "Loading Map...",
 					waitMessageDisplay: "block",
 					allCountyData: null,
-					displayDate: "",
-					dateList: []
+					displayDate: "February 22", // CHANGE CODE HERE
+					dateList: [],
+					infoCards: // CHANGE CODE HERE
+					[
+						{
+							placeName: "McHenry County, Illinois",
+							col1Title: "Absolute",
+							col2Title: "Per 100,000",
+							row1Title: "Confirmed Cases",
+							row1Data1: "4,000",
+							row1Data2: "386.90",
+							row2Title: "Deaths",
+							row2Data1: "400",
+							row2Data2: "38.69",
+							row3Title: "Deaths / Confirmed Case",
+							row3Data1: "0.10",
+							row3Data2: ""
+						},
+						{
+							placeName: "Lake County, Illinois",
+							col1Title: "Absolute",
+							col2Title: "Per 100,000",
+							row1Title: "Confirmed Cases",
+							row1Data1: "4,000",
+							row1Data2: "386.90",
+							row2Title: "Deaths",
+							row2Data1: "400",
+							row2Data2: "38.69",
+							row3Title: "Deaths / Confirmed Case",
+							row3Data1: "0.10",
+							row3Data2: ""
+						}
+					]
 				},
 	
 			mounted: function()
@@ -447,7 +478,7 @@ let appLogic = (function()
 											buildDataAnimation(
 												allCountyData,
 												FactType.Cases,
-												DataViewType.InstantaneousValue,
+												DataViewType.CumulativeValue,
 												0, "hsl(50, 100%, 50%)", 100);
 					
 											vueObject.waitMessageDisplay = "none";
