@@ -13,6 +13,7 @@ const DataViewType =
 	GrowthAbsolute: 1,
 	GrowthLogarithmicBase: 2
 };
+
 //const DefaultFact = FactType.Cases;
 //const DefaultDataView = DataViewType.InstantaneousValue;
 //const DefaultAnimationRatioMSPerDay = 1000;
