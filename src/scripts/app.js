@@ -155,7 +155,7 @@ let appLogic = (function()
 })(); // end appLogic singleton definition
 
 
-// let view = // CHANGE CODE HERE
+// let UI = // CHANGE CODE HERE
 (function()
 {
 	"use strict";
@@ -344,6 +344,7 @@ let appLogic = (function()
 		BtnStepForward.onclick = animationStepForward;
 		BtnPause.onclick = animationPause;
 		BtnSeekEnd.onclick = animationSeekEnd;
+		AnimationSlider.onkeydown = function(eventObject) { eventObject.preventDefault(); };
 		AnimationSlider.onchange = function(eventObject) { animationSeekToSpecificDay(parseInt(eventObject.target.value, 10)); };
 
 		document.onkeydown = function(eventObject)
