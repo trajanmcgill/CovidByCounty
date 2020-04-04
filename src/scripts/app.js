@@ -164,6 +164,8 @@ let appLogic = (function()
 	const DefaultAnimationTimeRatio = 200;
 
 	let animationTimeRatio = DefaultAnimationTimeRatio;
+	let totalDays = 0;
+	let sequence = null;
 
 
 	let loadHandlers = [], windowHandlerSet = false;
@@ -190,19 +192,21 @@ let appLogic = (function()
 
 	function buildDataAnimation(allCountyData, fact, dataView, colorationHue, exceededRangeColor, scaleMax)
 	{
-		const BtnSeekStart = document.getElementById("BtnSeekStart");
-		const BtnStepBack = document.getElementById("BtnStepBack");
-		const BtnPlay = document.getElementById("BtnPlay");
-		const BtnStepForward = document.getElementById("BtnStepForward");
-		const BtnPause = document.getElementById("BtnPause");
-		const BtnSeekEnd = document.getElementById("BtnSeekEnd");
-		const AnimationSlider = document.getElementById("AnimationSlider");
+		const svgObject = document.getElementById("SvgObject"),
+			svgDocument = svgObject.getSVGDocument();
+		const BtnSeekStart = document.getElementById("BtnSeekStart"),
+			BtnStepBack = document.getElementById("BtnStepBack"),
+			BtnPlay = document.getElementById("BtnPlay"),
+			BtnStepForward = document.getElementById("BtnStepForward"),
+			BtnPause = document.getElementById("BtnPause"),
+			BtnSeekEnd = document.getElementById("BtnSeekEnd"),
+			AnimationSlider = document.getElementById("AnimationSlider");
 		const msPerDay = 1000 * 60 * 60 * 24;
 
 		if(scaleMax === null)
 			scaleMax = allCountyData.maxCaseCount; // CHANGE CODE HERE (this will not always be true)
 
-		let sequence = new Concert.Sequence();
+		sequence = new Concert.Sequence();
 		sequence.setDefaults(
 			{
 				applicator: Concert.Applicators.SVG_ElementAttribute,
@@ -214,7 +218,7 @@ let appLogic = (function()
 		allCountyData.counties.forEach(
 			county =>
 			{
-				let mapElement = document.getElementById("SvgObject").getSVGDocument().getElementById("c" + county.id);
+				let mapElement = svgDocument.getElementById("c" + county.id);
 
 				if (mapElement !== null)
 				{
@@ -273,7 +277,7 @@ let appLogic = (function()
 							keyFrameValues.push(keyFrameValue);
 						});
 				
-					if (document.getElementById("SvgObject").getSVGDocument().getElementById("c" + county.id) === null)
+					if (svgDocument.getElementById("c" + county.id) === null)
 						alert("null target");
 
 					sequence.addTransformations(
@@ -285,7 +289,7 @@ let appLogic = (function()
 				}
 			}); // end forEach on allCountyData.counties
 
-		let totalDays = Math.round((allCountyData.lastDate - allCountyData.firstDate) / msPerDay);
+		totalDays = Math.round((allCountyData.lastDate - allCountyData.firstDate) / msPerDay);
 		sequence.addTransformations(
 			{
 				target: document.getElementById("Timeline"),
@@ -313,51 +317,30 @@ let appLogic = (function()
 					}
 			});
 		
-		//  WORKING HERE
-		BtnSeekStart.onclick = function() { sequence.seek(sequence.getStartTime()); };
-		BtnStepBack.onclick =
-			function()
-			{
-				sequence.stop();
-				let seekDay = Math.max(Math.round(sequence.getCurrentTime() / animationTimeRatio) - 1, 0);
-				sequence.seek(seekDay * animationTimeRatio);
-			}
-		BtnPlay.onclick = function() { sequence.run(); };
-		BtnStepForward.onclick =
-			function()
-			{
-				sequence.stop();
-				let seekDay = Math.min(Math.round(sequence.getCurrentTime() / animationTimeRatio) + 1, totalDays);
-				sequence.seek(seekDay * animationTimeRatio);
-			}
-		BtnPause.onclick = function() { sequence.stop(); };
-		BtnSeekEnd.onclick = function() { sequence.seek(sequence.getEndTime()); };
-		AnimationSlider.onchange = function(eventObject) { sequence.stop(); sequence.seek(parseInt(eventObject.target.value, 10) * animationTimeRatio); };
-		
-		/*
-		let cook = allCountyData.c17031, dailyCaseRecords = cook.dailyCaseRecords;
-		let times = [0], values = ["hsl(" + colorationHue + ", 100%, 100%)"];
-		for(let i = 0; i < dailyCaseRecords.length; i++)
-		{
-			times.push(i * animationTimeRatio);
+		BtnSeekStart.onclick = animationSeekStart;
+		BtnStepBack.onclick = animationStepBack;
+		BtnPlay.onclick = animationPlay;
+		BtnStepForward.onclick = animationStepForward;
+		BtnPause.onclick = animationPause;
+		BtnSeekEnd.onclick = animationSeekEnd;
+		AnimationSlider.onchange = function(eventObject) { animationSeekToSpecificDay(parseInt(eventObject.target.value, 10)); };
 
-			let currentValue = dailyCaseRecords[i].cumulativeCases;
-			if(currentValue <= scaleMax)
-			{
-				let currentColor = Concert.Calculators.Color(currentValue / scaleMax, values[0], "hsl(" + colorationHue + ", 100%, 50%)");
-				values.push(currentColor);
-			}
-			else
-				values.push(exceededRangeColor);
-		}
-		sequence.addTransformations(
-			{
-				target: document.getElementById("SvgObject").getSVGDocument().getElementById("c17031"),
-				feature: "fill",
-				keyframes: { times: times, values: values }
-			});
-		*/
-		return sequence;
+		document.onkeydown = function(eventObject)
+		{
+			let keyCode = eventObject.keyCode;
+			if (keyCode === 36 || keyCode === 38) // home key or up arrow
+				animationSeekStart();
+			else if (keyCode === 37) // left arrow
+				animationStepBack();
+			else if (keyCode === 32) // space bar
+				animationToggleStartStop();
+			else if (keyCode === 39) // right arrow
+				animationStepForward();
+			else if (keyCode === 35 || keyCode === 40) // end key or down arrow
+				animationSeekEnd();
+		};
+
+		svgDocument.onkeydown = function(eventObject) { document.onkeydown(eventObject); }
 	} // end buildDataAnimation()
 
 
@@ -375,6 +358,39 @@ let appLogic = (function()
 			currentDate = nextDate;
 		}
 	} // end buildTimelineData()
+
+
+	function animationSeekStart()
+	{ animationSeekToSpecificDay(0); }
+
+	function animationStepBack()
+	{	animationSeekToSpecificDay(Math.max(Math.round(sequence.getCurrentTime() / animationTimeRatio) - 1, 0));	}
+
+	function animationPlay()
+	{	sequence.run();	}
+
+	function animationStepForward()
+	{	animationSeekToSpecificDay(Math.min(Math.round(sequence.getCurrentTime() / animationTimeRatio) + 1, totalDays));	}
+
+	function animationPause()
+	{	sequence.stop();	}
+
+	function animationSeekEnd()
+	{	animationSeekToSpecificDay(totalDays); }
+
+	function animationSeekToSpecificDay(dayNumber)
+	{
+		sequence.stop();
+		sequence.seek(dayNumber * animationTimeRatio);
+	}
+
+	function animationToggleStartStop()
+	{
+		if (sequence.isRunning())
+			animationPause();
+		else
+			animationPlay();
+	}
 
 
 	let VueApp = new Vue(
@@ -428,7 +444,7 @@ let appLogic = (function()
 					
 											// CHANGE CODE: coloration test
 											window.allCountyData = allCountyData;
-											window.sequence = buildDataAnimation(
+											buildDataAnimation(
 												allCountyData,
 												FactType.Cases,
 												DataViewType.InstantaneousValue,
@@ -443,6 +459,7 @@ let appLogic = (function()
 			}
 		});
 
+	
 	// CHANGE CODE HERE: remove the below if there turns out to be no need for a public interface
 	let publicInterface =
 		{
