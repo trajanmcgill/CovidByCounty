@@ -320,7 +320,7 @@ let appUI = (function()
 		BtnPause.onclick = animationPause;
 		BtnSeekEnd.onclick = animationSeekEnd;
 		AnimationSlider.onkeydown = function(eventObject) { eventObject.preventDefault(); };
-		AnimationSlider.onchange = function(eventObject) { animationSeekToSpecificDay(parseInt(eventObject.target.value, 10)); };
+		AnimationSlider.oninput = function(eventObject) { animationSeekToSpecificDay(parseInt(eventObject.target.value, 10)); };
 
 		document.onkeydown = function(eventObject)
 		{
