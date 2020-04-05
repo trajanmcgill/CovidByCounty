@@ -9,9 +9,13 @@
 	
 	"extends": "eslint:recommended",
 	
-	"globals": { "Concert": "readonly", "Vue": "readonly", "Papa": "readonly" },
+	"globals": { "Papa": "readonly" },
 	
-	"parserOptions": { "ecmaVersion": 2018 },
+	"parserOptions":
+	{
+		"ecmaVersion": 2018,
+		"sourceType": "module"
+	},
 	
 	"rules":
 	{
@@ -28,6 +32,7 @@
 		"quotes": ["error", "double"],
 		"no-mixed-spaces-and-tabs": ["error", "smart-tabs"],
 		"strict": ["error", "function"],
-		"no-use-before-define": ["error", { "variables": true, "classes": true, "functions": false }]
+		"no-use-before-define": ["error", { "variables": true, "classes": true, "functions": false }],
+		"no-unused-vars": ["error", { "vars": "all", "args": "after-used", "ignoreRestSiblings": false,  "varsIgnorePattern": "VueApp" }]
     }
 }

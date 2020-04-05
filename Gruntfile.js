@@ -156,13 +156,13 @@ module.exports = function(grunt)
 				{
 					files:
 					[
-						{ src: "node_modules/concert.js/dist/Concert.js", dest: "dist/dev/components/Concert.js" },
-						{ src: "node_modules/papaparse/papaparse.js", dest: "dist/dev/components/papaparse.js" },
-						{ src: "node_modules/vue/dist/vue.js", dest: "dist/dev/components/vue.js" },
+						{ src: "node_modules/concert.js/dist/Concert.mjs", dest: "dist/dev/modules/Concert.js" },
+						{ src: "node_modules/papaparse/papaparse.js", dest: "dist/dev/scripts/papaparse.js" },
+						{ src: "node_modules/vue/dist/vue.esm.browser.js", dest: "dist/dev/modules/vue.js" },
 
-						{ src: "node_modules/concert.js/dist/Concert.min.js", dest: "dist/prod/components/Concert.js" },
-						{ src: "node_modules/papaparse/papaparse.min.js", dest: "dist/prod/components/papaparse.js" },
-						{ src: "node_modules/vue/dist/vue.min.js", dest: "dist/prod/components/vue.js" }
+						{ src: "node_modules/concert.js/dist/Concert.min.mjs", dest: "dist/prod/modules/Concert.js" },
+						{ src: "node_modules/papaparse/papaparse.min.js", dest: "dist/prod/scripts/papaparse.js" },
+						{ src: "node_modules/vue/dist/vue.esm.browser.min.js", dest: "dist/prod/modules/vue.js" }
 					]
 				},
 

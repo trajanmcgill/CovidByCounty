@@ -1,167 +1,12 @@
-const FactType =
+import appLogic from "./appLogic.js";
+import Vue from "./vue.js";
+import {Concert} from "./Concert.js";
+
+let appUI = (function()
 {
-	Cases: 0,
-	CasesPerCapita: 1,
-	Deaths: 2,
-	DeathsPerCapita: 3,
-	DeathsPerCase: 4
-};
-
-const DataViewType =
-{
-	CumulativeValue: 0,
-	GrowthAbsolute: 1,
-	GrowthLogarithmicBase: 2
-};
-
-//const DefaultFact = FactType.Cases;
-//const DefaultDataView = DataViewType.InstantaneousValue;
-//const DefaultAnimationRatioMSPerDay = 1000;
-//const DefaultColorationHue = 0; // Red
-//const DefaultScaleMax = null;
-
-
-let appLogic = (function()
-{
-	"use strict";
-
-	const FIPS_LENGTH = 5;
-
-
-	function parseDate(dateString)
-	{
-		let pieces = dateString.split("/"),
-			parsedDate = new Date(pieces[2], parseInt(pieces[0], 10) - 1, pieces[1]);
-		return parsedDate;
-	} // end parseDate()
-
-
-	function buildCountyList(csvText)
-	{
-		let parsedData =
-			Papa.parse(
-				csvText,
-				{
-					header: true,
-
-					transformHeader:
-						function(header)
-						{
-							if(header === "Id2")
-								return "fips";
-							else
-								return "population";
-						},
-
-					transform:
-						function(value, header)
-						{
-							if(header === "fips")
-								return value.padStart(FIPS_LENGTH, "0");
-							else
-								return value;
-						},
-					
-					dynamicTyping: header => (header === "population"),
-
-					skipEmptyLines: true
-				}).data;
-		
-		let allCountyData =
-			{
-				maxCaseCount: 0,
-				maxDeaths: 0,
-				firstDate: null,
-				lastDate: null,
-				counties: []
-			};
-		parsedData.forEach(
-			item =>
-			{
-				allCountyData.counties[parseInt(item.fips, 10)] =
-					{
-						id: item.fips,
-						population: item.population,
-						maxCaseCount: 0,
-						maxDeaths: 0,
-						covid19Records: []
-					};
-			});
-
-		return allCountyData;
-	} // end buildCountyList()
-
-
-	function storeCountyCaseData(csvText, allCountyData)
-	{
-		let parsedData = Papa.parse(
-			csvText,
-			{
-				header: true,
-
-				transformHeader: header => ((header === "fips") ? "id" : header),
-
-				transform:
-					(value, header) => ((header === "id") ? value.padStart(FIPS_LENGTH, "0") : value),
-
-				dynamicTyping: header => (header === "cases" || header === "deaths"),
-
-				skipEmptyLines: true
-			}).data;
-		
-		parsedData.forEach(
-			item =>
-			{
-				if (item.id !== "00000")
-				{
-					let intId = parseInt(item.id, 10);
-					let currentCounty = allCountyData.counties[intId];
-
-					if (typeof currentCounty === "undefined")
-						throw "Error: No such county as " + item.id;
-					
-					let cases = item.cases, deaths = item.deaths, date = parseDate(item.date);
-
-					if (cases > allCountyData.maxCaseCount)
-						allCountyData.maxCaseCount = cases;
-					if (deaths > allCountyData.maxDeaths)
-						allCountyData.maxDeaths = deaths;
-					if (allCountyData.firstDate === null || date < allCountyData.firstDate)
-						allCountyData.firstDate = date;
-					if (allCountyData.lastDate === null || date > allCountyData.lastDate)
-						allCountyData.lastDate = date;
-					
-					if (cases > currentCounty.maxCaseCount)
-						currentCounty.maxCaseCount = cases;
-					if (deaths > currentCounty.maxDeaths)
-						currentCounty.maxDeaths = deaths;
-					currentCounty.covid19Records.push(
-						{
-							date: date,
-							cumulativeCases: item.cases,
-							cumulativeDeaths: item.deaths
-						});
-					}
-			});
-	} // end storeCountyCaseData()
-
-
-	let publicInterface =
-		{
-			buildCountyList: buildCountyList,
-			storeCountyCaseData: storeCountyCaseData
-		};
-	
-	return publicInterface;
-})(); // end appLogic singleton definition
-
-
-// let UI = // CHANGE CODE HERE
-(function()
-{
-	"use strict";
-
 	const TimelineDateBoxWidth = 90, TimelineStartingOffset = 541;
+	const DefaultColorationHue = 0; // Red
+	const DefaultExceededRangeColor = "hsl(50, 100%, 50%)";
 	const DefaultAnimationTimeRatio = 500;
 	const TimelineSlideTime = 100;
 
@@ -192,7 +37,71 @@ let appLogic = (function()
 	} // end whenDocumentLoaded()
 	
 
-	// CHANGE CODE HERE: Problem to fix: animation smoothly transitions from point 0 to its first real value, even when that is many days into the animation
+	const VueApp = new Vue(
+		{
+			el: "#Everything",
+	
+			data:
+				{
+					waitMessage: "Loading Map...",
+					waitMessageDisplay: "block",
+					displayDate: "February 22", // CHANGE CODE HERE
+					dateList: [],
+					mapConfigPhrase: "",
+					infoCards: // CHANGE CODE HERE
+					[
+						{
+							placeName: "McHenry County, Illinois",
+							col1Title: "Absolute",
+							col2Title: "Per 100,000",
+							row1Title: "Confirmed Cases",
+							row1Data1: "4,000",
+							row1Data2: "386.90",
+							row2Title: "Deaths",
+							row2Data1: "400",
+							row2Data2: "38.69",
+							row3Title: "Deaths / Confirmed Case",
+							row3Data1: "0.10",
+							row3Data2: ""
+						},
+						{
+							placeName: "Lake County, Illinois",
+							col1Title: "Absolute",
+							col2Title: "Per 100,000",
+							row1Title: "Confirmed Cases",
+							row1Data1: "4,000",
+							row1Data2: "386.90",
+							row2Title: "Deaths",
+							row2Data1: "400",
+							row2Data2: "38.69",
+							row3Title: "Deaths / Confirmed Case",
+							row3Data1: "0.10",
+							row3Data2: ""
+						}
+					]
+				},
+	
+			mounted: function() { whenDocumentLoaded(initializeApp); }
+		});
+
+	function initializeApp()
+	{
+		appLogic.loadData(
+			setWaitMessage,
+			function()
+			{
+				let allCountyData = appLogic.allCountyData;
+				buildTimelineViewData(allCountyData.firstDate, allCountyData.lastDate);
+				setWaitMessage(appLogic.AppWaitType.BuildingVisualization);
+				buildDataAnimation(
+					allCountyData, appLogic.DefaultFact, appLogic.DefaultDataView,
+					DefaultColorationHue, DefaultExceededRangeColor,
+					null);
+				setWaitMessage(appLogic.AppWaitType.None);
+			});
+	} // end initializeApp()
+
+
 	function buildDataAnimation(allCountyData, fact, dataView, colorationHue, exceededRangeColor, scaleMax)
 	{
 		const svgObject = document.getElementById("SvgObject"),
@@ -238,27 +147,27 @@ let appLogic = (function()
 							let keyFrameValue;
 
 							let lastFactValue, currentFactValue, displayFactValue;
-							if (fact === FactType.Cases)
+							if (fact === appLogic.FactType.Cases)
 							{
 								lastFactValue = (index < 1) ? 0 : covid19Records[index - 1].cumulativeCases;
 								currentFactValue = covid19Record.cumulativeCases;
 							}
-							else if (fact === FactType.CasesPerCapita)
+							else if (fact === appLogic.FactType.CasesPerCapita)
 							{
 								lastFactValue = (index < 1) ? 0 : covid19Records[index - 1].cumulativeCases / countyPopulation;
 								currentFactValue = (countyPopulation > 0) ? covid19Record.cumulativeCases / countyPopulation : "unknown";
 							}
-							else if (fact === FactType.Deaths)
+							else if (fact === appLogic.FactType.Deaths)
 							{
 								lastFactValue = (index < 1) ? 0 : covid19Records[index - 1].cumulativeDeaths;
 								currentFactValue = covid19Record.cumulativeDeaths;
 							}
-							else if (fact === FactType.DeathsPerCapita)
+							else if (fact === appLogic.FactType.DeathsPerCapita)
 							{
 								lastFactValue = (index < 1) ? 0 : covid19Records[index - 1].cumulativeDeaths / countyPopulation;
 								currentFactValue = (countyPopulation > 0) ? covid19Record.cumulativeDeaths / countyPopulation : "unknown";
 							}
-							else if (fact === FactType.DeathsPerCase)
+							else if (fact === appLogic.FactType.DeathsPerCase)
 							{
 								lastFactValue = (index < 1) ? 0 : covid19Records[index - 1].cumulativeDeaths / covid19Records[index - 1].cumulativeCases;
 								currentFactValue = (covid19Record.cumulativeCases > 0) ? covid19Record.cumulativeDeaths / covid19Record.cumulativeCases : 0;
@@ -270,11 +179,11 @@ let appLogic = (function()
 								keyFrameValue = UnknownValueColor;
 							else
 							{
-								if (dataView === DataViewType.CumulativeValue)
+								if (dataView === appLogic.DataViewType.CumulativeValue)
 									displayFactValue = currentFactValue;
-								else if (dataView === DataViewType.GrowthAbsolute)
+								else if (dataView === appLogic.DataViewType.GrowthAbsolute)
 									displayFactValue = currentFactValue - lastFactValue;
-								else if (dataView === DataViewType.GrowthLogarithmicBase)
+								else if (dataView === appLogic.DataViewType.GrowthLogarithmicBase)
 									displayFactValue = (currentFactValue - lastFactValue) / lastFactValue;
 
 								if (displayFactValue <= scaleMax)
@@ -367,7 +276,7 @@ let appLogic = (function()
 	} // end buildDataAnimation()
 
 
-	function buildTimelineData(firstDate, lastDate, vueAppObject)
+	function buildTimelineViewData(firstDate, lastDate)
 	{
 		let currentDate = firstDate;
 		while (currentDate <= lastDate)
@@ -375,7 +284,7 @@ let appLogic = (function()
 			let month = currentDate.toLocaleString("en-us", { month: "long" }),
 				dayOfMonth = currentDate.getDate();
 
-			vueAppObject.dateList.push({ month: month, dayOfMonth: dayOfMonth });
+			VueApp.dateList.push({ month: month, dayOfMonth: dayOfMonth });
 			let nextDate = new Date(currentDate);
 			nextDate.setDate(nextDate.getDate() + 1);
 			currentDate = nextDate;
@@ -415,114 +324,31 @@ let appLogic = (function()
 			animationPlay();
 	}
 
-
-	let VueApp = new Vue(
+	function setWaitMessage(waitType)
+	{
+		if (waitType === appLogic.AppWaitType.None)
 		{
-			el: "#Everything",
-	
-			data:
-				{
-					waitMessage: "Loading Map...",
-					waitMessageDisplay: "block",
-					allCountyData: null,
-					displayDate: "February 22", // CHANGE CODE HERE
-					dateList: [],
-					infoCards: // CHANGE CODE HERE
-					[
-						{
-							placeName: "McHenry County, Illinois",
-							col1Title: "Absolute",
-							col2Title: "Per 100,000",
-							row1Title: "Confirmed Cases",
-							row1Data1: "4,000",
-							row1Data2: "386.90",
-							row2Title: "Deaths",
-							row2Data1: "400",
-							row2Data2: "38.69",
-							row3Title: "Deaths / Confirmed Case",
-							row3Data1: "0.10",
-							row3Data2: ""
-						},
-						{
-							placeName: "Lake County, Illinois",
-							col1Title: "Absolute",
-							col2Title: "Per 100,000",
-							row1Title: "Confirmed Cases",
-							row1Data1: "4,000",
-							row1Data2: "386.90",
-							row2Title: "Deaths",
-							row2Data1: "400",
-							row2Data2: "38.69",
-							row3Title: "Deaths / Confirmed Case",
-							row3Data1: "0.10",
-							row3Data2: ""
-						}
-					]
-				},
-	
-			mounted: function()
-			{
-				let runSetup =
-					(function(vueObject)
-					{
-						let setupFunction =
-							function()
-							{
-								vueObject.waitMessage = "Loading County Population Data...";
-								fetch("data/countyPopulations2018.csv")
-									.then(
-										response =>
-										{
-											vueObject.waitMessage = "Processing County Population Data...";
-											return response.text();
-										})
-									.then(
-										text =>
-										{
-											vueObject.allCountyData = appLogic.buildCountyList(text);
-											vueObject.waitMessage = "Loading County Case Data...";
-											return fetch("data/countyCases.csv");
-										})
-									.then(
-										response =>
-										{
-											vueObject.waitMessage = "Processing County Case Data...";
-											return response.text();
-										})
-									.then(
-										text =>
-										{
-											let allCountyData = vueObject.allCountyData;
-											appLogic.storeCountyCaseData(text, allCountyData);
-											buildTimelineData(allCountyData.firstDate, allCountyData.lastDate, vueObject);
-					
-											// CHANGE CODE: coloration test
-											window.allCountyData = allCountyData; // REMOVE CODE HERE
-											buildDataAnimation(
-												allCountyData,
-												FactType.Deaths,
-												DataViewType.CumulativeValue,
-												0, "hsl(50, 100%, 50%)", 1);
-					
-											vueObject.waitMessageDisplay = "none";
-										});
-							};
-						return setupFunction;
-					})(this);
-				whenDocumentLoaded(runSetup);
-			}
-		});
-
-	
-	// CHANGE CODE HERE: remove the below if there turns out to be no need for a public interface
-	let publicInterface =
+			VueApp.waitMessageDisplay = "none";
+			VueApp.waitMessage = "";
+		}
+		else
 		{
-			FactType: FactType,
-			DataViewType: DataViewType,
+			VueApp.waitMessageDisplay = "block";
+			if (waitType === appLogic.AppWaitType.LoadingMap)
+				VueApp.waitMessage = "Loading Map...";
+			if (waitType === appLogic.AppWaitType.LoadingPopulationData)
+				VueApp.waitMessage = "Loading County Population Data...";
+			else if (waitType === appLogic.AppWaitType.ProcessingPopulationData)
+				VueApp.waitMessage = "Processing County Population Data...";
+			else if (waitType === appLogic.AppWaitType.LoadingCaseData)
+				VueApp.waitMessage = "Loading County Case Data...";
+			else if (waitType === appLogic.AppWaitType.ProcessingCaseData)
+				VueApp.waitMessage = "Processing County Case Data...";
+			else if (waitType === appLogic.AppWaitType.Building)
+				VueApp.waitMessage = "Building Visualization...";
+		}
+	} // end setWaitMessage()
 
-			whenDocumentLoaded: whenDocumentLoaded,
-			buildDataAnimation: buildDataAnimation,
-			VueApp: VueApp
-		};
-	return publicInterface;
-})(); // end view singleton definition
+})(); // end UI singleton definition
+
+export default appUI;
