@@ -2,6 +2,8 @@ import appLogic from "./appLogic.js";
 import Vue from "./vue.js";
 import {Concert} from "./Concert.js";
 
+const msPerDay = 1000 * 60 * 60 * 24;
+
 let appUI = (function()
 {
 	const TimelineDateBoxWidth = 90, TimelineStartingOffset = 541;
@@ -9,6 +11,9 @@ let appUI = (function()
 	const DefaultExceededRangeColor = "hsl(50, 100%, 50%)";
 	const DefaultAnimationTimeRatio = 500;
 	const TimelineSlideTime = 100;
+
+	//const MapConfigPhrases = [];
+	//MapConfigPhrases[appLogic.FactType.]
 
 	let animationTimeRatio = DefaultAnimationTimeRatio;
 	let totalDays = 0;
@@ -93,16 +98,130 @@ let appUI = (function()
 				let allCountyData = appLogic.allCountyData;
 				buildTimelineViewData(allCountyData.firstDate, allCountyData.lastDate);
 				setWaitMessage(appLogic.AppWaitType.BuildingVisualization);
-				buildDataAnimation(
-					allCountyData, appLogic.DefaultFact, appLogic.DefaultDataView,
+				setupDataAnimation(
+					allCountyData, appLogic.DefaultFact, appLogic.DefaultDataView, appLogic.DefaultGrowthRangeDays,
 					DefaultColorationHue, DefaultExceededRangeColor,
-					null);
+					1); // CHANGE CODE HERE: set to auto range?
 				setWaitMessage(appLogic.AppWaitType.None);
 			});
 	} // end initializeApp()
 
 
-	function buildDataAnimation(allCountyData, fact, dataView, colorationHue, exceededRangeColor, scaleMax)
+	function buildRawMapAnimationData(allCountyData, fact, dataView, growthRangeDays, svgDocument)
+	{
+		let rawAnimationData = { maxOverallDisplayFactValue: 0, firstDate: allCountyData.firstDate, counties: [] };
+
+		allCountyData.counties.forEach(
+			county =>
+			{
+				let mapElement = svgDocument.getElementById("c" + county.id);
+				if (mapElement === null)
+					return;
+
+				let currentCountyData = { id: county.id, dailyRecords: [] };
+
+				let countyPopulation = county.population;
+				county.covid19Records.forEach(
+					(covid19Record, index, covid19Records) =>
+					{
+						let previousFactValue, currentFactValue, displayFactValue;
+						if (fact === appLogic.FactType.Cases)
+						{
+							previousFactValue = (index < growthRangeDays) ? 0 : covid19Records[index - growthRangeDays].cumulativeCases;
+							currentFactValue = covid19Record.cumulativeCases;
+						}
+						else if (fact === appLogic.FactType.CasesPerCapita)
+						{
+							previousFactValue = (index < growthRangeDays) ? 0 : covid19Records[index - growthRangeDays].cumulativeCases / countyPopulation;
+							currentFactValue = (countyPopulation > 0) ? covid19Record.cumulativeCases / countyPopulation : "unknown";
+						}
+						else if (fact === appLogic.FactType.Deaths)
+						{
+							previousFactValue = (index < growthRangeDays) ? 0 : covid19Records[index - growthRangeDays].cumulativeDeaths;
+							currentFactValue = covid19Record.cumulativeDeaths;
+						}
+						else if (fact === appLogic.FactType.DeathsPerCapita)
+						{
+							previousFactValue = (index < growthRangeDays) ? 0 : covid19Records[index - growthRangeDays].cumulativeDeaths / countyPopulation;
+							currentFactValue = (countyPopulation > 0) ? covid19Record.cumulativeDeaths / countyPopulation : "unknown";
+						}
+						else if (fact === appLogic.FactType.DeathsPerCase)
+						{
+							previousFactValue = (index < growthRangeDays) ? 0 : covid19Records[index - growthRangeDays].cumulativeDeaths / covid19Records[index - 1].cumulativeCases;
+							currentFactValue = (covid19Record.cumulativeCases > 0) ? covid19Record.cumulativeDeaths / covid19Record.cumulativeCases : 0;
+						}
+						else
+							throw "Invalid fact parameter";
+						
+						if(currentFactValue === "unknown")
+							displayFactValue = currentFactValue;
+						else
+						{
+							if (dataView === appLogic.DataViewType.CumulativeValue)
+								displayFactValue = currentFactValue;
+							else if (dataView === appLogic.DataViewType.GrowthAbsolute)
+								displayFactValue = currentFactValue - previousFactValue;
+							else if (dataView === appLogic.DataViewType.GrowthLogarithmicBase)
+								displayFactValue = (currentFactValue - previousFactValue) / previousFactValue;
+
+							if (displayFactValue > rawAnimationData.maxOverallDisplayFactValue)
+							rawAnimationData.maxOverallDisplayFactValue = displayFactValue;
+						}
+						
+						currentCountyData.dailyRecords.push({ date: covid19Record.date, displayFactValue: displayFactValue });
+					}); // end forEach on county.covid19Records
+				
+				rawAnimationData.counties.push(currentCountyData);
+			}); // end forEach on counties
+		
+		return rawAnimationData;
+	} // end buildRawMapAnimationData()
+
+
+	function getMapAnimationTransformations(rawAnimationData, colorationHue, exceededRangeColor, scaleMax, svgDocument)
+	{
+		const UnknownValueColor = "hsl(0, 0%, 0%)";
+		if(scaleMax === null)
+			scaleMax = rawAnimationData.maxOverallDisplayFactValue;
+		let transformations = [];
+		
+		rawAnimationData.counties.forEach(
+			county =>
+			{
+				let keyframeTimes = [0],
+					keyframeValues = ["hsl(" + colorationHue + ", 100%, 100%)"];
+
+				county.dailyRecords.forEach(
+					dailyRecord =>
+					{
+						let displayFactValue = dailyRecord.displayFactValue;
+						let keyFrameTime = Math.round(((dailyRecord.date - rawAnimationData.firstDate) / msPerDay + 1) * animationTimeRatio);
+						let keyFrameValue;
+
+						if(displayFactValue === "unknown")
+							keyFrameValue = UnknownValueColor;
+						else if (displayFactValue <= scaleMax)
+							keyFrameValue = Concert.Calculators.Color(displayFactValue / scaleMax, keyframeValues[0], "hsl(" + colorationHue + ", 100%, 50%)");
+						else
+							keyFrameValue = exceededRangeColor;
+						
+						keyframeTimes.push(keyFrameTime);
+						keyframeValues.push(keyFrameValue);
+					});
+				
+				transformations.push(
+					{
+						target: svgDocument.getElementById("c" + county.id),
+						feature: "fill",
+						keyframes: { times: keyframeTimes, values: keyframeValues }
+					});
+			});
+		
+		return transformations;
+	} // getMapAnimationTransformations
+
+
+	function setupDataAnimation(allCountyData, fact, dataView, growthRangeDays, colorationHue, exceededRangeColor, scaleMax)
 	{
 		const svgObject = document.getElementById("SvgObject"),
 			svgDocument = svgObject.getSVGDocument();
@@ -113,12 +232,7 @@ let appUI = (function()
 			BtnPause = document.getElementById("BtnPause"),
 			BtnSeekEnd = document.getElementById("BtnSeekEnd"),
 			AnimationSlider = document.getElementById("AnimationSlider");
-		const msPerDay = 1000 * 60 * 60 * 24;
-		const UnknownValueColor = "hsl(0, 0%, 0%)";
-
-		if(scaleMax === null)
-			scaleMax = allCountyData.maxCaseCount; // CHANGE CODE HERE (this will not always be true)
-
+		
 		sequence = new Concert.Sequence();
 		sequence.setDefaults(
 			{
@@ -129,84 +243,9 @@ let appUI = (function()
 			});
 		
 		// Animate map
-		allCountyData.counties.forEach(
-			county =>
-			{
-				let mapElement = svgDocument.getElementById("c" + county.id);
-				let countyPopulation = county.population;
-
-				if (mapElement !== null)
-				{
-					let keyframeTimes = [0],
-					keyFrameValues = ["hsl(" + colorationHue + ", 100%, 100%)"];
-				
-					county.covid19Records.forEach(
-						(covid19Record, index, covid19Records) =>
-						{
-							let keyFrameTime = Math.round(((covid19Record.date - allCountyData.firstDate) / msPerDay + 1) * animationTimeRatio);
-							let keyFrameValue;
-
-							let lastFactValue, currentFactValue, displayFactValue;
-							if (fact === appLogic.FactType.Cases)
-							{
-								lastFactValue = (index < 1) ? 0 : covid19Records[index - 1].cumulativeCases;
-								currentFactValue = covid19Record.cumulativeCases;
-							}
-							else if (fact === appLogic.FactType.CasesPerCapita)
-							{
-								lastFactValue = (index < 1) ? 0 : covid19Records[index - 1].cumulativeCases / countyPopulation;
-								currentFactValue = (countyPopulation > 0) ? covid19Record.cumulativeCases / countyPopulation : "unknown";
-							}
-							else if (fact === appLogic.FactType.Deaths)
-							{
-								lastFactValue = (index < 1) ? 0 : covid19Records[index - 1].cumulativeDeaths;
-								currentFactValue = covid19Record.cumulativeDeaths;
-							}
-							else if (fact === appLogic.FactType.DeathsPerCapita)
-							{
-								lastFactValue = (index < 1) ? 0 : covid19Records[index - 1].cumulativeDeaths / countyPopulation;
-								currentFactValue = (countyPopulation > 0) ? covid19Record.cumulativeDeaths / countyPopulation : "unknown";
-							}
-							else if (fact === appLogic.FactType.DeathsPerCase)
-							{
-								lastFactValue = (index < 1) ? 0 : covid19Records[index - 1].cumulativeDeaths / covid19Records[index - 1].cumulativeCases;
-								currentFactValue = (covid19Record.cumulativeCases > 0) ? covid19Record.cumulativeDeaths / covid19Record.cumulativeCases : 0;
-							}
-							else
-								throw "Invalid fact parameter";
-							
-							if(currentFactValue === "unknown")
-								keyFrameValue = UnknownValueColor;
-							else
-							{
-								if (dataView === appLogic.DataViewType.CumulativeValue)
-									displayFactValue = currentFactValue;
-								else if (dataView === appLogic.DataViewType.GrowthAbsolute)
-									displayFactValue = currentFactValue - lastFactValue;
-								else if (dataView === appLogic.DataViewType.GrowthLogarithmicBase)
-									displayFactValue = (currentFactValue - lastFactValue) / lastFactValue;
-
-								if (displayFactValue <= scaleMax)
-									keyFrameValue = Concert.Calculators.Color(displayFactValue / scaleMax, keyFrameValues[0], "hsl(" + colorationHue + ", 100%, 50%)");
-								else
-									keyFrameValue = exceededRangeColor; // ADD CODE HERE: need to deal with making the shift to this discrete instead of gradual
-							}
-
-							keyframeTimes.push(keyFrameTime);
-							keyFrameValues.push(keyFrameValue);
-						});
-				
-					if (svgDocument.getElementById("c" + county.id) === null)
-						alert("null target");
-
-					sequence.addTransformations(
-						{
-							target: mapElement,
-							feature: "fill",
-							keyframes: { times: keyframeTimes, values: keyFrameValues }
-						});
-				}
-			}); // end forEach on allCountyData.counties
+		let rawMapAnimationData = buildRawMapAnimationData(allCountyData, fact, dataView, growthRangeDays, svgDocument);
+		let mapTransformations = getMapAnimationTransformations(rawMapAnimationData, colorationHue, exceededRangeColor, scaleMax, svgDocument);
+		mapTransformations.forEach(transformation => { sequence.addTransformations(transformation); });
 
 		// Animate timeline
 		totalDays = Math.round((allCountyData.lastDate - allCountyData.firstDate + msPerDay) / msPerDay);
@@ -273,7 +312,7 @@ let appUI = (function()
 		};
 
 		svgDocument.onkeydown = function(eventObject) { document.onkeydown(eventObject); }
-	} // end buildDataAnimation()
+	} // end setupDataAnimation()
 
 
 	function buildTimelineViewData(firstDate, lastDate)

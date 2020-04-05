@@ -34,8 +34,7 @@ let appLogic = (function()
 	
 	const DefaultFact = FactType.Cases;
 	const DefaultDataView = DataViewType.CumulativeValue;
-	//const DefaultAnimationRatioMSPerDay = 1000;
-	//const DefaultScaleMax = null;
+	const DefaultGrowthRangeDays = 1;
 	
 	const allCountyData =
 	{
@@ -153,10 +152,12 @@ let appLogic = (function()
 						{
 							date: date,
 							cumulativeCases: item.cases,
-							cumulativeDeaths: item.deaths
+							cumulativeDeaths: item.deaths,
+							displayFactValue: null
 						});
 					}
 			});
+
 	} // end storeCountyCaseData()
 
 
@@ -198,6 +199,7 @@ let appLogic = (function()
 			DataViewType: DataViewType,
 			DefaultFact: DefaultFact,
 			DefaultDataView: DefaultDataView,
+			DefaultGrowthRangeDays: DefaultGrowthRangeDays,
 			AppWaitType: AppWaitType,
 
 			allCountyData: allCountyData,
