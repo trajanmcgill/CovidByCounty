@@ -57,6 +57,12 @@ let appUI = (function()
 					colorExceededRange: "",
 					maxOverallValue: 0,
 					maxDisplayValue: 0,
+					BasicFactType: appLogic.BasicFactType,
+					MeasurementType: appLogic.MeasurementType,
+					DataViewType: appLogic.DataViewType,
+					configBasicFact: null,
+					configMeasurement: null,
+					configDataView: null,
 					infoCards: // CHANGE CODE HERE
 					[
 						{
@@ -103,7 +109,7 @@ let appUI = (function()
 				buildTimelineViewData(allCountyData.firstDate, allCountyData.lastDate);
 				setWaitMessage(appLogic.AppWaitType.BuildingVisualization);
 				setupDataAnimation(
-					allCountyData, appLogic.DefaultFact, appLogic.DefaultDataView, appLogic.DefaultGrowthRangeDays,
+					allCountyData, appLogic.DefaultFact, appLogic.DefaultMeasurementType, appLogic.DefaultDataView, appLogic.DefaultGrowthRangeDays,
 					DefaultColorationHue, DefaultExceededRangeColor,
 					0.05, appLogic.DefaultPopulationScale); // CHANGE CODE HERE: set to auto range?
 				setWaitMessage(appLogic.AppWaitType.None);
@@ -111,7 +117,7 @@ let appUI = (function()
 	} // end initializeApp()
 
 
-	function buildRawMapAnimationData(allCountyData, fact, dataView, growthRangeDays, svgDocument)
+	function buildRawMapAnimationData(allCountyData, basicFact, measurement, dataView, growthRangeDays, svgDocument)
 	{
 		let rawAnimationData = { maxOverallDisplayFactValue: 0, firstDate: allCountyData.firstDate, counties: [] };
 
@@ -128,48 +134,68 @@ let appUI = (function()
 				county.covid19Records.forEach(
 					(covid19Record, index, covid19Records) =>
 					{
-						let previousFactValue, currentFactValue, displayFactValue;
-						if (fact === appLogic.FactType.Cases)
+						let currentCases = covid19Record.cumulativeCases,
+							currentDeaths = covid19Record.cumulativeDeaths,
+							previousCases = (index < growthRangeDays) ? 0 : covid19Records[index - growthRangeDays].cumulativeCases,
+							previousDeaths = (index < growthRangeDays) ? 0 : covid19Records[index - growthRangeDays].cumulativeDeaths;
+
+						let currentBasicValue, previousBasicValue;
+						if (basicFact === appLogic.BasicFactType.Cases)
 						{
-							previousFactValue = (index < growthRangeDays) ? 0 : covid19Records[index - growthRangeDays].cumulativeCases;
-							currentFactValue = covid19Record.cumulativeCases;
+							currentBasicValue = currentCases;
+							previousBasicValue = previousCases;
 						}
-						else if (fact === appLogic.FactType.CasesPerCapita)
+						else if (basicFact === appLogic.BasicFactType.Deaths)
 						{
-							previousFactValue = (index < growthRangeDays) ? 0 : covid19Records[index - growthRangeDays].cumulativeCases / countyPopulation;
-							currentFactValue = (countyPopulation > 0) ? covid19Record.cumulativeCases / countyPopulation : "unknown";
-						}
-						else if (fact === appLogic.FactType.Deaths)
-						{
-							previousFactValue = (index < growthRangeDays) ? 0 : covid19Records[index - growthRangeDays].cumulativeDeaths;
-							currentFactValue = covid19Record.cumulativeDeaths;
-						}
-						else if (fact === appLogic.FactType.DeathsPerCapita)
-						{
-							previousFactValue = (index < growthRangeDays) ? 0 : covid19Records[index - growthRangeDays].cumulativeDeaths / countyPopulation;
-							currentFactValue = (countyPopulation > 0) ? covid19Record.cumulativeDeaths / countyPopulation : "unknown";
-						}
-						else if (fact === appLogic.FactType.DeathsPerCase)
-						{
-							previousFactValue = (index < growthRangeDays) ? 0 : covid19Records[index - growthRangeDays].cumulativeDeaths / covid19Records[index - 1].cumulativeCases;
-							currentFactValue = (covid19Record.cumulativeCases > 0) ? covid19Record.cumulativeDeaths / covid19Record.cumulativeCases : 0;
+							currentBasicValue = currentDeaths;
+							previousBasicValue = previousDeaths;
 						}
 						else
 							throw "Invalid fact parameter";
 						
-						if(currentFactValue === "unknown")
-							displayFactValue = currentFactValue;
+						let currentMeasuredValue, previousMeasuredValue;
+						if (measurement === appLogic.MeasurementType.Absolute)
+						{
+							currentMeasuredValue = currentBasicValue;
+							previousMeasuredValue = previousBasicValue;
+						}
+						else if (measurement === appLogic.MeasurementType.CaseRelative || basicFact === appLogic.BasicFactType.Deaths)
+						{
+							currentMeasuredValue = currentBasicValue / currentCases;
+							previousMeasuredValue = previousBasicValue / previousCases;
+						}
+						else if (measurement === appLogic.MeasurementType.PopulationRelative)
+						{
+							if (countyPopulation > 0)
+							{
+								currentMeasuredValue = currentBasicValue / countyPopulation;
+								previousMeasuredValue = previousBasicValue / countyPopulation;
+							}
+							else
+							{
+								currentMeasuredValue = undefined;
+								previousMeasuredValue = undefined;
+							}
+						}
+						else
+							throw "Invalid fact / measurement parameter combination";
+						
+						let displayFactValue;
+						if (typeof currentMeasuredValue === "undefined")
+							displayFactValue = currentMeasuredValue;
 						else
 						{
-							if (dataView === appLogic.DataViewType.CumulativeValue)
-								displayFactValue = currentFactValue;
-							else if (dataView === appLogic.DataViewType.GrowthAbsolute)
-								displayFactValue = currentFactValue - previousFactValue;
-							else if (dataView === appLogic.DataViewType.GrowthLogarithmicBase)
-								displayFactValue = (currentFactValue - previousFactValue) / previousFactValue;
-
+							if (dataView === appLogic.DataViewType.DailyValue)
+								displayFactValue = currentMeasuredValue;
+							else if (dataView === appLogic.DataViewType.ChangeAbsolute)
+								displayFactValue = currentMeasuredValue - previousMeasuredValue;
+							else if (dataView === appLogic.DataViewType.ChangeProportional)
+								displayFactValue = (currentMeasuredValue - previousMeasuredValue) / previousMeasuredValue;
+							else
+								throw "Invalid data view parameter";
+							
 							if (displayFactValue > rawAnimationData.maxOverallDisplayFactValue)
-							rawAnimationData.maxOverallDisplayFactValue = displayFactValue;
+								rawAnimationData.maxOverallDisplayFactValue = displayFactValue;
 						}
 						
 						currentCountyData.dailyRecords.push({ date: covid19Record.date, displayFactValue: displayFactValue });
@@ -223,7 +249,7 @@ let appUI = (function()
 	} // getMapAnimationTransformations
 
 
-	function setupDataAnimation(allCountyData, fact, dataView, growthRangeDays, colorationHue, exceededRangeColor, scaleMax, populationScale)
+	function setupDataAnimation(allCountyData, basicFact, measurement, dataView, growthRangeDays, colorationHue, exceededRangeColor, scaleMax, populationScale)
 	{
 		const svgObject = document.getElementById("SvgObject"),
 			svgDocument = svgObject.getSVGDocument();
@@ -247,28 +273,31 @@ let appUI = (function()
 			});
 		
 		// Animate map
-		let rawMapAnimationData = buildRawMapAnimationData(allCountyData, fact, dataView, growthRangeDays, svgDocument);
+		let rawMapAnimationData = buildRawMapAnimationData(allCountyData, basicFact, measurement, dataView, growthRangeDays, svgDocument);
 		if(scaleMax === null)
 			scaleMax = rawMapAnimationData.maxOverallDisplayFactValue;
 		let mapTransformations = getMapAnimationTransformations(rawMapAnimationData, colorationHue, exceededRangeColor, scaleMax, svgDocument);
 		mapTransformations.forEach(transformation => { sequence.addTransformations(transformation); });
 		let mapConfigPhrase;
-		if (fact === appLogic.FactType.Cases)
+		if (basicFact === appLogic.BasicFactType.Cases)
 			mapConfigPhrase = "Confirmed Cases";
-		else if (fact === appLogic.FactType.CasesPerCapita)
-			mapConfigPhrase = "Confirmed Cases per " + populationScale + " people";
-		else if (fact === appLogic.FactType.Deaths)
+		else if (basicFact === appLogic.BasicFactType.Deaths)
 			mapConfigPhrase = "Confirmed Deaths";
-		else if (fact === appLogic.FactType.DeathsPerCapita)
-			mapConfigPhrase = "Confirmed Deaths per " + populationScale + " people";
-		else if (fact === appLogic.FactType.DeathsPerCase)
-			mapConfigPhrase = "Confirmed Deaths per Confirmed Case [known fatality rate]";
-		if (dataView === appLogic.DataViewType.CumulativeValue)
+		if (measurement === appLogic.MeasurementType.Absolute)
 			mapConfigPhrase += " (Total)";
-		else if (dataView === appLogic.DataViewType.GrowthAbsolute)
-			mapConfigPhrase += " (Last " + growthRangeDays + " Days Total Increase)"
-		else if (dataView === appLogic.DataViewType.GrowthLogarithmicBase)
+		else if (measurement === appLogic.MeasurementType.CaseRelative)
+			mapConfigPhrase += " per Confirmed Case [known fatality rate]";
+		else if (measurement === appLogic.MeasurementType.PopulationRelative)
+			mapConfigPhrase += " Per " + formatNumberWithCommas(populationScale) + " People";
+		if (dataView === appLogic.DataViewType.DailyValue)
+			mapConfigPhrase += " (Daily Value)";
+		else if (dataView === appLogic.DataViewType.ChangeAbsolute)
+			mapConfigPhrase += " (Last " + growthRangeDays + " Days Total Increase)";
+		else if (dataView === appLogic.DataViewType.ChangeProportional)
 			mapConfigPhrase += " (Last " + growthRangeDays + " Days Percentage Increase)"
+		VueApp.configBasicFact = basicFact;
+		VueApp.configMeasurement = measurement;
+		VueApp.configDataView = dataView;
 		VueApp.mapConfigPhrase = mapConfigPhrase;
 		VueApp.maxOverallValue = rawMapAnimationData.maxOverallDisplayFactValue;
 		VueApp.maxDisplayValue = scaleMax;
@@ -360,6 +389,16 @@ let appUI = (function()
 		}
 	} // end buildTimelineData()
 
+	function formatNumberWithCommas(number)
+	{
+		let rawString = number.toString(),
+			decimalPosition = rawString.indexOf("."),
+			integerPortion = (decimalPosition < 0) ? rawString : rawString.substring(0, decimalPosition),
+			decimalPortion = (decimalPosition < 0) ? "" : rawString.substring(decimalPosition),
+			formattedIntegerPortion = integerPortion.toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1,"),
+			entireNumber = formattedIntegerPortion + decimalPortion;
+		return entireNumber;
+	} // end formatNumberWithCommas()
 
 	function animationSeekStart()
 	{ animationSeekToSpecificDay(0); }

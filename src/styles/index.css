@@ -35,6 +35,27 @@ h3, h4
 	display: none;
 }
 
+#ConfigurationBox
+{
+	position: absolute;
+	left: 50%;
+	top: 50%;
+	width: 400px;
+	height: 300px;
+	margin: -150px 0 0 -200px;
+	padding: 12px;
+	border: none;
+	border-radius: 6px;
+	background-color: #808080;
+	z-index: 999;
+}
+
+.ConfigurationRadioGroup
+{
+	margin-top: 14px;
+	color: #efefef;
+}
+
 #WaitBox
 {
 	position: absolute;

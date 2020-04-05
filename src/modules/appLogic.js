@@ -5,20 +5,24 @@ let appLogic = (function()
 
 	const FIPS_Length = 5;
 
-	const FactType =
+	const BasicFactType =
 	{
 		Cases: 0,
-		CasesPerCapita: 1,
-		Deaths: 2,
-		DeathsPerCapita: 3,
-		DeathsPerCase: 4
+		Deaths: 2
 	};
 	
+	const MeasurementType =
+	{
+		Absolute: 0,
+		CaseRelative: 1,
+		PopulationRelative: 2
+	};
+
 	const DataViewType =
 	{
-		CumulativeValue: 0,
-		GrowthAbsolute: 1,
-		GrowthLogarithmicBase: 2
+		DailyValue: 0,
+		ChangeAbsolute: 1,
+		ChangeProportional: 2
 	};
 
 	const AppWaitType =
@@ -32,8 +36,9 @@ let appLogic = (function()
 		BuildingVisualization: 6
 	};
 	
-	const DefaultFact = FactType.DeathsPerCase;
-	const DefaultDataView = DataViewType.CumulativeValue;
+	const DefaultBasicFact = BasicFactType.Cases;
+	const DefaultDataView = DataViewType.DailyValue;
+	const DefaultMeasurementType = MeasurementType.PopulationRelative;
 	const DefaultGrowthRangeDays = 1;
 	const DefaultPopulationScale = 10000;
 	
@@ -196,13 +201,16 @@ let appLogic = (function()
 
 	let publicInterface =
 		{
-			FactType: FactType,
+			BasicFactType: BasicFactType,
+			MeasurementType: MeasurementType,
 			DataViewType: DataViewType,
-			DefaultFact: DefaultFact,
+			AppWaitType: AppWaitType,
+
+			DefaultFact: DefaultBasicFact,
+			DefaultMeasurementType: DefaultMeasurementType,
 			DefaultDataView: DefaultDataView,
 			DefaultGrowthRangeDays: DefaultGrowthRangeDays,
 			DefaultPopulationScale: DefaultPopulationScale,
-			AppWaitType: AppWaitType,
 
 			allCountyData: allCountyData,
 			loadData: loadData

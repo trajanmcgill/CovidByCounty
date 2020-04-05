@@ -95,6 +95,41 @@
 			</div>
 		</div>
 
+		<div id="ConfigurationBox">
+			<div class="ConfigurationRadioGroup">
+				<h4>Basic Fact to Report:</h4>
+				<input id="RdoFactCases" type="radio" v-bind:value="BasicFactType.Cases" v-model="configBasicFact">
+				<label for="RdoFactCases">Confirmed Cases</label>
+				<br>
+				<input id="RdoFactDeaths" type="radio" v-bind:value="BasicFactType.Deaths" v-model="configBasicFact">
+				<label for="RdoFactDeaths">Confirmed Deaths</label>
+			</div>
+
+			<div class="ConfigurationRadioGroup">
+				<h4>Measurement:</h4>
+				<input id="RdoMeasurementAbsolute" type="radio" v-bind:value="MeasurementType.Absolute" v-model="configMeasurement">
+				<label for="RdoMeasurementAbsolute">Absolute</label>
+				<br>
+				<input id="RdoMeasurementPopulationRelative" type="radio" v-bind:value="MeasurementType.PopulationRelative" v-model="configMeasurement">
+				<label for="RdoMeasurementPopulationRelative">Per X Persons</label>
+				<br>
+				<input id="RdoMeasurementCaseRelative" type="radio" v-bind:value="MeasurementType.CaseRelative" v-model="configMeasurement">
+				<label for="RdoMeasurementCaseRelative">Per Case (Fatality Rate)</label>
+			</div>
+
+			<div class="ConfigurationRadioGroup">
+				<h4>Value to Display:</h4>
+				<input id="RdoViewDailyValue" type="radio" v-bind:value="DataViewType.DailyValue" v-model="configDataView">
+				<label for="RdoViewDailyValue">Daily Value</label>
+				<br>
+				<input id="RdoViewChangeAbsolute" type="radio" v-bind:value="DataViewType.ChangeAbsolute" v-model="configDataView">
+				<label for="RdoViewChangeAbsolute">Change (Absolute)</label>
+				<br>
+				<input id="RdoViewChangeProportional" type="radio" v-bind:value="DataViewType.ChangeProportional" v-model="configDataView">
+				<label for="RdoViewChangeProportional">Change (Proportional)</label>
+			</div>
+		</div>
+
 		<div id="WaitBox" v-bind:style="{ display: waitMessageDisplay }">
 			<div id="WaitMessageBox">{{ waitMessage }}</div>
 		</div>
