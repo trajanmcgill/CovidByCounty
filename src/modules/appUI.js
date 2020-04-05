@@ -233,7 +233,9 @@ let appUI = (function()
 			BtnStepForward = document.getElementById("BtnStepForward"),
 			BtnPause = document.getElementById("BtnPause"),
 			BtnSeekEnd = document.getElementById("BtnSeekEnd"),
-			AnimationSlider = document.getElementById("AnimationSlider");
+			AnimationSlider = document.getElementById("AnimationSlider"),
+			TimelineCoverLeft = document.getElementById("TimelineCoverLeft"),
+			TimelineCoverRight = document.getElementById("TimelineCoverRight");
 		
 		sequence = new Concert.Sequence();
 		sequence.setDefaults(
@@ -321,6 +323,8 @@ let appUI = (function()
 		BtnSeekEnd.onclick = animationSeekEnd;
 		AnimationSlider.onkeydown = function(eventObject) { eventObject.preventDefault(); };
 		AnimationSlider.oninput = function(eventObject) { animationSeekToSpecificDay(parseInt(eventObject.target.value, 10)); };
+		TimelineCoverRight.onclick = timelineClickRight;
+		TimelineCoverLeft.onclick = timelineClickLeft;
 
 		document.onkeydown = function(eventObject)
 		{
@@ -387,6 +391,33 @@ let appUI = (function()
 			animationPause();
 		else
 			animationPlay();
+	}
+
+	function getTimelineClickDayPosition(eventObject, invert)
+	{
+		let boundingRect = eventObject.target.getBoundingClientRect(),
+			clickPositionX = eventObject.clientX - boundingRect.x,
+			dayPosition = Math.trunc(clickPositionX / TimelineDateBoxWidth) + 1,
+			invertedDayPosition = eventObject.target.clientWidth / TimelineDateBoxWidth + 1 - dayPosition;
+		return (invert ? invertedDayPosition : dayPosition);
+	}
+
+	function timelineClickRight(eventObject)
+	{
+		let AnimationSlider = document.getElementById("AnimationSlider"),
+			daysToMove = getTimelineClickDayPosition(eventObject, false),
+			sliderValue = parseInt(AnimationSlider.value, 10);
+		if (parseInt(AnimationSlider.max, 10) - sliderValue >= daysToMove)
+			animationSeekToSpecificDay(sliderValue + daysToMove);
+	}
+
+	function timelineClickLeft(eventObject)
+	{
+		let AnimationSlider = document.getElementById("AnimationSlider"),
+			daysToMove = getTimelineClickDayPosition(eventObject, true),
+			sliderValue = parseInt(AnimationSlider.value, 10);
+		if (sliderValue - parseInt(AnimationSlider.min, 10) >= daysToMove)
+			animationSeekToSpecificDay(sliderValue - daysToMove);
 	}
 
 	function setWaitMessage(waitType)

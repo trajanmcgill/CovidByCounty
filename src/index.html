@@ -21,7 +21,7 @@
 				</div>
 				<div id="TimelineContainer">
 					<ul id="Timeline">
-						<li v-for="item in dateList" class="TimeLineDateBox">
+						<li v-for="item in dateList" class="TimeLineDateBox" onclick="alert('asdf');">
 							{{ item.month }}
 							<br>
 							{{ item.dayOfMonth }}
@@ -29,7 +29,6 @@
 					</ul>
 					<div id="TimelineFrame">
 						<div id="TimelineCoverLeft" class="TimelineCover"></div>
-						<div id="TimelineDateFrame"></div>
 						<div id="TimelineCoverRight" class="TimelineCover"></div>
 					</div>
 				</div>
