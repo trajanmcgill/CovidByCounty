@@ -32,9 +32,10 @@ let appLogic = (function()
 		BuildingVisualization: 6
 	};
 	
-	const DefaultFact = FactType.Cases;
+	const DefaultFact = FactType.DeathsPerCase;
 	const DefaultDataView = DataViewType.CumulativeValue;
 	const DefaultGrowthRangeDays = 1;
+	const DefaultPopulationScale = 10000;
 	
 	const allCountyData =
 	{
@@ -200,6 +201,7 @@ let appLogic = (function()
 			DefaultFact: DefaultFact,
 			DefaultDataView: DefaultDataView,
 			DefaultGrowthRangeDays: DefaultGrowthRangeDays,
+			DefaultPopulationScale: DefaultPopulationScale,
 			AppWaitType: AppWaitType,
 
 			allCountyData: allCountyData,

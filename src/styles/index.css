@@ -20,6 +20,7 @@ h3, h4
 	text-decoration: underline;
 	text-decoration-style: dotted;
 	font-weight: normal;
+	font-size: 18px;
 	color: #7d96d7;
 	cursor: pointer;
 }
@@ -70,11 +71,37 @@ h3, h4
 	width: 992px;
 }
 
-#InformationPanel
+#InformationColumn
 {
 	position: absolute;
 	left: 992px;
 	top: 0;
+	width: 350px;
+}
+
+#RangeKeyPanel
+{
+	position: absolute;
+	left: 0;
+	top: 0;
+	box-sizing: border-box;
+	width: 350px;
+	height: 80px;
+	border: none;
+	text-align: left;
+}
+
+div.ColorKey
+{
+	width: 20px;
+	height: 20px;
+}
+
+#InformationPanel
+{
+	position: absolute;
+	left: 0;
+	top: 80px;
 	box-sizing: border-box;
 	width: 350px;
 	height: 722px;

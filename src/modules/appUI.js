@@ -53,6 +53,10 @@ let appUI = (function()
 					displayDate: "February 22", // CHANGE CODE HERE
 					dateList: [],
 					mapConfigPhrase: "",
+					colorMaxRange: "",
+					colorExceededRange: "",
+					maxOverallValue: 0,
+					maxDisplayValue: 0,
 					infoCards: // CHANGE CODE HERE
 					[
 						{
@@ -101,7 +105,7 @@ let appUI = (function()
 				setupDataAnimation(
 					allCountyData, appLogic.DefaultFact, appLogic.DefaultDataView, appLogic.DefaultGrowthRangeDays,
 					DefaultColorationHue, DefaultExceededRangeColor,
-					1); // CHANGE CODE HERE: set to auto range?
+					0.05, appLogic.DefaultPopulationScale); // CHANGE CODE HERE: set to auto range?
 				setWaitMessage(appLogic.AppWaitType.None);
 			});
 	} // end initializeApp()
@@ -181,8 +185,6 @@ let appUI = (function()
 	function getMapAnimationTransformations(rawAnimationData, colorationHue, exceededRangeColor, scaleMax, svgDocument)
 	{
 		const UnknownValueColor = "hsl(0, 0%, 0%)";
-		if(scaleMax === null)
-			scaleMax = rawAnimationData.maxOverallDisplayFactValue;
 		let transformations = [];
 		
 		rawAnimationData.counties.forEach(
@@ -221,7 +223,7 @@ let appUI = (function()
 	} // getMapAnimationTransformations
 
 
-	function setupDataAnimation(allCountyData, fact, dataView, growthRangeDays, colorationHue, exceededRangeColor, scaleMax)
+	function setupDataAnimation(allCountyData, fact, dataView, growthRangeDays, colorationHue, exceededRangeColor, scaleMax, populationScale)
 	{
 		const svgObject = document.getElementById("SvgObject"),
 			svgDocument = svgObject.getSVGDocument();
@@ -244,8 +246,32 @@ let appUI = (function()
 		
 		// Animate map
 		let rawMapAnimationData = buildRawMapAnimationData(allCountyData, fact, dataView, growthRangeDays, svgDocument);
+		if(scaleMax === null)
+			scaleMax = rawMapAnimationData.maxOverallDisplayFactValue;
 		let mapTransformations = getMapAnimationTransformations(rawMapAnimationData, colorationHue, exceededRangeColor, scaleMax, svgDocument);
 		mapTransformations.forEach(transformation => { sequence.addTransformations(transformation); });
+		let mapConfigPhrase;
+		if (fact === appLogic.FactType.Cases)
+			mapConfigPhrase = "Confirmed Cases";
+		else if (fact === appLogic.FactType.CasesPerCapita)
+			mapConfigPhrase = "Confirmed Cases per " + populationScale + " people";
+		else if (fact === appLogic.FactType.Deaths)
+			mapConfigPhrase = "Confirmed Deaths";
+		else if (fact === appLogic.FactType.DeathsPerCapita)
+			mapConfigPhrase = "Confirmed Deaths per " + populationScale + " people";
+		else if (fact === appLogic.FactType.DeathsPerCase)
+			mapConfigPhrase = "Confirmed Deaths per Confirmed Case [known fatality rate]";
+		if (dataView === appLogic.DataViewType.CumulativeValue)
+			mapConfigPhrase += " (Total)";
+		else if (dataView === appLogic.DataViewType.GrowthAbsolute)
+			mapConfigPhrase += " (Last " + growthRangeDays + " Days Total Increase)"
+		else if (dataView === appLogic.DataViewType.GrowthLogarithmicBase)
+			mapConfigPhrase += " (Last " + growthRangeDays + " Days Percentage Increase)"
+		VueApp.mapConfigPhrase = mapConfigPhrase;
+		VueApp.maxOverallValue = rawMapAnimationData.maxOverallDisplayFactValue;
+		VueApp.maxDisplayValue = scaleMax;
+		VueApp.colorMaxRange = "hsl(" + colorationHue + ", 100%, 50%)";
+		VueApp.colorExceededRange = exceededRangeColor;
 
 		// Animate timeline
 		totalDays = Math.round((allCountyData.lastDate - allCountyData.firstDate + msPerDay) / msPerDay);
