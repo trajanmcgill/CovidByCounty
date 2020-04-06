@@ -7,8 +7,23 @@ const msPerDay = 1000 * 60 * 60 * 24;
 let appUI = (function()
 {
 	const TimelineDateBoxWidth = 90, TimelineStartingOffset = 541;
-	const DefaultColorationHue = 0; // Red
-	const DefaultExceededRangeColor = "hsl(50, 100%, 50%)";
+	const DefaultUnknownValueColor = "rgb(80,80,80)";
+	const DefaultZeroValueColor = "rgb(128,128,128)";
+//	const DefaultColorGradients =
+//		[
+//			{ start: "hsl(0, 50%, 100%)", end: "hsl(0, 65%, 60%)" },
+//			{ start: "hsl(0, 65%, 60%)", end: "hsl(60, 100%, 50%)" },
+//			{ start: "hsl(60, 100%, 50%)", end: "hsl(270, 100%, 30%)" }
+//		];
+	const DefaultColorGradients =
+		[
+			//{ start: "rgb(255, 255, 255)", end: "rgb(219, 87, 87)" },
+			//{ start: "rgb(219, 87, 87)", end: "rgb(255, 255, 0)" },
+			//{ start: "rgb(255, 255, 0)", end: "rgb(77, 0, 153)" }
+			{ start: "rgb(255, 255, 255)", end: "rgb(255, 255, 0)" },
+			{ start: "rgb(255, 255, 0)", end: "rgb(255, 0, 0)" },
+			{ start: "rgb(255, 0, 0)", end: "rgb(77, 0, 153)" }
+		];
 	const DefaultAnimationTimeRatio = 500;
 	const TimelineSlideTime = 100;
 
@@ -53,10 +68,11 @@ let appUI = (function()
 					displayDate: "February 22", // CHANGE CODE HERE
 					dateList: [],
 					mapConfigPhrase: "",
-					colorMaxRange: "",
-					colorExceededRange: "",
 					maxOverallValue: 0,
-					maxDisplayValue: 0,
+					unknownValueColor: null,
+					zeroValueColor: null,
+					colorGradients: [],
+					colorRanges: [],
 					BasicFactType: appLogic.BasicFactType,
 					MeasurementType: appLogic.MeasurementType,
 					DataViewType: appLogic.DataViewType,
@@ -108,18 +124,25 @@ let appUI = (function()
 				let allCountyData = appLogic.allCountyData;
 				buildTimelineViewData(allCountyData.firstDate, allCountyData.lastDate);
 				setWaitMessage(appLogic.AppWaitType.BuildingVisualization);
-				setupDataAnimation(
-					allCountyData, appLogic.DefaultFact, appLogic.DefaultMeasurementType, appLogic.DefaultDataView, appLogic.DefaultGrowthRangeDays,
-					DefaultColorationHue, DefaultExceededRangeColor,
-					0.05, appLogic.DefaultPopulationScale); // CHANGE CODE HERE: set to auto range?
+				let animationSequence = setupDataAnimation(
+					allCountyData, appLogic.DefaultFact, appLogic.DefaultMeasurementType, appLogic.DefaultDataView,
+					appLogic.DefaultGrowthRangeDays, appLogic.DefaultPopulationScale,
+					DefaultZeroValueColor, DefaultColorGradients, null, DefaultUnknownValueColor);
+				animationSequence.seek(animationSequence.getStartTime());
 				setWaitMessage(appLogic.AppWaitType.None);
 			});
 	} // end initializeApp()
 
 
-	function buildRawMapAnimationData(allCountyData, basicFact, measurement, dataView, growthRangeDays, svgDocument)
+	function buildRawMapAnimationData(allCountyData, basicFact, measurement, dataView, populationScale, growthRangeDays, svgDocument)
 	{
-		let rawAnimationData = { maxOverallDisplayFactValue: 0, firstDate: allCountyData.firstDate, counties: [] };
+		let rawAnimationData =
+		{
+			minNonzeroValue: null,
+			maxOverallDisplayFactValue: 0,
+			firstDate: allCountyData.firstDate,
+			counties: []
+		};
 
 		allCountyData.counties.forEach(
 			county =>
@@ -159,7 +182,7 @@ let appUI = (function()
 							currentMeasuredValue = currentBasicValue;
 							previousMeasuredValue = previousBasicValue;
 						}
-						else if (measurement === appLogic.MeasurementType.CaseRelative || basicFact === appLogic.BasicFactType.Deaths)
+						else if (measurement === appLogic.MeasurementType.CaseRelative && basicFact === appLogic.BasicFactType.Deaths)
 						{
 							currentMeasuredValue = currentBasicValue / currentCases;
 							previousMeasuredValue = previousBasicValue / previousCases;
@@ -168,8 +191,8 @@ let appUI = (function()
 						{
 							if (countyPopulation > 0)
 							{
-								currentMeasuredValue = currentBasicValue / countyPopulation;
-								previousMeasuredValue = previousBasicValue / countyPopulation;
+								currentMeasuredValue = currentBasicValue / countyPopulation * populationScale;
+								previousMeasuredValue = previousBasicValue / countyPopulation * populationScale;
 							}
 							else
 							{
@@ -194,6 +217,8 @@ let appUI = (function()
 							else
 								throw "Invalid data view parameter";
 							
+							if (displayFactValue > 0 && (rawAnimationData.minNonzeroValue === null || displayFactValue < rawAnimationData.minNonzeroValue))
+								rawAnimationData.minNonzeroValue = displayFactValue;
 							if (displayFactValue > rawAnimationData.maxOverallDisplayFactValue)
 								rawAnimationData.maxOverallDisplayFactValue = displayFactValue;
 						}
@@ -208,16 +233,15 @@ let appUI = (function()
 	} // end buildRawMapAnimationData()
 
 
-	function getMapAnimationTransformations(rawAnimationData, colorationHue, exceededRangeColor, scaleMax, svgDocument)
+	function getMapAnimationTransformations(rawAnimationData, zeroValueColor, colorGradients, colorRanges, unknownValueColor, svgDocument)
 	{
-		const UnknownValueColor = "hsl(0, 0%, 0%)";
 		let transformations = [];
 		
 		rawAnimationData.counties.forEach(
 			county =>
 			{
 				let keyframeTimes = [0],
-					keyframeValues = ["hsl(" + colorationHue + ", 100%, 100%)"];
+					keyframeValues = [zeroValueColor];
 
 				county.dailyRecords.forEach(
 					dailyRecord =>
@@ -226,12 +250,22 @@ let appUI = (function()
 						let keyFrameTime = Math.round(((dailyRecord.date - rawAnimationData.firstDate) / msPerDay + 1) * animationTimeRatio);
 						let keyFrameValue;
 
-						if(displayFactValue === "unknown")
-							keyFrameValue = UnknownValueColor;
-						else if (displayFactValue <= scaleMax)
-							keyFrameValue = Concert.Calculators.Color(displayFactValue / scaleMax, keyframeValues[0], "hsl(" + colorationHue + ", 100%, 50%)");
-						else
-							keyFrameValue = exceededRangeColor;
+						keyFrameValue = unknownValueColor;
+						if (displayFactValue === 0)
+							keyFrameValue = zeroValueColor;
+						else if (displayFactValue !== "unknown")
+						{
+							for (let i = 0; i < colorRanges.length; i++)
+							{
+								let currentRange = colorRanges[i];
+								if (currentRange.min <= displayFactValue && displayFactValue <= currentRange.max)
+								{
+									let distance = (displayFactValue - currentRange.min) / (currentRange.max - currentRange.min);
+									keyFrameValue = Concert.Calculators.Color(distance, colorGradients[i].start, colorGradients[i].end);
+									break;
+								}
+							}
+						}
 						
 						keyframeTimes.push(keyFrameTime);
 						keyframeValues.push(keyFrameValue);
@@ -249,7 +283,43 @@ let appUI = (function()
 	} // getMapAnimationTransformations
 
 
-	function setupDataAnimation(allCountyData, basicFact, measurement, dataView, growthRangeDays, colorationHue, exceededRangeColor, scaleMax, populationScale)
+	function autoScaleColorRanges(minNonzeroValue, maxValue)
+	{
+		let colorRanges;
+		if (minNonzeroValue)
+		{
+			let maxMinRatio = maxValue / minNonzeroValue;
+			if (maxMinRatio > 10000)
+			{
+				let base = Math.cbrt(maxValue),
+					secondPower = Math.pow(base, 2);
+				colorRanges =
+					[
+						{ min: 0, max: base },
+						{ min: base, max: secondPower },
+						{ min: secondPower, max: maxValue }
+					];
+			}
+			else if (maxMinRatio > 100)
+			{
+				let base = Math.sqrt(maxValue);
+				colorRanges =
+					[
+						{ min: 0, max: base },
+						{ min: base, max: maxValue }
+					];
+			}
+			else
+				colorRanges = [ { min: 0, max: maxValue }];
+		}
+		else
+			colorRanges = [];
+
+		return colorRanges;
+	} // end autoScaleColorRanges()
+
+
+	function setupDataAnimation(allCountyData, basicFact, measurement, dataView, growthRangeDays, populationScale, zeroValueColor, colorGradients, colorRanges, unknownValueColor)
 	{
 		const svgObject = document.getElementById("SvgObject"),
 			svgDocument = svgObject.getSVGDocument();
@@ -273,10 +343,10 @@ let appUI = (function()
 			});
 		
 		// Animate map
-		let rawMapAnimationData = buildRawMapAnimationData(allCountyData, basicFact, measurement, dataView, growthRangeDays, svgDocument);
-		if(scaleMax === null)
-			scaleMax = rawMapAnimationData.maxOverallDisplayFactValue;
-		let mapTransformations = getMapAnimationTransformations(rawMapAnimationData, colorationHue, exceededRangeColor, scaleMax, svgDocument);
+		let rawMapAnimationData = buildRawMapAnimationData(allCountyData, basicFact, measurement, dataView, populationScale, growthRangeDays, svgDocument);
+		if (colorRanges === null)
+			colorRanges = autoScaleColorRanges(rawMapAnimationData.minNonzeroValue, rawMapAnimationData.maxOverallDisplayFactValue);
+		let mapTransformations = getMapAnimationTransformations(rawMapAnimationData, zeroValueColor, colorGradients, colorRanges, unknownValueColor, svgDocument);
 		mapTransformations.forEach(transformation => { sequence.addTransformations(transformation); });
 		let mapConfigPhrase;
 		if (basicFact === appLogic.BasicFactType.Cases)
@@ -300,9 +370,10 @@ let appUI = (function()
 		VueApp.configDataView = dataView;
 		VueApp.mapConfigPhrase = mapConfigPhrase;
 		VueApp.maxOverallValue = rawMapAnimationData.maxOverallDisplayFactValue;
-		VueApp.maxDisplayValue = scaleMax;
-		VueApp.colorMaxRange = "hsl(" + colorationHue + ", 100%, 50%)";
-		VueApp.colorExceededRange = exceededRangeColor;
+		VueApp.unknownValueColor = unknownValueColor;
+		VueApp.zeroValueColor = zeroValueColor;
+		VueApp.colorGradients = colorGradients;
+		VueApp.colorRanges = colorRanges;
 
 		// Animate timeline
 		totalDays = Math.round((allCountyData.lastDate - allCountyData.firstDate + msPerDay) / msPerDay);
@@ -371,6 +442,8 @@ let appUI = (function()
 		};
 
 		svgDocument.onkeydown = function(eventObject) { document.onkeydown(eventObject); }
+
+		return sequence;
 	} // end setupDataAnimation()
 
 
@@ -401,22 +474,34 @@ let appUI = (function()
 	} // end formatNumberWithCommas()
 
 	function animationSeekStart()
-	{ animationSeekToSpecificDay(0); }
+	{
+		animationSeekToSpecificDay(0);
+	}
 
 	function animationStepBack()
-	{	animationSeekToSpecificDay(Math.max(Math.round(sequence.getCurrentTime() / animationTimeRatio) - 1, 0));	}
+	{
+		animationSeekToSpecificDay(Math.max(Math.round(sequence.getCurrentTime() / animationTimeRatio) - 1, 0));
+	}
 
 	function animationPlay()
-	{	sequence.run();	}
+	{
+		sequence.run();
+	}
 
 	function animationStepForward()
-	{	animationSeekToSpecificDay(Math.min(Math.round(sequence.getCurrentTime() / animationTimeRatio) + 1, totalDays));	}
+	{
+		animationSeekToSpecificDay(Math.min(Math.round(sequence.getCurrentTime() / animationTimeRatio) + 1, totalDays));
+	}
 
 	function animationPause()
-	{	sequence.stop();	}
+	{
+		sequence.stop();
+	}
 
 	function animationSeekEnd()
-	{	animationSeekToSpecificDay(totalDays); }
+	{
+		animationSeekToSpecificDay(totalDays);
+	}
 
 	function animationSeekToSpecificDay(dayNumber)
 	{

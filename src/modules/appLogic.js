@@ -37,10 +37,10 @@ let appLogic = (function()
 	};
 	
 	const DefaultBasicFact = BasicFactType.Cases;
-	const DefaultDataView = DataViewType.DailyValue;
 	const DefaultMeasurementType = MeasurementType.PopulationRelative;
+	const DefaultDataView = DataViewType.DailyValue;
 	const DefaultGrowthRangeDays = 1;
-	const DefaultPopulationScale = 10000;
+	const DefaultPopulationScale = 100000;
 	
 	const allCountyData =
 	{
