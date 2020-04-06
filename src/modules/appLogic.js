@@ -1,7 +1,7 @@
 let appLogic = (function()
 {
-	const DataSource_Population = "/data/countyPopulations2018.csv";
-	const DataSource_CaseData = "/data/countyCases.csv";
+	const DataSource_Population = "data/countyPopulations2018.csv";
+	const DataSource_CaseData = "data/countyCases.csv";
 
 	const FIPS_Length = 5;
 
