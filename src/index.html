@@ -97,7 +97,10 @@
 			</div>
 		</div>
 
-		<div id="ConfigurationBox">
+		<div id="ConfigurationModalBackground" v-bind:style="{ display: configurationBoxDisplay }">
+		</div>
+		<div id="ConfigurationBox" v-bind:style="{ display: configurationBoxDisplay }">
+			<h3>Animated Report Configuration</h3>
 			<div class="ConfigurationRadioGroup">
 				<h4>Basic Fact to Report:</h4>
 				<input id="RdoFactCases" type="radio" v-bind:value="BasicFactType.Cases" v-model="configBasicFact">
@@ -113,7 +116,7 @@
 				<label for="RdoMeasurementAbsolute">Absolute</label>
 				<br>
 				<input id="RdoMeasurementPopulationRelative" type="radio" v-bind:value="MeasurementType.PopulationRelative" v-model="configMeasurement">
-				<label for="RdoMeasurementPopulationRelative">Per X Persons</label>
+				<label for="RdoMeasurementPopulationRelative">Per X Persons [ADD: ability to set scale]</label>
 				<br>
 				<input id="RdoMeasurementCaseRelative" type="radio" v-bind:value="MeasurementType.CaseRelative" v-model="configMeasurement">
 				<label for="RdoMeasurementCaseRelative">Per Case (Fatality Rate)</label>
@@ -125,10 +128,15 @@
 				<label for="RdoViewDailyValue">Daily Value</label>
 				<br>
 				<input id="RdoViewChangeAbsolute" type="radio" v-bind:value="DataViewType.ChangeAbsolute" v-model="configDataView">
-				<label for="RdoViewChangeAbsolute">Change (Absolute)</label>
+				<label for="RdoViewChangeAbsolute">Change (Absolute) [ADD: ability to set time range]</label>
 				<br>
 				<input id="RdoViewChangeProportional" type="radio" v-bind:value="DataViewType.ChangeProportional" v-model="configDataView">
-				<label for="RdoViewChangeProportional">Change (Proportional)</label>
+				<label for="RdoViewChangeProportional">Change (Proportional) [ADD: ability to set time range]</label>
+			</div>
+
+			<div id="ConfigurationButtons">
+				<button id="BtnApplyConfigChanges" type="button">Apply</button>
+				<button id="BtnCancelConfigChanges" type="button">Cancel</button>
 			</div>
 		</div>
 

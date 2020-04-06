@@ -9,17 +9,8 @@ let appUI = (function()
 	const TimelineDateBoxWidth = 90, TimelineStartingOffset = 541;
 	const DefaultUnknownValueColor = "rgb(80,80,80)";
 	const DefaultZeroValueColor = "rgb(128,128,128)";
-//	const DefaultColorGradients =
-//		[
-//			{ start: "hsl(0, 50%, 100%)", end: "hsl(0, 65%, 60%)" },
-//			{ start: "hsl(0, 65%, 60%)", end: "hsl(60, 100%, 50%)" },
-//			{ start: "hsl(60, 100%, 50%)", end: "hsl(270, 100%, 30%)" }
-//		];
 	const DefaultColorGradients =
 		[
-			//{ start: "rgb(255, 255, 255)", end: "rgb(219, 87, 87)" },
-			//{ start: "rgb(219, 87, 87)", end: "rgb(255, 255, 0)" },
-			//{ start: "rgb(255, 255, 0)", end: "rgb(77, 0, 153)" }
 			{ start: "rgb(255, 255, 255)", end: "rgb(255, 255, 0)" },
 			{ start: "rgb(255, 255, 0)", end: "rgb(255, 0, 0)" },
 			{ start: "rgb(255, 0, 0)", end: "rgb(77, 0, 153)" }
@@ -27,12 +18,10 @@ let appUI = (function()
 	const DefaultAnimationTimeRatio = 500;
 	const TimelineSlideTime = 100;
 
-	//const MapConfigPhrases = [];
-	//MapConfigPhrases[appLogic.FactType.]
-
 	let animationTimeRatio = DefaultAnimationTimeRatio;
 	let totalDays = 0;
 	let sequence = null;
+	let savedConfigValues = null;
 
 
 	let loadHandlers = [], windowHandlerSet = false;
@@ -65,6 +54,7 @@ let appUI = (function()
 				{
 					waitMessage: "Loading Map...",
 					waitMessageDisplay: "block",
+					configurationBoxDisplay: "none",
 					displayDate: "February 22", // CHANGE CODE HERE
 					dateList: [],
 					mapConfigPhrase: "",
@@ -79,6 +69,8 @@ let appUI = (function()
 					configBasicFact: null,
 					configMeasurement: null,
 					configDataView: null,
+					growthRangeDays: null,
+					populationScale: null,
 					infoCards: // CHANGE CODE HERE
 					[
 						{
@@ -368,6 +360,8 @@ let appUI = (function()
 		VueApp.configBasicFact = basicFact;
 		VueApp.configMeasurement = measurement;
 		VueApp.configDataView = dataView;
+		VueApp.growthRangeDays = growthRangeDays;
+		VueApp.populationScale = populationScale;
 		VueApp.mapConfigPhrase = mapConfigPhrase;
 		VueApp.maxOverallValue = rawMapAnimationData.maxOverallDisplayFactValue;
 		VueApp.unknownValueColor = unknownValueColor;
@@ -425,6 +419,7 @@ let appUI = (function()
 		AnimationSlider.oninput = function(eventObject) { animationSeekToSpecificDay(parseInt(eventObject.target.value, 10)); };
 		TimelineCoverRight.onclick = timelineClickRight;
 		TimelineCoverLeft.onclick = timelineClickLeft;
+		document.getElementById("ConfigPhrase").onclick = showConfigDialog;
 
 		document.onkeydown = function(eventObject)
 		{
@@ -543,6 +538,40 @@ let appUI = (function()
 		if (sliderValue - parseInt(AnimationSlider.min, 10) >= daysToMove)
 			animationSeekToSpecificDay(sliderValue - daysToMove);
 	}
+
+	function showConfigDialog()
+	{
+		savedConfigValues =
+		{
+			basicFact: VueApp.configBasicFact,
+			measurement: VueApp.configMeasurement,
+			dataView: VueApp.configDataView
+		};
+		VueApp.configurationBoxDisplay = "block";
+		document.getElementById("BtnApplyConfigChanges").onclick = function() { hideConfigDialog(true); };
+		document.getElementById("BtnCancelConfigChanges").onclick = function() { hideConfigDialog(false); };
+} // end showConfigDialog()
+
+	function hideConfigDialog(apply)
+	{
+		VueApp.configurationBoxDisplay = "none";
+		if (apply)
+		{
+			setWaitMessage(appLogic.AppWaitType.BuildingVisualization);
+			let animationSequence = setupDataAnimation(
+				appLogic.allCountyData, VueApp.configBasicFact, VueApp.configMeasurement, VueApp.configDataView,
+				VueApp.growthRangeDays, VueApp.populationScale,
+				VueApp.zeroValueColor, VueApp.colorGradients, VueApp.colorRanges, VueApp.unknownValueColor);
+			animationSequence.seek(animationSequence.getStartTime());
+			setWaitMessage(appLogic.AppWaitType.None);
+		}
+		else
+		{
+			VueApp.configBasicFact = savedConfigValues.basicFact;
+			VueApp.configMeasurement = savedConfigValues.measurement;
+			VueApp.configDataView = savedConfigValues.dataView;
+		}
+	} // end hideConfigDialog()
 
 	function setWaitMessage(waitType)
 	{
