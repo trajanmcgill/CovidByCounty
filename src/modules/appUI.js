@@ -74,7 +74,7 @@ let appUI = (function()
 					infoCards: // CHANGE CODE HERE
 					[
 						{
-							placeName: "McHenry County, Illinois",
+							placeName: "McHenry County, Illinois [SAMPLE DATA]",
 							col1Title: "Absolute",
 							col2Title: "Per 100,000",
 							row1Title: "Confirmed Cases",
@@ -86,7 +86,7 @@ let appUI = (function()
 							row3Title: "Deaths / Confirmed Case",
 							row3Data1: "0.10",
 							row3Data2: ""
-						},
+						} /*,
 						{
 							placeName: "Lake County, Illinois",
 							col1Title: "Absolute",
@@ -101,6 +101,7 @@ let appUI = (function()
 							row3Data1: "0.10",
 							row3Data2: ""
 						}
+						*/
 					]
 				},
 	
@@ -407,6 +408,23 @@ let appUI = (function()
 				applicator: Concert.Applicators.Property,
 				calculator: Concert.Calculators.Discrete,
 				keyframes: { times: sliderTimes, values: sliderPositions }
+			});
+		
+		// Animate Info Title Card
+		let titleCardTimes = [0], titleCardValues = [""];
+		for (let i = 1; i <= totalDays; i++)
+		{
+			titleCardTimes.push(i * animationTimeRatio);
+			let dateValue = VueApp.dateList[i - 1];
+			titleCardValues.push(dateValue.month + " " + dateValue.dayOfMonth);
+		}
+		sequence.addTransformations(
+			{
+				target: VueApp,
+				feature: "displayDate",
+				applicator: Concert.Applicators.Property,
+				calculator: Concert.Calculators.Discrete,
+				keyframes: { times: titleCardTimes, values: titleCardValues }
 			});
 		
 		BtnSeekStart.onclick = animationSeekStart;

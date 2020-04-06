@@ -117,24 +117,6 @@ h3, h4
 	width: 350px;
 }
 
-#RangeKeyPanel
-{
-	position: absolute;
-	left: 0;
-	top: 0;
-	box-sizing: border-box;
-	width: 350px;
-	height: 80px;
-	border: none;
-	text-align: left;
-}
-
-div.ColorKey
-{
-	width: 20px;
-	height: 20px;
-}
-
 #InformationPanel
 {
 	position: absolute;
@@ -169,6 +151,13 @@ div.ColorKey
 .TitleCard
 {
 	background-color: #7777be;
+	color: #1e1e1e;
+	height: 28px;
+}
+
+.DataCard
+{
+	top: 40px;
 }
 
 .CountyInfoCardTable
@@ -268,6 +257,28 @@ li.TimeLineDateBox
 #ControlButtonsContainer
 {
 	text-align: center;
+}
+
+#RangeKeyPanel
+{
+	zposition: relative;
+	margin-top: 10px;
+	box-sizing: border-box;
+	width: 100%;
+	border: none;
+	text-align: left;
+}
+
+.ColorKeyContainer
+{
+	display: inline-block;
+	margin-right: 30px;
+}
+
+div.ColorKey
+{
+	width: 200px;
+	height: 20px;
 }
 
 #SvgObject

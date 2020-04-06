@@ -19,9 +19,10 @@
 						Browser not supported.
 					</object>
 				</div>
+
 				<div id="TimelineContainer">
 					<ul id="Timeline">
-						<li v-for="item in dateList" class="TimeLineDateBox" onclick="alert('asdf');">
+						<li v-for="item in dateList" class="TimeLineDateBox">
 							{{ item.month }}
 							<br>
 							{{ item.dayOfMonth }}
@@ -32,7 +33,9 @@
 						<div id="TimelineCoverRight" class="TimelineCover"></div>
 					</div>
 				</div>
+
 				<input id="AnimationSlider" type="range" min="0" v-bind:max="dateList.length" value="0">
+
 				<div id="ControlButtonsContainer">
 					<button id="BtnSeekStart" type="button">|&lt;</button>
 					<button id="BtnStepBack" type="button">&lt;</button>
@@ -41,30 +44,31 @@
 					<button id="BtnPause" type="button">||</button>
 					<button id="BtnSeekEnd" type="button">>|</button>
 				</div>
+				
+				<div id="RangeKeyPanel">
+					<div class="ColorKeyContainer" v-for="(item, index) in colorGradients">
+						<div class="ColorKey" v-bind:style="{ backgroundImage:'linear-gradient(to right,' + item.start + ',' + item.end + ')' }"></div>
+						<div>>{{ colorRanges[index].min }} to {{ colorRanges[index].max }}</div>
+					</div>
+				</div>
+				<div id="RangeKeyPanel">
+					<div class="ColorKeyContainer">
+						<div class="ColorKey" v-bind:style="{ backgroundColor: zeroValueColor }"></div>
+						<div>Zero Value</div>
+					</div>
+					<div class="ColorKeyContainer">
+						<div class="ColorKey" v-bind:style="{ backgroundColor: unknownValueColor }"></div>
+						<div>Unknown Value</div>
+					</div>
+				</div>
 			</div>
 			
 			<div id="InformationColumn">
-				<div id="RangeKeyPanel">
-					<!--
-					<table>
-						<tr>
-							<td><div id="MaxRangeColorKey" class="ColorKey" v-bind:style="{ backgroundColor: colorMaxRange }"></div></td>
-							<td>= Max value in color gradation range ({{ maxDisplayValue }})</td>
-						</tr>
-						<tr>
-							<td><div id="ExceededRangeColorKey" class="ColorKey" v-bind:style="{ backgroundColor: colorExceededRange }"></div></td>
-							<td>= Exceeds color gradation range (>{{ maxDisplayValue }})</td>
-						</tr>
-					</table>
-				-->
-					<div>Overall max value found: {{ maxOverallValue }}</div>
-				</div>
-	
 				<div id="InformationPanel">
 					<div class="InformationCard TitleCard">
 						<h3>{{ displayDate }}</h3>
 					</div>
-					<div v-for="item in infoCards" class="InformationCard">
+					<div v-for="item in infoCards" class="InformationCard DataCard">
 						<h4>{{ item.placeName }}</h4>
 						<table class="CountyInfoCardTable">
 							<thead>
