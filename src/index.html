@@ -74,28 +74,31 @@
 							<thead>
 								<tr>
 									<th></th>
-									<th>{{ item.col1Title }}</th>
-									<th>{{ item.col2Title }}</th>
+									<th>Absolute</th>
+									<th>{{ cardCol2Title }}</th>
 								</tr>
 							</thead>
 							<tbody>
 								<tr>
-									<td>{{ item.row1Title }}</td>
-									<td>{{ item.row1Data1 }}</td>
-									<td>{{ item.row1Data2 }}</td>
+									<td>Confirmed Cases</td>
+									<td>{{ item.casesAbsolute }}</td>
+									<td>{{ parseFloat(item.casesByPopulation).toPrecision(8) }}</td>
 								</tr>
 								<tr>
-									<td>{{ item.row2Title }}</td>
-									<td>{{ item.row2Data1 }}</td>
-									<td>{{ item.row2Data2 }}</td>
+									<td>Deaths</td>
+									<td>{{ item.deathsAbsolute }}</td>
+									<td>{{ parseFloat(item.deathsByPopulation).toPrecision(8) }}</td>
 								</tr>
 								<tr>
-									<td>{{ item.row3Title }}</td>
-									<td>{{ item.row3Data1 }}</td>
-									<td>{{ item.row3Data2 }}</td>
+									<td>Deaths / Confirmed Case</td>
+									<td>{{ parseFloat(item.deathsPerCase).toPrecision(8) }}</td>
+									<td></td>
 								</tr>
 							</tbody>
 						</table>
+					</div>
+					<div class="InformationCard DataCard">
+						<span style="font-size: smaller;">To Add: ability to add and remove these info cards by clicking on the map.</span>
 					</div>
 				</div>
 			</div>

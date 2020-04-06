@@ -52,6 +52,8 @@ let appUI = (function()
 	
 			data:
 				{
+					cardCol1Title: "",
+					cardCol2Title: "",
 					waitMessage: "Loading Map...",
 					waitMessageDisplay: "block",
 					configurationBoxDisplay: "none",
@@ -74,34 +76,23 @@ let appUI = (function()
 					infoCards: // CHANGE CODE HERE
 					[
 						{
-							placeName: "McHenry County, Illinois [SAMPLE DATA]",
-							col1Title: "Absolute",
-							col2Title: "Per 100,000",
-							row1Title: "Confirmed Cases",
-							row1Data1: "4,000",
-							row1Data2: "386.90",
-							row2Title: "Deaths",
-							row2Data1: "400",
-							row2Data2: "38.69",
-							row3Title: "Deaths / Confirmed Case",
-							row3Data1: "0.10",
-							row3Data2: ""
-						} /*,
+							id: "17111",
+							placeName: "McHenry County, Illinois",
+							casesAbsolute: "4,000",
+							casesByPopulation: "386.90",
+							deathsAbsolute: "400",
+							deathsByPopulation: "38.69",
+							deathsPerCase: "0.10"
+						},
 						{
+							id: "17097",
 							placeName: "Lake County, Illinois",
-							col1Title: "Absolute",
-							col2Title: "Per 100,000",
-							row1Title: "Confirmed Cases",
-							row1Data1: "4,000",
-							row1Data2: "386.90",
-							row2Title: "Deaths",
-							row2Data1: "400",
-							row2Data2: "38.69",
-							row3Title: "Deaths / Confirmed Case",
-							row3Data1: "0.10",
-							row3Data2: ""
+							casesAbsolute: "4,000",
+							casesByPopulation: "386.90",
+							deathsAbsolute: "400",
+							deathsByPopulation: "38.69",
+							deathsPerCase: "0.10"
 						}
-						*/
 					]
 				},
 	
@@ -120,14 +111,15 @@ let appUI = (function()
 				let animationSequence = setupDataAnimation(
 					allCountyData, appLogic.DefaultFact, appLogic.DefaultMeasurementType, appLogic.DefaultDataView,
 					appLogic.DefaultGrowthRangeDays, appLogic.DefaultPopulationScale,
-					DefaultZeroValueColor, DefaultColorGradients, null, DefaultUnknownValueColor);
+					DefaultZeroValueColor, DefaultColorGradients, null, DefaultUnknownValueColor,
+					VueApp.infoCards);
 				animationSequence.seek(animationSequence.getStartTime());
 				setWaitMessage(appLogic.AppWaitType.None);
 			});
 	} // end initializeApp()
 
 
-	function buildRawMapAnimationData(allCountyData, basicFact, measurement, dataView, populationScale, growthRangeDays, svgDocument)
+	function buildRawMapAnimationData(allCountyData, basicFact, measurement, dataView, populationScale, growthRangeDays, svgDocument, vueInfoCards)
 	{
 		let rawAnimationData =
 		{
@@ -144,9 +136,12 @@ let appUI = (function()
 				if (mapElement === null)
 					return;
 
-				let currentCountyData = { id: county.id, dailyRecords: [] };
+				let currentCountyData = { id: county.id, dailyRecords: [], vueInfoCard: null, infoCardDailyRecords: [] };
 
 				let countyPopulation = county.population;
+				let matchingVueInfoCards = vueInfoCards.filter(infoCard => infoCard.id === county.id),
+					vueInfoCard = (matchingVueInfoCards.length > 0) ? matchingVueInfoCards[0] : null;
+				currentCountyData.vueInfoCard = vueInfoCard;
 				county.covid19Records.forEach(
 					(covid19Record, index, covid19Records) =>
 					{
@@ -154,6 +149,19 @@ let appUI = (function()
 							currentDeaths = covid19Record.cumulativeDeaths,
 							previousCases = (index < growthRangeDays) ? 0 : covid19Records[index - growthRangeDays].cumulativeCases,
 							previousDeaths = (index < growthRangeDays) ? 0 : covid19Records[index - growthRangeDays].cumulativeDeaths;
+
+						if (currentCountyData.vueInfoCard != null)
+						{
+							currentCountyData.infoCardDailyRecords.push(
+								{
+									date: covid19Record.date,
+									casesAbsolute: currentCases,
+									casesByPopulation: currentCases / countyPopulation * populationScale,
+									deathsAbsolute: currentDeaths,
+									deathsByPopulation: currentDeaths / countyPopulation * populationScale,
+									deathsPerCase: currentDeaths / currentCases
+								});
+						}
 
 						let currentBasicValue, previousBasicValue;
 						if (basicFact === appLogic.BasicFactType.Cases)
@@ -233,9 +241,9 @@ let appUI = (function()
 		rawAnimationData.counties.forEach(
 			county =>
 			{
-				let keyframeTimes = [0],
-					keyframeValues = [zeroValueColor];
-
+				// Build map transformations
+				let countyMapKeyframeTimes = [0],
+					countyMapKeyframeValues = [zeroValueColor];
 				county.dailyRecords.forEach(
 					dailyRecord =>
 					{
@@ -260,16 +268,44 @@ let appUI = (function()
 							}
 						}
 						
-						keyframeTimes.push(keyFrameTime);
-						keyframeValues.push(keyFrameValue);
+						countyMapKeyframeTimes.push(keyFrameTime);
+						countyMapKeyframeValues.push(keyFrameValue);
 					});
-				
 				transformations.push(
 					{
 						target: svgDocument.getElementById("c" + county.id),
 						feature: "fill",
-						keyframes: { times: keyframeTimes, values: keyframeValues }
+						keyframes: { times: countyMapKeyframeTimes, values: countyMapKeyframeValues }
 					});
+
+				// Build info card transformations
+				if (county.vueInfoCard !== null)
+				{
+					let countyInfoCardKeyframeTimes = [0],
+					countyInfoCardKeyframeValues = [[0, 0, 0, 0, 0]];
+					county.infoCardDailyRecords.forEach(
+						infoCardRecord =>
+						{
+							let keyFrameTime = Math.round(((infoCardRecord.date - rawAnimationData.firstDate) / msPerDay + 1) * animationTimeRatio),
+								keyFrameValue =
+									[
+										infoCardRecord.casesAbsolute,
+										infoCardRecord.casesByPopulation,
+										infoCardRecord.deathsAbsolute,
+										infoCardRecord.deathsByPopulation,
+										infoCardRecord.deathsPerCase
+									];
+							countyInfoCardKeyframeTimes.push(keyFrameTime);
+							countyInfoCardKeyframeValues.push(keyFrameValue);
+						});
+					transformations.push(
+						{
+							target: county.vueInfoCard,
+							feature: ["casesAbsolute", "casesByPopulation", "deathsAbsolute", "deathsByPopulation", "deathsPerCase"],
+							applicator: Concert.Applicators.Property,
+							keyframes: { times: countyInfoCardKeyframeTimes, values: countyInfoCardKeyframeValues }
+						});
+				}
 			});
 		
 		return transformations;
@@ -312,7 +348,7 @@ let appUI = (function()
 	} // end autoScaleColorRanges()
 
 
-	function setupDataAnimation(allCountyData, basicFact, measurement, dataView, growthRangeDays, populationScale, zeroValueColor, colorGradients, colorRanges, unknownValueColor)
+	function setupDataAnimation(allCountyData, basicFact, measurement, dataView, growthRangeDays, populationScale, zeroValueColor, colorGradients, colorRanges, unknownValueColor, vueInfoCards)
 	{
 		const svgObject = document.getElementById("SvgObject"),
 			svgDocument = svgObject.getSVGDocument();
@@ -336,12 +372,13 @@ let appUI = (function()
 			});
 		
 		// Animate map
-		let rawMapAnimationData = buildRawMapAnimationData(allCountyData, basicFact, measurement, dataView, populationScale, growthRangeDays, svgDocument);
+		let rawMapAnimationData = buildRawMapAnimationData(allCountyData, basicFact, measurement, dataView, populationScale, growthRangeDays, svgDocument, vueInfoCards);
 		if (colorRanges === null)
 			colorRanges = autoScaleColorRanges(rawMapAnimationData.minNonzeroValue, rawMapAnimationData.maxOverallDisplayFactValue);
 		let mapTransformations = getMapAnimationTransformations(rawMapAnimationData, zeroValueColor, colorGradients, colorRanges, unknownValueColor, svgDocument);
 		mapTransformations.forEach(transformation => { sequence.addTransformations(transformation); });
-		let mapConfigPhrase;
+		let mapConfigPhrase,
+			infoCardCol2Title = VueApp.cardCol2Title;
 		if (basicFact === appLogic.BasicFactType.Cases)
 			mapConfigPhrase = "Confirmed Cases";
 		else if (basicFact === appLogic.BasicFactType.Deaths)
@@ -351,7 +388,11 @@ let appUI = (function()
 		else if (measurement === appLogic.MeasurementType.CaseRelative)
 			mapConfigPhrase += " per Confirmed Case [known fatality rate]";
 		else if (measurement === appLogic.MeasurementType.PopulationRelative)
-			mapConfigPhrase += " Per " + formatNumberWithCommas(populationScale) + " People";
+		{
+			let formattedPopulation = formatNumberWithCommas(populationScale);
+			mapConfigPhrase += " Per " + formattedPopulation + " People";
+			infoCardCol2Title = "Per " + formattedPopulation;
+		}
 		if (dataView === appLogic.DataViewType.DailyValue)
 			mapConfigPhrase += " (Daily Value)";
 		else if (dataView === appLogic.DataViewType.ChangeAbsolute)
@@ -364,6 +405,7 @@ let appUI = (function()
 		VueApp.growthRangeDays = growthRangeDays;
 		VueApp.populationScale = populationScale;
 		VueApp.mapConfigPhrase = mapConfigPhrase;
+		VueApp.cardCol2Title = infoCardCol2Title;
 		VueApp.maxOverallValue = rawMapAnimationData.maxOverallDisplayFactValue;
 		VueApp.unknownValueColor = unknownValueColor;
 		VueApp.zeroValueColor = zeroValueColor;
@@ -410,7 +452,7 @@ let appUI = (function()
 				keyframes: { times: sliderTimes, values: sliderPositions }
 			});
 		
-		// Animate Info Title Card
+		// Animate info title card
 		let titleCardTimes = [0], titleCardValues = [""];
 		for (let i = 1; i <= totalDays; i++)
 		{
@@ -426,6 +468,9 @@ let appUI = (function()
 				calculator: Concert.Calculators.Discrete,
 				keyframes: { times: titleCardTimes, values: titleCardValues }
 			});
+		
+		// Animate info cards
+		// WORKING HERE
 		
 		BtnSeekStart.onclick = animationSeekStart;
 		BtnStepBack.onclick = animationStepBack;
@@ -579,7 +624,8 @@ let appUI = (function()
 			let animationSequence = setupDataAnimation(
 				appLogic.allCountyData, VueApp.configBasicFact, VueApp.configMeasurement, VueApp.configDataView,
 				VueApp.growthRangeDays, VueApp.populationScale,
-				VueApp.zeroValueColor, VueApp.colorGradients, VueApp.colorRanges, VueApp.unknownValueColor);
+				VueApp.zeroValueColor, VueApp.colorGradients, VueApp.colorRanges, VueApp.unknownValueColor,
+				VueApp.infoCards);
 			animationSequence.seek(animationSequence.getStartTime());
 			setWaitMessage(appLogic.AppWaitType.None);
 		}
