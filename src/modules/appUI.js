@@ -20,8 +20,8 @@ let appUI = (function()
 	let animationTimeRatio = DefaultAnimationTimeRatio;
 	let totalDays = 0;
 	let sequence = null;
+	let animationEnabled = false;
 	let savedConfigValues = null;
-
 
 	let loadHandlers = [], windowHandlerSet = false;
 	function whenDocumentLoaded(action)
@@ -118,7 +118,7 @@ let appUI = (function()
 	} // end initializeApp()
 
 
-	function buildRawMapAnimationData(allCountyData, basicFact, measurement, dataView, populationScale, growthRangeDays, svgDocument, vueInfoCards)
+	function buildRawMapAnimationData(allCountyData, basicFact, measurement, dataView, populationScale, growthRangeDays, vueInfoCards, svgDocument)
 	{
 		let rawAnimationData =
 		{
@@ -360,7 +360,7 @@ let appUI = (function()
 			AnimationSlider = document.getElementById("AnimationSlider"),
 			TimelineCoverLeft = document.getElementById("TimelineCoverLeft"),
 			TimelineCoverRight = document.getElementById("TimelineCoverRight");
-		
+
 		sequence = new Concert.Sequence();
 		sequence.setDefaults(
 			{
@@ -371,7 +371,7 @@ let appUI = (function()
 			});
 		
 		// Animate map
-		let rawMapAnimationData = buildRawMapAnimationData(allCountyData, basicFact, measurement, dataView, populationScale, growthRangeDays, svgDocument, vueInfoCards);
+		let rawMapAnimationData = buildRawMapAnimationData(allCountyData, basicFact, measurement, dataView, populationScale, growthRangeDays, vueInfoCards, svgDocument);
 		if (colorRanges === null)
 			colorRanges = autoScaleColorRanges(rawMapAnimationData.minNonzeroValue, rawMapAnimationData.maxOverallDisplayFactValue);
 		let mapTransformations = getMapAnimationTransformations(rawMapAnimationData, zeroValueColor, colorGradients, colorRanges, unknownValueColor, svgDocument);
@@ -468,6 +468,8 @@ let appUI = (function()
 		// Animate info cards
 		// WORKING HERE
 		
+		document.getElementById("ConfigPhrase").onclick = showConfigDialog;
+
 		BtnSeekStart.onclick = animationSeekStart;
 		BtnStepBack.onclick = animationStepBack;
 		BtnPlay.onclick = animationPlay;
@@ -478,24 +480,9 @@ let appUI = (function()
 		AnimationSlider.oninput = function(eventObject) { animationSeekToSpecificDay(parseInt(eventObject.target.value, 10)); };
 		TimelineCoverRight.onclick = timelineClickRight;
 		TimelineCoverLeft.onclick = timelineClickLeft;
-		document.getElementById("ConfigPhrase").onclick = showConfigDialog;
-
-		document.onkeydown = function(eventObject)
-		{
-			let keyCode = eventObject.keyCode;
-			if (keyCode === 36 || keyCode === 38) // home key or up arrow
-				animationSeekStart();
-			else if (keyCode === 37) // left arrow
-				animationStepBack();
-			else if (keyCode === 32) // space bar
-				animationToggleStartStop();
-			else if (keyCode === 39) // right arrow
-				animationStepForward();
-			else if (keyCode === 35 || keyCode === 40) // end key or down arrow
-				animationSeekEnd();
-		};
-
-		svgDocument.onkeydown = function(eventObject) { document.onkeydown(eventObject); }
+		document.onkeydown = handleKeyboardControl;
+		svgDocument.onkeydown = handleKeyboardControl;
+		animationEnable();
 
 		return sequence;
 	} // end setupDataAnimation()
@@ -527,48 +514,73 @@ let appUI = (function()
 		return entireNumber;
 	} // end formatNumberWithCommas()
 
+	function animationEnable()
+	{
+		animationEnabled = true;
+	} // end animationEnable()
+
+	function animationDisable()
+	{
+		if (sequence !== null)
+			sequence.stop();
+
+		animationEnabled = false;
+	} // end animationDisable()
+
 	function animationSeekStart()
 	{
-		animationSeekToSpecificDay(0);
+		if (animationEnabled)
+			animationSeekToSpecificDay(0);
 	}
 
 	function animationStepBack()
 	{
-		animationSeekToSpecificDay(Math.max(Math.round(sequence.getCurrentTime() / animationTimeRatio) - 1, 0));
+		if (animationEnabled)
+			animationSeekToSpecificDay(Math.max(Math.round(sequence.getCurrentTime() / animationTimeRatio) - 1, 0));
 	}
 
 	function animationPlay()
 	{
-		sequence.run();
+		if (animationEnabled)
+			sequence.run();
 	}
 
 	function animationStepForward()
 	{
-		animationSeekToSpecificDay(Math.min(Math.round(sequence.getCurrentTime() / animationTimeRatio) + 1, totalDays));
+		if (animationEnabled)
+			animationSeekToSpecificDay(Math.min(Math.round(sequence.getCurrentTime() / animationTimeRatio) + 1, totalDays));
 	}
 
 	function animationPause()
 	{
-		sequence.stop();
+		if (sequence !== null)
+			sequence.stop();
 	}
 
 	function animationSeekEnd()
 	{
-		animationSeekToSpecificDay(totalDays);
+		if (animationEnabled)
+			animationSeekToSpecificDay(totalDays);
 	}
 
 	function animationSeekToSpecificDay(dayNumber)
 	{
-		sequence.stop();
-		sequence.seek(Math.min(Math.max(dayNumber, 0), totalDays) * animationTimeRatio);
+		if (animationEnabled)
+		{
+			sequence.stop();
+			sequence.seek(Math.min(Math.max(dayNumber, 0), totalDays) * animationTimeRatio);
+		}
 	}
 
 	function animationToggleStartStop()
 	{
-		if (sequence.isRunning())
-			animationPause();
-		else
-			animationPlay();
+		if (animationEnabled)
+		{
+			if (sequence.isRunning())
+				animationPause();
+			else
+				animationPlay();
+		}
 	}
 
 	function getTimelineClickDayPosition(eventObject, invert)
@@ -582,25 +594,49 @@ let appUI = (function()
 
 	function timelineClickRight(eventObject)
 	{
-		let AnimationSlider = document.getElementById("AnimationSlider"),
-			daysToMove = getTimelineClickDayPosition(eventObject, false),
-			sliderValue = parseInt(AnimationSlider.value, 10);
-		if (parseInt(AnimationSlider.max, 10) - sliderValue >= daysToMove)
-			animationSeekToSpecificDay(sliderValue + daysToMove);
+		if (animationEnabled)
+		{
+			let AnimationSlider = document.getElementById("AnimationSlider"),
+				daysToMove = getTimelineClickDayPosition(eventObject, false),
+				sliderValue = parseInt(AnimationSlider.value, 10);
+			if (parseInt(AnimationSlider.max, 10) - sliderValue >= daysToMove)
+				animationSeekToSpecificDay(sliderValue + daysToMove);
+		}
 	}
 
 	function timelineClickLeft(eventObject)
 	{
-		let AnimationSlider = document.getElementById("AnimationSlider"),
-			daysToMove = getTimelineClickDayPosition(eventObject, true),
-			sliderValue = parseInt(AnimationSlider.value, 10);
-		if (sliderValue - parseInt(AnimationSlider.min, 10) >= daysToMove)
-			animationSeekToSpecificDay(sliderValue - daysToMove);
+		if (animationEnabled)
+		{
+			let AnimationSlider = document.getElementById("AnimationSlider"),
+				daysToMove = getTimelineClickDayPosition(eventObject, true),
+				sliderValue = parseInt(AnimationSlider.value, 10);
+			if (sliderValue - parseInt(AnimationSlider.min, 10) >= daysToMove)
+				animationSeekToSpecificDay(sliderValue - daysToMove);
+		}
 	}
+
+	function handleKeyboardControl(eventObject)
+	{
+		if (animationEnabled)
+		{
+			let keyCode = eventObject.keyCode;
+			if (keyCode === 36 || keyCode === 38) // home key or up arrow
+				animationSeekStart();
+			else if (keyCode === 37) // left arrow
+				animationStepBack();
+			else if (keyCode === 32) // space bar
+				animationToggleStartStop();
+			else if (keyCode === 39) // right arrow
+				animationStepForward();
+			else if (keyCode === 35 || keyCode === 40) // end key or down arrow
+				animationSeekEnd();
+		}
+	} // end handleKeyboardControl()
 
 	function showConfigDialog()
 	{
-		sequence.stop();
+		animationDisable();
 		savedConfigValues =
 		{
 			basicFact: VueApp.configBasicFact,
@@ -631,6 +667,7 @@ let appUI = (function()
 			VueApp.configBasicFact = savedConfigValues.basicFact;
 			VueApp.configMeasurement = savedConfigValues.measurement;
 			VueApp.configDataView = savedConfigValues.dataView;
+			animationEnable();
 		}
 	} // end hideConfigDialog()
 
