@@ -604,6 +604,7 @@ let appUI = (function()
 
 	function showConfigDialog()
 	{
+		sequence.stop();
 		savedConfigValues =
 		{
 			basicFact: VueApp.configBasicFact,
