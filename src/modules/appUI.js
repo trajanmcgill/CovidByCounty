@@ -1,6 +1,6 @@
-import appLogic from "./appLogic.js";
-import Vue from "./vue.js";
-import {Concert} from "./Concert.js";
+import appLogic from "./appLogic.js?ver=2";
+import Vue from "./vue.js?ver=2";
+import {Concert} from "./Concert.js?ver=2";
 
 const msPerDay = 1000 * 60 * 60 * 24;
 
