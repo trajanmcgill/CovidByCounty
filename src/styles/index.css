@@ -199,6 +199,8 @@ h3, h4
 	white-space: nowrap;
 	font-size: 0;
 	color: #1e1e1e;
+	transition-property: margin-left;
+	transition-duration: 0.2s;
 }
 
 li.TimeLineDateBox

@@ -16,7 +16,6 @@ let appUI = (function()
 			{ start: "rgb(255, 0, 0)", end: "rgb(77, 0, 153)" }
 		];
 	const DefaultAnimationTimeRatio = 500;
-	const TimelineSlideTime = 100;
 
 	let animationTimeRatio = DefaultAnimationTimeRatio;
 	let totalDays = 0;
@@ -419,9 +418,6 @@ let appUI = (function()
 		{
 			let nextLandingTime = (i + 1) * animationTimeRatio;
 
-			timelineTimes.push(nextLandingTime - TimelineSlideTime);
-			timelinePositions.push(TimelineStartingOffset - i * TimelineDateBoxWidth);
-
 			timelineTimes.push(nextLandingTime);
 			timelinePositions.push(TimelineStartingOffset - (i + 1) * TimelineDateBoxWidth);
 		}
@@ -430,8 +426,8 @@ let appUI = (function()
 				target: document.getElementById("Timeline"),
 				feature: "margin-left",
 				applicator: Concert.Applicators.Style,
-				calculator: Concert.Calculators.Linear,
-				easing: Concert.EasingFunctions.Smoothstep,
+				calculator: Concert.Calculators.Discrete,
+				easing: Concert.EasingFunctions.ConstantRate,
 				unit: "px",
 				keyframes: { times: timelineTimes, values: timelinePositions }
 			});
