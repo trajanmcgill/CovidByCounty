@@ -17,6 +17,7 @@ let appUI = (function()
 		];
 	const DefaultAnimationTimeRatio = 500;
 
+	let svgObject = null, svgDocument = null;
 	let animationTimeRatio = DefaultAnimationTimeRatio;
 	let totalDays = 0;
 	let sequence = null;
@@ -105,6 +106,9 @@ let appUI = (function()
 			function()
 			{
 				let allCountyData = appLogic.allCountyData;
+				svgObject = document.getElementById("SvgObject");
+				svgDocument = svgObject.getSVGDocument();
+				initializeMapUI();
 				buildTimelineViewData(allCountyData.firstDate, allCountyData.lastDate);
 				setWaitMessage(appLogic.AppWaitType.BuildingVisualization);
 				let animationSequence = setupDataAnimation(
@@ -118,7 +122,24 @@ let appUI = (function()
 	} // end initializeApp()
 
 
-	function buildRawMapAnimationData(allCountyData, basicFact, measurement, dataView, populationScale, growthRangeDays, vueInfoCards, svgDocument)
+	function initializeMapUI()
+	{
+		svgDocument.onmousedown = function() { updateTempConsole("mousedown", true); };
+		svgDocument.onmouseup = function() { updateTempConsole("mouseup", true); };
+		svgDocument.onmousemove = function() { updateTempConsole("mousemove", true); };
+	} // end initializeMapUI()
+
+	function updateTempConsole(input, append)
+	{
+		let tempconsole = document.getElementById("tempconsole");
+		if (append)
+			tempconsole.innerHTML += input + "<br>";
+		else
+			tempconsole.innerHTML = input;
+	}
+
+
+	function buildRawMapAnimationData(allCountyData, basicFact, measurement, dataView, populationScale, growthRangeDays, vueInfoCards)
 	{
 		let rawAnimationData =
 		{
@@ -233,7 +254,7 @@ let appUI = (function()
 	} // end buildRawMapAnimationData()
 
 
-	function getMapAnimationTransformations(rawAnimationData, zeroValueColor, colorGradients, colorRanges, unknownValueColor, svgDocument)
+	function getMapAnimationTransformations(rawAnimationData, zeroValueColor, colorGradients, colorRanges, unknownValueColor)
 	{
 		let transformations = [];
 		
@@ -349,8 +370,6 @@ let appUI = (function()
 
 	function setupDataAnimation(allCountyData, basicFact, measurement, dataView, growthRangeDays, populationScale, zeroValueColor, colorGradients, colorRanges, unknownValueColor, vueInfoCards)
 	{
-		const svgObject = document.getElementById("SvgObject"),
-			svgDocument = svgObject.getSVGDocument();
 		const BtnSeekStart = document.getElementById("BtnSeekStart"),
 			BtnStepBack = document.getElementById("BtnStepBack"),
 			BtnPlay = document.getElementById("BtnPlay"),
@@ -371,10 +390,10 @@ let appUI = (function()
 			});
 		
 		// Animate map
-		let rawMapAnimationData = buildRawMapAnimationData(allCountyData, basicFact, measurement, dataView, populationScale, growthRangeDays, vueInfoCards, svgDocument);
+		let rawMapAnimationData = buildRawMapAnimationData(allCountyData, basicFact, measurement, dataView, populationScale, growthRangeDays, vueInfoCards);
 		if (colorRanges === null)
 			colorRanges = autoScaleColorRanges(rawMapAnimationData.minNonzeroValue, rawMapAnimationData.maxOverallDisplayFactValue);
-		let mapTransformations = getMapAnimationTransformations(rawMapAnimationData, zeroValueColor, colorGradients, colorRanges, unknownValueColor, svgDocument);
+		let mapTransformations = getMapAnimationTransformations(rawMapAnimationData, zeroValueColor, colorGradients, colorRanges, unknownValueColor);
 		mapTransformations.forEach(transformation => { sequence.addTransformations(transformation); });
 		let mapConfigPhrase,
 			infoCardCol2Title = VueApp.cardCol2Title;
