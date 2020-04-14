@@ -24,6 +24,84 @@ let appUI = (function()
 	let animationEnabled = false;
 	let savedConfigValues = null;
 
+	let mapControls = (function()
+	{
+		const MouseClickMovementTolerance = 5;
+
+		let mapDragObject = null,
+			mapCommittedPosition = { x: 0, y: 0 },
+			mapDragPosition = mapCommittedPosition,
+			mapMouseDownPosition = null,
+			draggingMap = false;
+		
+		function handleMapMouseDown(eventObject)
+		{
+			draggingMap = false;
+			mapMouseDownPosition = { x: eventObject.pageX, y: eventObject.pageY };
+			document.onmousemove = svgDocument.onmousemove = monitorMapMouseMove;
+			svgDocument.onmouseup = endMapClick;
+		}
+
+		function monitorMapMouseMove(eventObject)
+		{
+			let totalDragDistance = { x: eventObject.pageX - mapMouseDownPosition.x, y: eventObject.pageY - mapMouseDownPosition.y };
+			if (Math.abs(totalDragDistance.x) > MouseClickMovementTolerance || Math.abs(totalDragDistance.y) > MouseClickMovementTolerance)
+			{
+				mapDragObject.style.zIndex = 3;
+				draggingMap = true;
+				mapDragObject.onmousemove = monitorMapMouseMove;
+				document.onmouseup = svgDocument.onmouseup = mapDragObject.onmouseup = function() { endMapDrag(false); };
+			}
+			if (draggingMap)
+			{
+				mapDragPosition = { x: mapCommittedPosition.x + totalDragDistance.x, y: mapCommittedPosition.y + totalDragDistance.y };
+				setMapPosition(false, mapDragPosition);
+			}
+		}
+
+		function setMapPosition(useRealMap, newPosition)
+		{
+			let objectToMove = useRealMap ? svgObject : mapDragObject;
+			objectToMove.style.left = newPosition.x + "px";
+			objectToMove.style.top = newPosition.y + "px";
+		}
+			
+		function endMapDrag(cancel)
+		{
+			if (cancel)
+			{
+				mapDragPosition = mapCommittedPosition;
+				setMapPosition(false, mapCommittedPosition);
+			}
+			else
+			{
+				mapCommittedPosition = mapDragPosition;
+				setMapPosition(true, mapCommittedPosition);
+			}
+			document.onmousemove = svgDocument.onmousemove = mapDragObject.onmousemove = null;
+			document.onmouseup = svgDocument.onmouseup = mapDragObject.onmouseup = null;
+			mapDragObject.style.zIndex = 1;
+			draggingMap = false;
+		}
+
+		function endMapClick()
+		{
+			mapMouseDownPosition = null;
+			document.onmousemove = svgDocument.onmousemove = null;
+			svgDocument.onmouseup = null;
+			// ADD CODE HERE: handle the click (add an info card)
+		}
+
+		function initializeMapUI()
+		{
+			mapDragObject = document.getElementById("DragMap");
+			svgDocument.onmousedown = handleMapMouseDown;
+		} // end initializeMapUI()
+
+		let objectInterface = { initializeMapUI: initializeMapUI };
+		return objectInterface;
+	})();
+
 	let loadHandlers = [], windowHandlerSet = false;
 	function whenDocumentLoaded(action)
 	{
@@ -108,7 +186,7 @@ let appUI = (function()
 				let allCountyData = appLogic.allCountyData;
 				svgObject = document.getElementById("SvgObject");
 				svgDocument = svgObject.getSVGDocument();
-				initializeMapUI();
+				mapControls.initializeMapUI();
 				buildTimelineViewData(allCountyData.firstDate, allCountyData.lastDate);
 				setWaitMessage(appLogic.AppWaitType.BuildingVisualization);
 				let animationSequence = setupDataAnimation(
@@ -122,21 +200,15 @@ let appUI = (function()
 	} // end initializeApp()
 
 
-	function initializeMapUI()
-	{
-		svgDocument.onmousedown = function() { updateTempConsole("mousedown", true); };
-		svgDocument.onmouseup = function() { updateTempConsole("mouseup", true); };
-		svgDocument.onmousemove = function() { updateTempConsole("mousemove", true); };
-	} // end initializeMapUI()
-
-	function updateTempConsole(input, append)
-	{
-		let tempconsole = document.getElementById("tempconsole");
-		if (append)
-			tempconsole.innerHTML += input + "<br>";
-		else
-			tempconsole.innerHTML = input;
-	}
+	// REMOVE CODE HERE (also the element to which this connects)
+//	function updateTempConsole(input, append)
+//	{
+//		let tempconsole = document.getElementById("tempconsole");
+//		if (append)
+//			tempconsole.innerHTML += input + "<br>";
+//		else
+//			tempconsole.innerHTML = input;
+//	}
 
 
 	function buildRawMapAnimationData(allCountyData, basicFact, measurement, dataView, populationScale, growthRangeDays, vueInfoCards)
@@ -485,7 +557,7 @@ let appUI = (function()
 			});
 		
 		// Animate info cards
-		// WORKING HERE
+		// ADD CODE HERE
 		
 		document.getElementById("ConfigPhrase").onclick = showConfigDialog;
 

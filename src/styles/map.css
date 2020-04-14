@@ -35,7 +35,7 @@ svg
 	background-color: #1e1e1e;
 }
 
-path[id*='c']:hover
+path[id^='c']:hover
 {
 	stroke-width: 3;
 }
