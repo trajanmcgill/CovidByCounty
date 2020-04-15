@@ -302,3 +302,23 @@ div.ColorKey
 	z-index: 1;
 	opacity: 0.5;
 }
+
+#ZoomButtonContainer
+{
+	position: absolute;
+	left: 900px;
+	top: 595px;
+	z-index: 5;
+}
+
+#BtnZoomIn, #BtnZoomOut, #BtnZoomFull
+{
+	width: 24px;
+	height: 24px;
+	font-size: 13.33px;
+}
+
+#BtnZoomFull
+{
+	padding-left: 4px;
+}
