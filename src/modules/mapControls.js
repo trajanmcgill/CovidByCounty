@@ -128,8 +128,8 @@ let mapControls = (function()
 	function rescaleMapDrawing(magnificationRatio)
 	{
 		currentZoom = magnificationRatio;
-		svgObject.style.width = (initialMapSize.width * currentZoom) + "px";
-		svgObject.style.height = (initialMapSize.height * currentZoom) + "px";
+		svgObject.style.width = mapDragObject.style.width = (initialMapSize.width * currentZoom) + "px";
+		svgObject.style.height = mapDragObject.style.height = (initialMapSize.height * currentZoom) + "px";
 	}
 
 	function initializeMapUI()
