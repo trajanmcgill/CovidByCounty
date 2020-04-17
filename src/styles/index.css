@@ -260,7 +260,7 @@ li.TimeLineDateBox
 	text-align: center;
 }
 
-#RangeKeyPanel
+.RangeKeyPanel
 {
 	margin-top: 10px;
 	box-sizing: border-box;

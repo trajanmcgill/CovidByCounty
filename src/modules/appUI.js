@@ -76,30 +76,43 @@ let appUI = (function()
 					configDataView: null,
 					growthRangeDays: null,
 					populationScale: null,
-					infoCards: // CHANGE CODE HERE
-					[
-						{
-							id: "17111",
-							placeName: "McHenry County, Illinois",
-							casesAbsolute: "4,000",
-							casesByPopulation: "386.90",
-							deathsAbsolute: "400",
-							deathsByPopulation: "38.69",
-							deathsPerCase: "0.10"
-						},
-						{
-							id: "17097",
-							placeName: "Lake County, Illinois",
-							casesAbsolute: "4,000",
-							casesByPopulation: "386.90",
-							deathsAbsolute: "400",
-							deathsByPopulation: "38.69",
-							deathsPerCase: "0.10"
-						}
-					],
+					infoCardCountyList: [],
 					consoleEntries: [] // REMOVE CODE HERE
 				},
-	
+
+			computed:
+				{
+					infoCards:
+						function()
+						{
+							let cards = [];
+							this.infoCardCountyList.forEach(
+								countyCard =>
+								{
+									let county = appLogic.allCountyData.counties[countyCard.id],
+										matchingDailyRecords, dailyRecord;
+									if (this.displayDate === null)
+										dailyRecord = null;
+									else
+									{
+										matchingDailyRecords = county.covid19Records.filter(record => record.date.getTime() === this.displayDate.getTime()),
+										dailyRecord = (matchingDailyRecords.length > 0) ? matchingDailyRecords[0] : null;
+									}
+									cards.push(
+										{
+											id: countyCard.id,
+											placeName: countyCard.placeName,
+											casesAbsolute: (dailyRecord === null) ? 0 : dailyRecord.cumulativeCases,
+											casesByPopulation: (dailyRecord === null) ? 0 : dailyRecord.cumulativeCases / county.population * this.populationScale,
+											deathsAbsolute: (dailyRecord === null) ? 0 : dailyRecord.cumulativeDeaths,
+											deathsByPopulation: (dailyRecord === null) ? 0 : dailyRecord.cumulativeDeaths / county.population * this.populationScale,
+											deathsPerCase: (dailyRecord === null) ? 0 : dailyRecord.cumulativeDeaths / dailyRecord.cumulativeCases
+										});
+								});
+							return cards;
+						}
+				},
+
 			mounted: function() { whenDocumentLoaded(initializeApp); }
 		});
 
@@ -121,6 +134,10 @@ let appUI = (function()
 					DefaultZeroValueColor, DefaultColorGradients, null, DefaultUnknownValueColor);
 				animationSequence.seek(animationSequence.getStartTime());
 				setWaitMessage(appLogic.AppWaitType.None);
+
+				// WORKING HERE
+				VueApp.infoCardCountyList.push({ id: "17111", placeName: "McHenry County, Illinoiz" }); // REMOVE CODE HERE
+				VueApp.infoCardCountyList.push({ id: "17097", placeName: "Lake County, Illinoiz" }); // REMOVE CODE HERE
 
 				window.appLogic = appLogic; // REMOVE CODE HERE
 			});
@@ -467,10 +484,7 @@ let appUI = (function()
 		let currentDate = firstDate;
 		while (currentDate <= lastDate)
 		{
-			let month = currentDate.toLocaleString("en-us", { month: "long" }),
-				dayOfMonth = currentDate.getDate();
-
-			VueApp.dateList.push({ month: month, dayOfMonth: dayOfMonth });
+			VueApp.dateList.push(currentDate);
 			let nextDate = new Date(currentDate);
 			nextDate.setDate(nextDate.getDate() + 1);
 			currentDate = nextDate;

@@ -10,7 +10,7 @@ let mapControls = (function()
 	const MouseClickMovementTolerance = 5,
 		ZoomRatio = 1.5, MaxZoom = 12, MinZoom = 1;
 
-	let vueObject = null,
+	let //vueObject = null,
 		svgObject = null, svgDocument = null, mapDragObject = null,
 		btnZoomIn = null, btnZoomOut = null, btnZoomFull = null,
 		mapCommittedPosition = { x: 0, y: 0 },
@@ -60,12 +60,6 @@ let mapControls = (function()
 		mapMouseDownPosition = null;
 		document.onmousemove = svgDocument.onmousemove = null;
 		svgDocument.onmouseup = null;
-		// ADD CODE HERE: handle the click (add an info card)
-	}
-
-	function handleMapClick(eventObject)
-	{
-		vueObject.consoleEntries.push("clicked " + eventObject.target.id);
 	}
 
 	function handleMapDoubleClick()
@@ -166,9 +160,9 @@ let mapControls = (function()
 			svgDocument.onkeydown = pagewideKeyDownHandler;
 	}
 
-	function initializeMapUI(vueAppObject)
+	function initializeMapUI(/*vueAppObject*/)
 	{
-		vueObject = vueAppObject;
+		//vueObject = vueAppObject;
 		svgObject = document.getElementById("SvgObject");
 		svgDocument = svgObject.getSVGDocument();
 		svgDocument.onkeydown = pagewideKeyDownHandler;
@@ -184,7 +178,6 @@ let mapControls = (function()
 		btnZoomFull.onclick = zoomFull;
 		svgDocument.onwheel = handleMouseWheel;
 		svgDocument.onmousedown = handleMapMouseDown;
-		svgDocument.onclick = handleMapClick;
 		svgDocument.ondblclick = handleMapDoubleClick;
 	} // end initializeMapUI()
 
