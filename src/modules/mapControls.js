@@ -10,14 +10,16 @@ let mapControls = (function()
 	const MouseClickMovementTolerance = 5,
 		ZoomRatio = 1.5, MaxZoom = 12, MinZoom = 1;
 
-	let svgObject = null, svgDocument = null, mapDragObject = null,
+	let vueObject = null,
+		svgObject = null, svgDocument = null, mapDragObject = null,
 		btnZoomIn = null, btnZoomOut = null, btnZoomFull = null,
 		mapCommittedPosition = { x: 0, y: 0 },
 		mapDragPosition = mapCommittedPosition,
 		mapMouseDownPosition = null,
 		draggingMap = false,
 		initialMapSize = null,
-		currentZoom = 1;
+		currentZoom = 1,
+		pagewideKeyDownHandler = null;
 	
 	function handleMapMouseDown(eventObject)
 	{
@@ -41,22 +43,6 @@ let mapControls = (function()
 			setMapPosition(MapType.DragMap, { x: mapCommittedPosition.x + totalDragDistance.x, y: mapCommittedPosition.y + totalDragDistance.y });
 	}
 
-	function setMapPosition(map, newPosition)
-	{
-		if (map === MapType.RealMap || map === MapType.RealAndDragMaps)
-		{
-			mapCommittedPosition = newPosition;
-			svgObject.style.left = newPosition.x + "px";
-			svgObject.style.top = newPosition.y + "px";
-		}
-		if (map === MapType.DragMap || map === MapType.RealAndDragMaps)
-		{
-			mapDragPosition = newPosition;
-			mapDragObject.style.left = newPosition.x + "px";
-			mapDragObject.style.top = newPosition.y + "px";
-		}
-	}
-		
 	function endMapDrag(cancel)
 	{
 		if (cancel)
@@ -77,6 +63,47 @@ let mapControls = (function()
 		// ADD CODE HERE: handle the click (add an info card)
 	}
 
+	function handleMapClick(eventObject)
+	{
+		vueObject.consoleEntries.push("clicked " + eventObject.target.id);
+	}
+
+	function handleMapDoubleClick()
+	{
+		// ADD CODE HERE: Add an info card for the clicked county
+	}
+
+	function handleMouseWheel(eventObject)
+	{
+		doPointZoom(eventObject.clientX, eventObject.clientY, (eventObject.deltaY < 0) ? ZoomRatio : (1 / ZoomRatio));
+	}
+
+	function doPointZoom(clientX, clientY, scaleAmount)
+	{
+		let focalPosition =
+			{
+				x: mapCommittedPosition.x + clientX,
+				y: mapCommittedPosition.y + clientY
+			};
+		zoom(focalPosition, scaleAmount);
+	}
+
+	function setMapPosition(map, newPosition)
+	{
+		if (map === MapType.RealMap || map === MapType.RealAndDragMaps)
+		{
+			mapCommittedPosition = newPosition;
+			svgObject.style.left = newPosition.x + "px";
+			svgObject.style.top = newPosition.y + "px";
+		}
+		if (map === MapType.DragMap || map === MapType.RealAndDragMaps)
+		{
+			mapDragPosition = newPosition;
+			mapDragObject.style.left = newPosition.x + "px";
+			mapDragObject.style.top = newPosition.y + "px";
+		}
+	}
+		
 	function getMapSize()
 	{
 		let svgObjectRect = svgObject.getBoundingClientRect();
@@ -108,21 +135,21 @@ let mapControls = (function()
 		}
 	}
 
+	function zoomInOneStep()
+	{
+		zoom({ x: initialMapSize.width / 2, y: initialMapSize.height / 2 }, ZoomRatio);
+	}
+
+	function zoomOutOneStep()
+	{
+		zoom({ x: initialMapSize.width / 2, y: initialMapSize.height / 2 }, 1 / ZoomRatio);
+	}
+
 	function zoomFull()
 	{
 		rescaleMapDrawing(1);
 		let newPosition = { x: 0, y: 0 };
 		setMapPosition(MapType.RealAndDragMaps, newPosition);
-	}
-
-	function handleMouseWheel(eventObject)
-	{
-		let focalPosition =
-			{
-				x: mapCommittedPosition.x + eventObject.clientX,
-				y: mapCommittedPosition.y + eventObject.clientY
-			};
-		zoom(focalPosition, (eventObject.deltaY < 0) ? ZoomRatio : (1 / ZoomRatio));
 	}
 
 	function rescaleMapDrawing(magnificationRatio)
@@ -132,10 +159,19 @@ let mapControls = (function()
 		svgObject.style.height = mapDragObject.style.height = (initialMapSize.height * currentZoom) + "px";
 	}
 
-	function initializeMapUI()
+	function setPagewideKeyDownController(keyDownHandler)
 	{
+		pagewideKeyDownHandler = keyDownHandler;
+		if (svgDocument !== null)
+			svgDocument.onkeydown = pagewideKeyDownHandler;
+	}
+
+	function initializeMapUI(vueAppObject)
+	{
+		vueObject = vueAppObject;
 		svgObject = document.getElementById("SvgObject");
 		svgDocument = svgObject.getSVGDocument();
+		svgDocument.onkeydown = pagewideKeyDownHandler;
 		mapDragObject = document.getElementById("DragMap");
 		initialMapSize = getMapSize();
 
@@ -143,14 +179,23 @@ let mapControls = (function()
 		btnZoomOut = document.getElementById("BtnZoomOut");
 		btnZoomFull = document.getElementById("BtnZoomFull");
 
-		btnZoomIn.onclick = function() { zoom( { x: initialMapSize.width / 2, y: initialMapSize.height / 2 }, ZoomRatio); };
-		btnZoomOut.onclick = function() { zoom( { x: initialMapSize.width / 2, y: initialMapSize.height / 2 }, 1 / ZoomRatio); };
+		btnZoomIn.onclick = zoomInOneStep;
+		btnZoomOut.onclick = zoomOutOneStep;
 		btnZoomFull.onclick = zoomFull;
 		svgDocument.onwheel = handleMouseWheel;
 		svgDocument.onmousedown = handleMapMouseDown;
+		svgDocument.onclick = handleMapClick;
+		svgDocument.ondblclick = handleMapDoubleClick;
 	} // end initializeMapUI()
 
-	let objectInterface = { initializeMapUI: initializeMapUI };
+	let objectInterface =
+	{
+		initializeMapUI: initializeMapUI,
+		setPagewideKeyDownController: setPagewideKeyDownController,
+		zoomInOneStep: zoomInOneStep,
+		zoomOutOneStep: zoomOutOneStep,
+		zoomFull: zoomFull
+	};
 	return objectInterface;
 })(); // end mapControls singleton definition
 

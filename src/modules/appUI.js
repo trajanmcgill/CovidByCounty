@@ -43,6 +43,7 @@ let appUI = (function()
 						while(loadHandlers.length > 0)
 							loadHandlers.shift()();
 					});
+				windowHandlerSet = true;
 			}
 		}
 	} // end whenDocumentLoaded()
@@ -95,7 +96,8 @@ let appUI = (function()
 							deathsByPopulation: "38.69",
 							deathsPerCase: "0.10"
 						}
-					]
+					],
+					consoleEntries: [] // REMOVE CODE HERE
 				},
 	
 			mounted: function() { whenDocumentLoaded(initializeApp); }
@@ -110,7 +112,7 @@ let appUI = (function()
 				let allCountyData = appLogic.allCountyData;
 				svgObject = document.getElementById("SvgObject");
 				svgDocument = svgObject.getSVGDocument();
-				mapControls.initializeMapUI();
+				mapControls.initializeMapUI(VueApp);
 				buildTimelineViewData(allCountyData.firstDate, allCountyData.lastDate);
 				setWaitMessage(appLogic.AppWaitType.BuildingVisualization);
 				let animationSequence = setupDataAnimation(
@@ -122,17 +124,6 @@ let appUI = (function()
 				setWaitMessage(appLogic.AppWaitType.None);
 			});
 	} // end initializeApp()
-
-
-	// REMOVE CODE HERE (also the element to which this connects)
-//	function updateTempConsole(input, append)
-//	{
-//		let tempconsole = document.getElementById("tempconsole");
-//		if (append)
-//			tempconsole.innerHTML += input + "<br>";
-//		else
-//			tempconsole.innerHTML = input;
-//	}
 
 
 	function buildRawMapAnimationData(allCountyData, basicFact, measurement, dataView, populationScale, growthRangeDays, vueInfoCards)
@@ -496,7 +487,7 @@ let appUI = (function()
 		TimelineCoverRight.onclick = timelineClickRight;
 		TimelineCoverLeft.onclick = timelineClickLeft;
 		document.onkeydown = handleKeyboardControl;
-		svgDocument.onkeydown = handleKeyboardControl;
+		mapControls.setPagewideKeyDownController(handleKeyboardControl);
 		animationEnable();
 
 		return sequence;
@@ -518,6 +509,7 @@ let appUI = (function()
 		}
 	} // end buildTimelineData()
 
+
 	function formatNumberWithCommas(number)
 	{
 		let rawString = number.toString(),
@@ -529,10 +521,12 @@ let appUI = (function()
 		return entireNumber;
 	} // end formatNumberWithCommas()
 
+	
 	function animationEnable()
 	{
 		animationEnabled = true;
 	} // end animationEnable()
+
 
 	function animationDisable()
 	{
@@ -542,11 +536,13 @@ let appUI = (function()
 		animationEnabled = false;
 	} // end animationDisable()
 
+
 	function animationSeekStart()
 	{
 		if (animationEnabled)
 			animationSeekToSpecificDay(0);
 	}
+
 
 	function animationStepBack()
 	{
@@ -554,11 +550,13 @@ let appUI = (function()
 			animationSeekToSpecificDay(Math.max(Math.round(sequence.getCurrentTime() / animationTimeRatio) - 1, 0));
 	}
 
+
 	function animationPlay()
 	{
 		if (animationEnabled)
 			sequence.run();
 	}
+
 
 	function animationStepForward()
 	{
@@ -566,17 +564,20 @@ let appUI = (function()
 			animationSeekToSpecificDay(Math.min(Math.round(sequence.getCurrentTime() / animationTimeRatio) + 1, totalDays));
 	}
 
+
 	function animationPause()
 	{
 		if (sequence !== null)
 			sequence.stop();
 	}
 
+
 	function animationSeekEnd()
 	{
 		if (animationEnabled)
 			animationSeekToSpecificDay(totalDays);
 	}
+
 
 	function animationSeekToSpecificDay(dayNumber)
 	{
@@ -586,6 +587,7 @@ let appUI = (function()
 			sequence.seek(Math.min(Math.max(dayNumber, 0), totalDays) * animationTimeRatio);
 		}
 	}
+
 
 	function animationToggleStartStop()
 	{
@@ -598,6 +600,7 @@ let appUI = (function()
 		}
 	}
 
+
 	function getTimelineClickDayPosition(eventObject, invert)
 	{
 		let boundingRect = eventObject.target.getBoundingClientRect(),
@@ -606,6 +609,7 @@ let appUI = (function()
 			invertedDayPosition = eventObject.target.clientWidth / TimelineDateBoxWidth + 1 - dayPosition;
 		return (invert ? invertedDayPosition : dayPosition);
 	}
+
 
 	function timelineClickRight(eventObject)
 	{
@@ -619,6 +623,7 @@ let appUI = (function()
 		}
 	}
 
+
 	function timelineClickLeft(eventObject)
 	{
 		if (animationEnabled)
@@ -630,6 +635,7 @@ let appUI = (function()
 				animationSeekToSpecificDay(sliderValue - daysToMove);
 		}
 	}
+
 
 	function handleKeyboardControl(eventObject)
 	{
@@ -646,8 +652,15 @@ let appUI = (function()
 				animationStepForward();
 			else if (keyCode === 35 || keyCode === 40) // end key or down arrow
 				animationSeekEnd();
+			else if (keyCode === 107 || keyCode === 61) // plus key
+				mapControls.zoomInOneStep();
+			else if (keyCode === 109 || keyCode === 173) // minus key
+				mapControls.zoomOutOneStep();
+			else if (keyCode === 220) // backslash key
+				mapControls.zoomFull();
 		}
 	} // end handleKeyboardControl()
+
 
 	function showConfigDialog()
 	{
@@ -662,6 +675,7 @@ let appUI = (function()
 		document.getElementById("BtnApplyConfigChanges").onclick = function() { hideConfigDialog(true); };
 		document.getElementById("BtnCancelConfigChanges").onclick = function() { hideConfigDialog(false); };
 } // end showConfigDialog()
+
 
 	function hideConfigDialog(apply)
 	{
@@ -685,6 +699,7 @@ let appUI = (function()
 			animationEnable();
 		}
 	} // end hideConfigDialog()
+
 
 	function setWaitMessage(waitType)
 	{
