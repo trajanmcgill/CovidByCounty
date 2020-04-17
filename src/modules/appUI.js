@@ -118,8 +118,7 @@ let appUI = (function()
 				let animationSequence = setupDataAnimation(
 					allCountyData, appLogic.DefaultFact, appLogic.DefaultMeasurementType, appLogic.DefaultDataView,
 					appLogic.DefaultGrowthRangeDays, appLogic.DefaultPopulationScale,
-					DefaultZeroValueColor, DefaultColorGradients, null, DefaultUnknownValueColor,
-					VueApp.infoCards);
+					DefaultZeroValueColor, DefaultColorGradients, null, DefaultUnknownValueColor);
 				animationSequence.seek(animationSequence.getStartTime());
 				setWaitMessage(appLogic.AppWaitType.None);
 
@@ -128,7 +127,7 @@ let appUI = (function()
 	} // end initializeApp()
 
 
-	function buildRawMapAnimationData(allCountyData, basicFact, measurement, dataView, populationScale, growthRangeDays, vueInfoCards)
+	function buildRawMapAnimationData(allCountyData, basicFact, measurement, dataView, populationScale, growthRangeDays)
 	{
 		let rawAnimationData =
 		{
@@ -145,12 +144,9 @@ let appUI = (function()
 				if (mapElement === null)
 					return;
 
-				let currentCountyData = { id: county.id, dailyRecords: [], vueInfoCard: null, infoCardDailyRecords: [] };
+				let currentCountyData = { id: county.id, dailyRecords: [] };
 
 				let countyPopulation = county.population;
-				let matchingVueInfoCards = vueInfoCards.filter(infoCard => infoCard.id === county.id),
-					vueInfoCard = (matchingVueInfoCards.length > 0) ? matchingVueInfoCards[0] : null;
-				currentCountyData.vueInfoCard = vueInfoCard;
 				county.covid19Records.forEach(
 					(covid19Record, index, covid19Records) =>
 					{
@@ -286,35 +282,6 @@ let appUI = (function()
 						feature: "fill",
 						keyframes: { times: countyMapKeyframeTimes, values: countyMapKeyframeValues }
 					});
-
-				// Build info card transformations
-				if (county.vueInfoCard !== null)
-				{
-					let countyInfoCardKeyframeTimes = [0],
-					countyInfoCardKeyframeValues = [[0, 0, 0, 0, 0]];
-					county.infoCardDailyRecords.forEach(
-						infoCardRecord =>
-						{
-							let keyFrameTime = Math.round(((infoCardRecord.date - rawAnimationData.firstDate) / msPerDay + 1) * animationTimeRatio),
-								keyFrameValue =
-									[
-										infoCardRecord.casesAbsolute,
-										infoCardRecord.casesByPopulation,
-										infoCardRecord.deathsAbsolute,
-										infoCardRecord.deathsByPopulation,
-										infoCardRecord.deathsPerCase
-									];
-							countyInfoCardKeyframeTimes.push(keyFrameTime);
-							countyInfoCardKeyframeValues.push(keyFrameValue);
-						});
-					transformations.push(
-						{
-							target: county.vueInfoCard,
-							feature: ["casesAbsolute", "casesByPopulation", "deathsAbsolute", "deathsByPopulation", "deathsPerCase"],
-							applicator: Concert.Applicators.Property,
-							keyframes: { times: countyInfoCardKeyframeTimes, values: countyInfoCardKeyframeValues }
-						});
-				}
 			});
 		
 		return transformations;
@@ -357,7 +324,7 @@ let appUI = (function()
 	} // end autoScaleColorRanges()
 
 
-	function setupDataAnimation(allCountyData, basicFact, measurement, dataView, growthRangeDays, populationScale, zeroValueColor, colorGradients, colorRanges, unknownValueColor, vueInfoCards)
+	function setupDataAnimation(allCountyData, basicFact, measurement, dataView, growthRangeDays, populationScale, zeroValueColor, colorGradients, colorRanges, unknownValueColor)
 	{
 		const BtnSeekStart = document.getElementById("BtnSeekStart"),
 			BtnStepBack = document.getElementById("BtnStepBack"),
@@ -379,7 +346,7 @@ let appUI = (function()
 			});
 		
 		// Animate map
-		let rawMapAnimationData = buildRawMapAnimationData(allCountyData, basicFact, measurement, dataView, populationScale, growthRangeDays, vueInfoCards);
+		let rawMapAnimationData = buildRawMapAnimationData(allCountyData, basicFact, measurement, dataView, populationScale, growthRangeDays);
 		if (colorRanges === null)
 			colorRanges = autoScaleColorRanges(rawMapAnimationData.minNonzeroValue, rawMapAnimationData.maxOverallDisplayFactValue);
 		let mapTransformations = getMapAnimationTransformations(rawMapAnimationData, zeroValueColor, colorGradients, colorRanges, unknownValueColor);
@@ -687,8 +654,7 @@ let appUI = (function()
 			let animationSequence = setupDataAnimation(
 				appLogic.allCountyData, VueApp.configBasicFact, VueApp.configMeasurement, VueApp.configDataView,
 				VueApp.growthRangeDays, VueApp.populationScale,
-				VueApp.zeroValueColor, VueApp.colorGradients, VueApp.colorRanges, VueApp.unknownValueColor,
-				VueApp.infoCards);
+				VueApp.zeroValueColor, VueApp.colorGradients, VueApp.colorRanges, VueApp.unknownValueColor);
 			animationSequence.seek(animationSequence.getStartTime());
 			setWaitMessage(appLogic.AppWaitType.None);
 		}
