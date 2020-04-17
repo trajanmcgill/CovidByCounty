@@ -72,7 +72,7 @@
 			<div id="InformationColumn">
 				<div id="InformationPanel">
 					<div class="InformationCard TitleCard">
-						<h3>{{ displayDate }}</h3>
+						<h3>{{ (displayDate === null) ? "" : (displayDate.month + " " + displayDate.dayOfMonth) }}</h3>
 					</div>
 					<div v-for="item in infoCards" class="InformationCard DataCard">
 						<h4>{{ item.placeName }}</h4>
@@ -103,6 +103,7 @@
 							</tbody>
 						</table>
 					</div>
+					
 					<div class="InformationCard DataCard">
 						<span style="font-size: smaller;">To Add: ability to add and remove these info cards by clicking on the map.</span>
 					</div>

@@ -60,7 +60,7 @@ let appUI = (function()
 					waitMessage: "Loading Map...",
 					waitMessageDisplay: "block",
 					configurationBoxDisplay: "none",
-					displayDate: "February 22", // CHANGE CODE HERE
+					displayDate: null,
 					dateList: [],
 					mapConfigPhrase: "",
 					maxOverallValue: 0,
@@ -122,6 +122,8 @@ let appUI = (function()
 					VueApp.infoCards);
 				animationSequence.seek(animationSequence.getStartTime());
 				setWaitMessage(appLogic.AppWaitType.None);
+
+				window.appLogic = appLogic; // REMOVE CODE HERE
 			});
 	} // end initializeApp()
 
@@ -455,12 +457,11 @@ let appUI = (function()
 			});
 		
 		// Animate info title card
-		let titleCardTimes = [0], titleCardValues = [""];
+		let titleCardTimes = [0], titleCardValues = [null];
 		for (let i = 1; i <= totalDays; i++)
 		{
 			titleCardTimes.push(i * animationTimeRatio);
-			let dateValue = VueApp.dateList[i - 1];
-			titleCardValues.push(dateValue.month + " " + dateValue.dayOfMonth);
+			titleCardValues.push(VueApp.dateList[i - 1]);
 		}
 		sequence.addTransformations(
 			{
