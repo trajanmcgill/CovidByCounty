@@ -10,7 +10,7 @@ let mapControls = (function()
 	const MouseClickMovementTolerance = 5,
 		ZoomRatio = 1.5, MaxZoom = 12, MinZoom = 1;
 
-	let //vueObject = null,
+	let vueObject = null,
 		svgObject = null, svgDocument = null, mapDragObject = null,
 		btnZoomIn = null, btnZoomOut = null, btnZoomFull = null,
 		mapCommittedPosition = { x: 0, y: 0 },
@@ -62,9 +62,27 @@ let mapControls = (function()
 		svgDocument.onmouseup = null;
 	}
 
-	function handleMapDoubleClick()
+	function handleMapDoubleClick(eventObject)
 	{
-		// ADD CODE HERE: Add an info card for the clicked county
+		let clickTarget = eventObject.target,
+			targetID = eventObject.target.id;
+
+		// If a county was clicked, add an info card for it.
+		if (targetID.length === 6 && targetID[0] === "c")
+		{
+			let fipsCode = targetID.substring(1),
+				title = "Unknown County",
+				targetChildren = clickTarget.childNodes;
+			for (let i = 0; i < targetChildren.length; i++)
+			{
+				if (targetChildren[i].nodeName === "title")
+				{
+					title = targetChildren[i].textContent;
+					break;
+				}
+			}
+			vueObject.infoCardCountyList.push({ id: fipsCode, placeName: title });
+		}
 	}
 
 	function handleMouseWheel(eventObject)
@@ -160,9 +178,9 @@ let mapControls = (function()
 			svgDocument.onkeydown = pagewideKeyDownHandler;
 	}
 
-	function initializeMapUI(/*vueAppObject*/)
+	function initializeMapUI(vueAppObject)
 	{
-		//vueObject = vueAppObject;
+		vueObject = vueAppObject;
 		svgObject = document.getElementById("SvgObject");
 		svgDocument = svgObject.getSVGDocument();
 		svgDocument.onkeydown = pagewideKeyDownHandler;

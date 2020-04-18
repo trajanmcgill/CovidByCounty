@@ -76,6 +76,7 @@
 					</div>
 					<div v-for="item in infoCards" class="InformationCard DataCard">
 						<h4>{{ item.placeName }}</h4>
+						<button v-bind:id="'BtnRemoveCard_' + item.id" class="InfoCardRemovalButton">X</button>
 						<table class="CountyInfoCardTable">
 							<thead>
 								<tr>
@@ -102,6 +103,10 @@
 								</tr>
 							</tbody>
 						</table>
+					</div>
+
+					<div class="InformationCard DataCard" v-bind:style="{ display: infoCardInstructionDisplay }">
+						Double-click any county on the map to track its data here.
 					</div>
 
 					<div id="tempconsole" class="InformationCard DataCard"> <!-- REMOVE CODE HERE -->

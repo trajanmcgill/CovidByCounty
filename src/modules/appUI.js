@@ -110,6 +110,13 @@ let appUI = (function()
 										});
 								});
 							return cards;
+						},
+					
+					infoCardInstructionDisplay:
+						function()
+						{
+							let displayStyle = (this.infoCardCountyList.length < 1 ? "block" : "none");
+							return displayStyle;
 						}
 				},
 
@@ -134,10 +141,6 @@ let appUI = (function()
 					DefaultZeroValueColor, DefaultColorGradients, null, DefaultUnknownValueColor);
 				animationSequence.seek(animationSequence.getStartTime());
 				setWaitMessage(appLogic.AppWaitType.None);
-
-				// WORKING HERE
-				VueApp.infoCardCountyList.push({ id: "17111", placeName: "McHenry County, Illinoiz" }); // REMOVE CODE HERE
-				VueApp.infoCardCountyList.push({ id: "17097", placeName: "Lake County, Illinoiz" }); // REMOVE CODE HERE
 
 				window.appLogic = appLogic; // REMOVE CODE HERE
 			});
@@ -351,7 +354,8 @@ let appUI = (function()
 			BtnSeekEnd = document.getElementById("BtnSeekEnd"),
 			AnimationSlider = document.getElementById("AnimationSlider"),
 			TimelineCoverLeft = document.getElementById("TimelineCoverLeft"),
-			TimelineCoverRight = document.getElementById("TimelineCoverRight");
+			TimelineCoverRight = document.getElementById("TimelineCoverRight"),
+			InformationPanel = document.getElementById("InformationPanel");
 
 		sequence = new Concert.Sequence();
 		sequence.setDefaults(
@@ -460,7 +464,7 @@ let appUI = (function()
 		// ADD CODE HERE
 		
 		document.getElementById("ConfigPhrase").onclick = showConfigDialog;
-
+		InformationPanel.onclick = informationPanelClick;
 		BtnSeekStart.onclick = animationSeekStart;
 		BtnStepBack.onclick = animationStepBack;
 		BtnPlay.onclick = animationPlay;
@@ -618,6 +622,15 @@ let appUI = (function()
 		}
 	}
 
+	function informationPanelClick(eventObject)
+	{
+		let targetID = eventObject.target.id;
+		if (targetID !== null && targetID.length > 14 && targetID.indexOf("BtnRemoveCard_") === 0)
+		{
+			let countyID = targetID.substring(14);
+			VueApp.infoCardCountyList = VueApp.infoCardCountyList.filter(countyEntry => (countyEntry.id !== countyID));
+		}
+	}
 
 	function handleKeyboardControl(eventObject)
 	{
