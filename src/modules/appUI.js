@@ -627,8 +627,10 @@ let appUI = (function()
 		let targetID = eventObject.target.id;
 		if (targetID !== null && targetID.length > 14 && targetID.indexOf("BtnRemoveCard_") === 0)
 		{
+			// A info card removal button was clicked.
 			let countyID = targetID.substring(14);
 			VueApp.infoCardCountyList = VueApp.infoCardCountyList.filter(countyEntry => (countyEntry.id !== countyID));
+			mapControls.setCountyHighlightingByID(countyID, false);
 		}
 	}
 

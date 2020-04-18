@@ -62,12 +62,36 @@ let mapControls = (function()
 		svgDocument.onmouseup = null;
 	}
 
+	function setCountyHighlightingByFipsCode(fipsCode, highlightOn)
+	{
+		// Make sure this is a county element id.
+		if (fipsCode !== null && fipsCode.length === 5)
+			setCountyElementHighlighting(svgDocument.getElementById("c" + fipsCode), highlightOn);
+	}
+
+	function setCountyElementHighlighting(targetElement, highlightOn)
+	{
+		if (targetElement !== null)
+		{
+			if (highlightOn)
+			{
+				targetElement.style.stroke = "#00ffcf";
+				targetElement.style.strokeWidth = "1.5";
+			}
+			else
+			{
+				targetElement.style.stroke = "#000000";
+				targetElement.style.strokeWidth = "";
+			}
+		}
+	}
+
 	function handleMapDoubleClick(eventObject)
 	{
 		let clickTarget = eventObject.target,
 			targetID = eventObject.target.id;
 
-		// If a county was clicked, add an info card for it.
+		// See if it is a county that was clicked.
 		if (targetID.length === 6 && targetID[0] === "c")
 		{
 			let fipsCode = targetID.substring(1),
@@ -81,7 +105,12 @@ let mapControls = (function()
 					break;
 				}
 			}
+
+			// Add info card for the county.
 			vueObject.infoCardCountyList.push({ id: fipsCode, placeName: title });
+
+			// Add highlighting
+			setCountyElementHighlighting(clickTarget, true);
 		}
 	}
 
@@ -205,7 +234,8 @@ let mapControls = (function()
 		setPagewideKeyDownController: setPagewideKeyDownController,
 		zoomInOneStep: zoomInOneStep,
 		zoomOutOneStep: zoomOutOneStep,
-		zoomFull: zoomFull
+		zoomFull: zoomFull,
+		setCountyHighlightingByID: setCountyHighlightingByFipsCode
 	};
 	return objectInterface;
 })(); // end mapControls singleton definition
