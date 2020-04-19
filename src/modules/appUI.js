@@ -375,13 +375,13 @@ let appUI = (function()
 		let mapConfigPhrase,
 			infoCardCol2Title = VueApp.cardCol2Title;
 		if (basicFact === appLogic.BasicFactType.Cases)
-			mapConfigPhrase = "Confirmed Cases";
+			mapConfigPhrase = "Cumulative Cases";
 		else if (basicFact === appLogic.BasicFactType.Deaths)
-			mapConfigPhrase = "Confirmed Deaths";
+			mapConfigPhrase = "Cumulative Deaths";
 		if (measurement === appLogic.MeasurementType.Absolute)
 			mapConfigPhrase += " (Total)";
 		else if (measurement === appLogic.MeasurementType.CaseRelative)
-			mapConfigPhrase += " per Confirmed Case [known fatality rate]";
+			mapConfigPhrase += " per Case [known fatality rate]";
 		else if (measurement === appLogic.MeasurementType.PopulationRelative)
 		{
 			let formattedPopulation = formatNumberWithCommas(populationScale);
