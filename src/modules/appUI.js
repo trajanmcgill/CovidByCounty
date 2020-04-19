@@ -666,7 +666,9 @@ let appUI = (function()
 		{
 			basicFact: VueApp.configBasicFact,
 			measurement: VueApp.configMeasurement,
-			dataView: VueApp.configDataView
+			dataView: VueApp.configDataView,
+			growthRangeDays: VueApp.growthRangeDays,
+			populationScale: VueApp.populationScale
 		};
 		VueApp.configurationBoxDisplay = "block";
 		document.getElementById("BtnApplyConfigChanges").onclick = function() { hideConfigDialog(true); };
@@ -680,6 +682,10 @@ let appUI = (function()
 		if (apply)
 		{
 			setWaitMessage(appLogic.AppWaitType.BuildingVisualization);
+			if (VueApp.configMeasurement !== appLogic.MeasurementType.PopulationRelative)
+				VueApp.populationScale = savedConfigValues.populationScale; // User didn't select a population-relative measurement, so put the population scale number back to what it was.
+			if (VueApp.configDataView !== appLogic.DataViewType.ChangeAbsolute && VueApp.configDataView !== appLogic.DataViewType.ChangeProportional)
+				VueApp.growthRangeDays = savedConfigValues.growthRangeDays; // User didn't select a change-based display, so put the change date range back to what it was.
 			let animationSequence = setupDataAnimation(
 				appLogic.allCountyData, VueApp.configBasicFact, VueApp.configMeasurement, VueApp.configDataView,
 				VueApp.growthRangeDays, VueApp.populationScale,
@@ -692,6 +698,8 @@ let appUI = (function()
 			VueApp.configBasicFact = savedConfigValues.basicFact;
 			VueApp.configMeasurement = savedConfigValues.measurement;
 			VueApp.configDataView = savedConfigValues.dataView;
+			VueApp.growthRangeDays = savedConfigValues.growthRangeDays;
+			VueApp.populationScale = savedConfigValues.populationScale;
 			animationEnable();
 		}
 	} // end hideConfigDialog()
