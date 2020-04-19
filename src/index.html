@@ -135,7 +135,16 @@
 				<label for="RdoMeasurementAbsolute">Absolute</label>
 				<br>
 				<input id="RdoMeasurementPopulationRelative" type="radio" v-bind:value="MeasurementType.PopulationRelative" v-model="configMeasurement">
-				<label for="RdoMeasurementPopulationRelative">Per X Persons [ADD: ability to set scale]</label>
+				<label for="RdoMeasurementPopulationRelative">
+					Per
+					<select v-model="populationScale">
+						<option v-bind:value="100">100 (percentage)</option>
+						<option v-bind:value="1000">1,000</option>
+						<option v-bind:value="10000">10,000</option>
+						<option v-bind:value="100000">100,000</option>
+						<option v-bind:value="1000000">1,000,000</option>
+					</select>
+					Persons</label>
 				<br>
 				<input id="RdoMeasurementCaseRelative" type="radio" v-bind:value="MeasurementType.CaseRelative" v-model="configMeasurement">
 				<label for="RdoMeasurementCaseRelative">Per Case (Fatality Rate)</label>
@@ -143,14 +152,41 @@
 
 			<div class="ConfigurationRadioGroup">
 				<h4>Value to Display:</h4>
-				<input id="RdoViewDailyValue" type="radio" v-bind:value="DataViewType.DailyValue" v-model="configDataView">
-				<label for="RdoViewDailyValue">Daily Value</label>
+				<table>
+					<tr>
+						<td>
+							<input id="RdoViewDailyValue" type="radio" v-bind:value="DataViewType.DailyValue" v-model="configDataView">
+							<label for="RdoViewDailyValue">Daily Value</label>
+						</td>
+						<td></td>
+					</tr>
+					<tr>
+						<td>
+							<input id="RdoViewChangeAbsolute" type="radio" v-bind:value="DataViewType.ChangeAbsolute" v-model="configDataView">
+							<label for="RdoViewChangeAbsolute">Change (Absolute)</label>
+						</td>
+						<td id="GrowthRangeChoiceCell" rowspan="2">
+							over the preceding
+							<select v-model="growthRangeDays">
+								<option v-bind:value="1">24 hours</option>
+								<option v-bind:value="3">3 days</option>
+								<option v-bind:value="5">5 days</option>
+								<option v-bind:value="7">7 days</option>
+								<option v-bind:value="14">2 weeks</option>
+								<option v-bind:value="21">3 weeks</option>
+								<option v-bind:value="28">4 weeks</option>
+							</select>
+						</td>
+					<tr>
+						<td>
+							<input id="RdoViewChangeProportional" type="radio" v-bind:value="DataViewType.ChangeProportional" v-model="configDataView">
+							<label for="RdoViewChangeProportional">Change (Proportional)</label>
+						</td>
+						<td>
+						</td>
+					</tr>
+				</table>
 				<br>
-				<input id="RdoViewChangeAbsolute" type="radio" v-bind:value="DataViewType.ChangeAbsolute" v-model="configDataView">
-				<label for="RdoViewChangeAbsolute">Change (Absolute) [ADD: ability to set time range]</label>
-				<br>
-				<input id="RdoViewChangeProportional" type="radio" v-bind:value="DataViewType.ChangeProportional" v-model="configDataView">
-				<label for="RdoViewChangeProportional">Change (Proportional) [ADD: ability to set time range]</label>
 			</div>
 
 			<div id="ConfigurationButtons">
