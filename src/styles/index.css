@@ -130,7 +130,7 @@ h3, h4
 	position: absolute;
 	left: 992px;
 	top: 0;
-	width: 400px;
+	width: 550px;
 }
 
 #InformationPanel
@@ -139,8 +139,8 @@ h3, h4
 	left: 0;
 	top: 80px;
 	box-sizing: border-box;
-	width: 400px;
-	height: 722px;
+	width: 550px;
+	height: 873px;
 	border: 1px solid #74818b;
 	padding: 8px;
 	background-color: #d4d8db;
@@ -160,15 +160,31 @@ h3, h4
 	margin-bottom: 6px;
 	padding-left: 3px;
 	padding-right: 3px;
-	width: 365px;
+	width: 515px;
 	left: 8px;
+}
+
+.InfoCardLeftMainTitle
+{
+	width: 40px;
+}
+
+.InfoCardLeftSecondaryTitle
+{
+	width: 90px;
+}
+
+.InfoCardLeftSecondaryTitle, .InfoCardPercentageColumn, .InfoCardByPopulationColumn
+{
+	border-right: 1px solid #1e1e1e;
+	padding-right: 5px;
 }
 
 .InfoCardRemovalButton
 {
 	position: absolute;
 	top: 4px;
-	left: 343px;
+	left: 493px;
 	font-size: 12px;
 	width: 16px;
 	height: 16px;
@@ -188,10 +204,6 @@ h3, h4
 	height: 28px;
 }
 
-.DataCard
-{
-}
-
 .CountyInfoCardTable
 {
 	width: 100%;
@@ -204,6 +216,11 @@ h3, h4
 .CountyInfoCardTable thead
 {
 	font-size: 11px;
+}
+
+.CountyInfoCardTable thead th
+{
+	text-align: center;
 }
 
 .DeathRow

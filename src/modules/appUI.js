@@ -90,23 +90,50 @@ let appUI = (function()
 								countyCard =>
 								{
 									let county = appLogic.allCountyData.counties[countyCard.id],
-										matchingDailyRecords, dailyRecord;
+										matchingRecordIndex, currentDailyRecord, previousDailyRecord;
 									if (this.displayDate === null)
-										dailyRecord = null;
+										currentDailyRecord = previousDailyRecord = { cumulativeCases : 0, cumulativeDeaths: 0 };
 									else
 									{
-										matchingDailyRecords = county.covid19Records.filter(record => record.date.getTime() === this.displayDate.getTime()),
-										dailyRecord = (matchingDailyRecords.length > 0) ? matchingDailyRecords[0] : null;
+										matchingRecordIndex = county.covid19Records.findIndex(record => dateComparison(record.date, this.displayDate, 0));
+										currentDailyRecord = (matchingRecordIndex >= 0) ? county.covid19Records[matchingRecordIndex] : { cumulativeCases : 0, cumulativeDeaths: 0 };
+
+										matchingRecordIndex = county.covid19Records.findIndex(record => dateComparison(record.date, this.displayDate, 1));
+										previousDailyRecord = (matchingRecordIndex >= 0) ? county.covid19Records[matchingRecordIndex] : { cumulativeCases : 0, cumulativeDeaths: 0 };
 									}
+									let currentCases = currentDailyRecord.cumulativeCases,
+										previousCases = previousDailyRecord.cumulativeCases,
+										casesAbsoluteChange = currentCases - previousCases,
+										casesByPopulation = currentCases / county.population * this.populationScale,
+										casesByPopulationChange = casesByPopulation - previousCases / county.population * this.populationScale,
+										casesChangePercentage = (casesAbsoluteChange === 0) ? 0 : ((previousCases === 0) ? Number.POSITIVE_INFINITY : 100 * casesAbsoluteChange / previousCases),
+										currentDeaths = currentDailyRecord.cumulativeDeaths,
+										previousDeaths = previousDailyRecord.cumulativeDeaths,
+										deathsAbsoluteChange = currentDeaths - previousDeaths,
+										deathsChangePercentage = (deathsAbsoluteChange === 0) ? 0 : ((previousDeaths === 0) ? Number.POSITIVE_INFINITY : 100 * deathsAbsoluteChange / previousDeaths),
+										deathsByPopulation = currentDeaths / county.population * this.populationScale,
+										deathsByPopulationChange = deathsByPopulation - previousDeaths / county.population * this.populationScale,
+										deathsPerCase = (currentDeaths === 0) ? 0 : currentDeaths / currentCases,
+										previousDeathsPerCase = (previousDeaths === 0) ? 0 : previousDeaths / previousCases,
+										deathsPerCaseChange = deathsPerCase - previousDeathsPerCase,
+										deathsPerCaseChangePercentage = (deathsPerCaseChange === 0) ? 0 : ((previousDeathsPerCase === 0) ? Number.POSITIVE_INFINITY : 100 * deathsPerCaseChange / previousDeathsPerCase);
 									cards.push(
 										{
 											id: countyCard.id,
 											placeName: countyCard.placeName,
-											casesAbsolute: (dailyRecord === null) ? 0 : dailyRecord.cumulativeCases,
-											casesByPopulation: (dailyRecord === null) ? 0 : dailyRecord.cumulativeCases / county.population * this.populationScale,
-											deathsAbsolute: (dailyRecord === null) ? 0 : dailyRecord.cumulativeDeaths,
-											deathsByPopulation: (dailyRecord === null) ? 0 : dailyRecord.cumulativeDeaths / county.population * this.populationScale,
-											deathsPerCase: (dailyRecord === null) ? 0 : dailyRecord.cumulativeDeaths / dailyRecord.cumulativeCases
+											casesAbsolute: currentCases,
+											casesAbsoluteChange: casesAbsoluteChange,
+											casesChangePercentage: casesChangePercentage,
+											casesByPopulation: casesByPopulation,
+											casesByPopulationChange: casesByPopulationChange,
+											deathsAbsolute: currentDeaths,
+											deathsAbsoluteChange: deathsAbsoluteChange,
+											deathsChangePercentage: deathsChangePercentage,
+											deathsByPopulation: deathsByPopulation,
+											deathsByPopulationChange: deathsByPopulationChange,
+											deathsPerCase: deathsPerCase,
+											deathsPerCaseChange: deathsPerCaseChange,
+											deathsPerCaseChangePercentage: deathsPerCaseChangePercentage
 										});
 								});
 							return cards;
@@ -118,6 +145,29 @@ let appUI = (function()
 							let displayStyle = (this.infoCardCountyList.length < 1 ? "block" : "none");
 							return displayStyle;
 						}
+				},
+
+			methods:
+				{
+					formatInfoCardDisplayNumber(rawNumber, asInteger, significantDigits)
+					{
+						rawNumber = parseFloat(rawNumber);
+
+						let displayNumber;
+						if (rawNumber === 0)
+							displayNumber = 0;
+						else if (asInteger || rawNumber >= 1000 || rawNumber <= -1000)
+						{
+							let log10 = Math.log10(Math.abs(rawNumber)),
+								truncatedLog10 = Math.trunc(log10),
+								digits = 1 + (log10 > truncatedLog10) ? truncatedLog10 + 1 : truncatedLog10;
+							displayNumber = rawNumber.toPrecision(digits);
+						}
+						else
+							displayNumber = rawNumber.toPrecision(significantDigits);
+						
+						return displayNumber;
+					}
 				},
 
 			mounted: function() { whenDocumentLoaded(initializeApp); }
@@ -496,7 +546,19 @@ let appUI = (function()
 	} // end buildTimelineData()
 
 
-	function formatNumberWithCommas(number)
+	function dateComparison(firstDate, secondDate, targetedDifference)
+	{
+		let adjustedDate = new Date(firstDate);
+		adjustedDate.setDate(adjustedDate.getDate() + targetedDifference);
+		let match =
+			(adjustedDate.getFullYear() === secondDate.getFullYear()
+			&& adjustedDate.getMonth() === secondDate.getMonth()
+			&& adjustedDate.getDate() === secondDate.getDate());
+		return match;
+	} // end dateComparison()
+
+
+function formatNumberWithCommas(number)
 	{
 		let rawString = number.toString(),
 			decimalPosition = rawString.indexOf("."),

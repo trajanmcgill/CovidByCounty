@@ -74,7 +74,7 @@
 					<div class="InformationCard TitleCard">
 						<h3>{{ (displayDate === null) ? "" : (displayDate.toLocaleString("en-us", { month: "long" }) + " " + displayDate.getDate()) }}</h3>
 					</div>
-					<div v-for="item in infoCards" class="InformationCard DataCard">
+					<div v-for="item in infoCards" class="InformationCard">
 						<h4>{{ item.placeName }}</h4>
 						<button v-bind:id="'BtnRemoveCard_' + item.id" class="InfoCardRemovalButton">X</button>
 						<table class="CountyInfoCardTable">
@@ -82,47 +82,53 @@
 								<tr>
 									<th></th>
 									<th></th>
-									<th>Absolute</th>
+									<th colspan="2">Absolute</th>
 									<th>{{ cardCol2Title }}</th>
-									<th>Per Case</th>
+									<th colspan="2">Per Case (fatality rate)</th>
 								</tr>
 							</thead>
 							<tbody>
 								<tr>
-									<th rowspan="2">CASES</th>
-									<th>total</th>
-									<td>{{ item.casesAbsolute }}</td>
-									<td>{{ parseFloat(item.casesByPopulation).toPrecision(8) }}</td>
-									<td>-</td>
+									<th rowspan="2" class="InfoCardLeftMainTitle">CASES</th>
+									<th class="InfoCardLeftSecondaryTitle">to-date total</th>
+									<td>{{ formatInfoCardDisplayNumber(item.casesAbsolute, true, null) }} </td>
+									<td class="InfoCardPercentageColumn"></td>
+									<td class="InfoCardByPopulationColumn">{{ formatInfoCardDisplayNumber(item.casesByPopulation, false, 4) }}</td>
+									<td colspan="2">-</td>
 								</tr>
 								<tr>
-									<th>7-day change</th>
-									<td>0000</td>
-									<td>0000</td>
-									<td>-</td>
+									<th class="InfoCardLeftSecondaryTitle">{{ growthRangeDays }}-day change</th>
+									<td>{{ formatInfoCardDisplayNumber(item.casesAbsoluteChange, true, null) }}</td>
+									<td class="InfoCardPercentageColumn">({{ formatInfoCardDisplayNumber(item.casesChangePercentage, false, 3) }} %)</td>
+									<td class="InfoCardByPopulationColumn">{{ formatInfoCardDisplayNumber(item.casesByPopulationChange, false, 4) }}</td>
+									<td colspan="2">-</td>
 								</tr>
 								<tr class="DeathRow">
-									<th rowspan="2">DEATHS</th>
-									<th>total</th>
-									<td>{{ item.deathsAbsolute }}</td>
-									<td>{{ parseFloat(item.deathsByPopulation).toPrecision(8) }}</td>
-									<td>{{ parseFloat(item.deathsPerCase).toPrecision(8) }}</td>
+									<th rowspan="2" class="InfoCardLeftMainTitle">DEATHS</th>
+									<th class="InfoCardLeftSecondaryTitle">to-date total</th>
+									<td>{{ formatInfoCardDisplayNumber(item.deathsAbsolute, true, null) }}</td>
+									<td class="InfoCardPercentageColumn"></td>
+									<td class="InfoCardByPopulationColumn">{{ formatInfoCardDisplayNumber(item.deathsByPopulation, false, 4) }}</td>
+									<td>{{ formatInfoCardDisplayNumber(item.deathsPerCase, false, 4) }}</td>
+									<td></td>
 								</tr>
 								<tr>
-									<th>7-day change</th>
-									<td>0000</td>
-									<td>0000</td>
-									<td>0000</td>
+									<th class="InfoCardLeftSecondaryTitle">{{ growthRangeDays }}-day change</th>
+									<td>{{ formatInfoCardDisplayNumber(item.deathsAbsoluteChange, true, null) }}</td>
+									<td class="InfoCardPercentageColumn">({{ formatInfoCardDisplayNumber(item.deathsChangePercentage, false, 3) }}%)</td>
+									<td class="InfoCardByPopulationColumn">{{ formatInfoCardDisplayNumber(item.deathsByPopulationChange, false, 4) }}</td>
+									<td>{{ formatInfoCardDisplayNumber(item.deathsPerCaseChange, false, 4) }}</td>
+									<td>({{ formatInfoCardDisplayNumber(item.deathsPerCaseChangePercentage, false, 4) }} %)</td>
 								</tr>
 							</tbody>
 						</table>
 					</div>
 
-					<div class="InformationCard DataCard" v-bind:style="{ display: infoCardInstructionDisplay }">
+					<div class="InformationCard" v-bind:style="{ display: infoCardInstructionDisplay }">
 						Double-click any county on the map to track its data here.
 					</div>
 
-					<div id="tempconsole" class="InformationCard DataCard"> <!-- REMOVE CODE HERE -->
+					<div id="tempconsole" class="InformationCard"> <!-- REMOVE CODE HERE -->
 						<div v-for="item in consoleEntries">{{ item }}</div>
 					</div>
 				</div>
