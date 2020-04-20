@@ -91,34 +91,60 @@
 								<tr>
 									<th rowspan="2" class="InfoCardLeftMainTitle">CASES</th>
 									<th class="InfoCardLeftSecondaryTitle">to-date total</th>
-									<td>{{ formatInfoCardDisplayNumber(item.casesAbsolute, true, null) }} </td>
+									<td v-bind:class="{ CurrentFact: isCurrentFact('casesAbsolute') }">
+										{{ formatInfoCardDisplayNumber(item.casesAbsolute, true, null) }}
+									</td>
 									<td class="InfoCardPercentageColumn"></td>
-									<td class="InfoCardByPopulationColumn">{{ formatInfoCardDisplayNumber(item.casesByPopulation, false, 4) }}</td>
+									<td class="InfoCardByPopulationColumn" v-bind:class="{ CurrentFact: isCurrentFact('casesByPopulation') }">
+										{{ formatInfoCardDisplayNumber(item.casesByPopulation, false, 4) }}
+									</td>
 									<td colspan="2">-</td>
 								</tr>
 								<tr>
 									<th class="InfoCardLeftSecondaryTitle">{{ growthRangeDays }}-day change</th>
-									<td>{{ formatInfoCardDisplayNumber(item.casesAbsoluteChange, true, null) }}</td>
-									<td class="InfoCardPercentageColumn">({{ formatInfoCardDisplayNumber(item.casesChangePercentage, false, 3) }} %)</td>
-									<td class="InfoCardByPopulationColumn">{{ formatInfoCardDisplayNumber(item.casesByPopulationChange, false, 4) }}</td>
+									<td v-bind:class="{ CurrentFact: isCurrentFact('casesAbsoluteChange') }">
+										{{ formatInfoCardDisplayNumber(item.casesAbsoluteChange, true, null) }}
+									</td>
+									<td class="InfoCardPercentageColumn" v-bind:class="{ CurrentFact: isCurrentFact('casesChangePercentage') }">
+										({{ formatInfoCardDisplayNumber(item.casesChangePercentage, false, 3) }} %)
+									</td>
+									<td class="InfoCardByPopulationColumn" v-bind:class="{ CurrentFact: isCurrentFact('casesByPopulationChange') }">
+										{{ formatInfoCardDisplayNumber(item.casesByPopulationChange, false, 4) }}
+									</td>
 									<td colspan="2">-</td>
 								</tr>
 								<tr class="DeathRow">
 									<th rowspan="2" class="InfoCardLeftMainTitle">DEATHS</th>
 									<th class="InfoCardLeftSecondaryTitle">to-date total</th>
-									<td>{{ formatInfoCardDisplayNumber(item.deathsAbsolute, true, null) }}</td>
+									<td v-bind:class="{ CurrentFact: isCurrentFact('deathsAbsolute') }">
+										{{ formatInfoCardDisplayNumber(item.deathsAbsolute, true, null) }}
+									</td>
 									<td class="InfoCardPercentageColumn"></td>
-									<td class="InfoCardByPopulationColumn">{{ formatInfoCardDisplayNumber(item.deathsByPopulation, false, 4) }}</td>
-									<td>{{ formatInfoCardDisplayNumber(item.deathsPerCase, false, 4) }}</td>
+									<td class="InfoCardByPopulationColumn" v-bind:class="{ CurrentFact: isCurrentFact('deathsByPopulation') }">
+										{{ formatInfoCardDisplayNumber(item.deathsByPopulation, false, 4) }}
+									</td>
+									<td v-bind:class="{ CurrentFact: isCurrentFact('deathsPerCase') }">
+										{{ formatInfoCardDisplayNumber(item.deathsPerCase, false, 4) }}
+									</td>
 									<td></td>
 								</tr>
 								<tr>
 									<th class="InfoCardLeftSecondaryTitle">{{ growthRangeDays }}-day change</th>
-									<td>{{ formatInfoCardDisplayNumber(item.deathsAbsoluteChange, true, null) }}</td>
-									<td class="InfoCardPercentageColumn">({{ formatInfoCardDisplayNumber(item.deathsChangePercentage, false, 3) }}%)</td>
-									<td class="InfoCardByPopulationColumn">{{ formatInfoCardDisplayNumber(item.deathsByPopulationChange, false, 4) }}</td>
-									<td>{{ formatInfoCardDisplayNumber(item.deathsPerCaseChange, false, 4) }}</td>
-									<td>({{ formatInfoCardDisplayNumber(item.deathsPerCaseChangePercentage, false, 4) }} %)</td>
+									<td v-bind:class="{ CurrentFact: isCurrentFact('deathsAbsoluteChange') }">
+										{{ formatInfoCardDisplayNumber(item.deathsAbsoluteChange, true, null) }}
+									</td>
+									<td class="InfoCardPercentageColumn" v-bind:class="{ CurrentFact: isCurrentFact('deathsChangePercentage') }">
+										({{ formatInfoCardDisplayNumber(item.deathsChangePercentage, false, 3) }}%)
+									</td>
+									<td class="InfoCardByPopulationColumn" v-bind:class="{ CurrentFact: isCurrentFact('deathsByPopulationChange') }">
+										{{ formatInfoCardDisplayNumber(item.deathsByPopulationChange, false, 4) }}
+									</td>
+									<td v-bind:class="{ CurrentFact: isCurrentFact('deathsPerCaseChange') }">
+										{{ formatInfoCardDisplayNumber(item.deathsPerCaseChange, false, 4) }}
+									</td>
+									<td v-bind:class="{ CurrentFact: isCurrentFact('deathsPerCaseChangePercentage') }">
+										({{ formatInfoCardDisplayNumber(item.deathsPerCaseChangePercentage, false, 4) }} %)
+									</td>
 								</tr>
 							</tbody>
 						</table>

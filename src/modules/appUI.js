@@ -149,7 +149,7 @@ let appUI = (function()
 
 			methods:
 				{
-					formatInfoCardDisplayNumber(rawNumber, asInteger, significantDigits)
+					formatInfoCardDisplayNumber: function(rawNumber, asInteger, significantDigits)
 					{
 						rawNumber = parseFloat(rawNumber);
 
@@ -167,6 +167,27 @@ let appUI = (function()
 							displayNumber = rawNumber.toPrecision(significantDigits);
 						
 						return displayNumber;
+					},
+
+					isCurrentFact: function(factName)
+					{
+						let factMatches =
+						(
+							(factName === "casesAbsolute" && this.configBasicFact === appLogic.BasicFactType.Cases && this.configMeasurement === appLogic.MeasurementType.Absolute && this.configDataView === appLogic.DataViewType.DailyValue)
+							|| (factName === "casesByPopulation" && this.configBasicFact === appLogic.BasicFactType.Cases && this.configMeasurement === appLogic.MeasurementType.PopulationRelative && this.configDataView === appLogic.DataViewType.DailyValue)
+							|| (factName === "casesAbsoluteChange" && this.configBasicFact === appLogic.BasicFactType.Cases && this.configMeasurement === appLogic.MeasurementType.Absolute && this.configDataView === appLogic.DataViewType.ChangeAbsolute)
+							|| (factName === "casesChangePercentage" && this.configBasicFact === appLogic.BasicFactType.Cases && this.configMeasurement === appLogic.MeasurementType.Absolute && this.configDataView === appLogic.DataViewType.ChangeProportional)
+							|| (factName === "casesByPopulationChange" && this.configBasicFact === appLogic.BasicFactType.Cases && this.configMeasurement === appLogic.MeasurementType.PopulationRelative && this.configDataView === appLogic.DataViewType.ChangeAbsolute)
+							|| (factName === "deathsAbsolute" && this.configBasicFact === appLogic.BasicFactType.Deaths && this.configMeasurement === appLogic.MeasurementType.Absolute && this.configDataView === appLogic.DataViewType.DailyValue)
+							|| (factName === "deathsByPopulation" && this.configBasicFact === appLogic.BasicFactType.Deaths && this.configMeasurement === appLogic.MeasurementType.PopulationRelative && this.configDataView === appLogic.DataViewType.DailyValue)
+							|| (factName === "deathsPerCase" && this.configBasicFact === appLogic.BasicFactType.Deaths && this.configMeasurement === appLogic.MeasurementType.CaseRelative && this.configDataView === appLogic.DataViewType.DailyValue)
+							|| (factName === "deathsAbsoluteChange" && this.configBasicFact === appLogic.BasicFactType.Deaths && this.configMeasurement === appLogic.MeasurementType.Absolute && this.configDataView === appLogic.DataViewType.ChangeAbsolute)
+							|| (factName === "deathsChangePercentage" && this.configBasicFact === appLogic.BasicFactType.Deaths && this.configMeasurement === appLogic.MeasurementType.Absolute && this.configDataView === appLogic.DataViewType.ChangeProportional)
+							|| (factName === "deathsByPopulationChange" && this.configBasicFact === appLogic.BasicFactType.Deaths && this.configMeasurement === appLogic.MeasurementType.PopulationRelative && this.configDataView === appLogic.DataViewType.ChangeAbsolute)
+							|| (factName === "deathsPerCaseChange" && this.configBasicFact === appLogic.BasicFactType.Deaths && this.configMeasurement === appLogic.MeasurementType.CaseRelative && this.configDataView === appLogic.DataViewType.ChangeAbsolute)
+							|| (factName === "deathsPerCaseChangePercentage" && this.configBasicFact === appLogic.BasicFactType.Deaths && this.configMeasurement === appLogic.MeasurementType.CaseRelative && this.configDataView === appLogic.DataViewType.ChangeProportional)
+						);
+						return factMatches;
 					}
 				},
 
