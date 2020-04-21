@@ -560,9 +560,6 @@ let appUI = (function()
 				keyframes: { times: titleCardTimes, values: titleCardValues }
 			});
 		
-		// Animate info cards
-		// ADD CODE HERE
-		
 		document.getElementById("ConfigPhrase").onclick = showConfigDialog;
 		InformationPanel.onclick = informationPanelClick;
 		BtnSeekStart.onclick = animationSeekStart;
