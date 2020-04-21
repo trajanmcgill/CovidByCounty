@@ -188,6 +188,35 @@ let appUI = (function()
 							|| (factName === "deathsPerCaseChangePercentage" && this.configBasicFact === appLogic.BasicFactType.Deaths && this.configMeasurement === appLogic.MeasurementType.CaseRelative && this.configDataView === appLogic.DataViewType.ChangeProportional)
 						);
 						return factMatches;
+					},
+
+					mouseenterInfoCard: function(eventObject)
+					{
+						let infoCard = eventObject.currentTarget,
+							fipsCode = infoCard.id.substring(9);
+						mapControls.setCountyHighlightingByID(fipsCode, mapControls.CountyHighlightType.Hovered);
+						this.updateInfoCardHoverHighlight(fipsCode, true);
+					},
+
+					mouseleaveInfoCard: function(eventObject)
+					{
+						let infoCard = eventObject.currentTarget,
+							fipsCode = infoCard.id.substring(9);
+						mapControls.setCountyHighlightingByID(fipsCode, mapControls.CountyHighlightType.Selected);
+						this.updateInfoCardHoverHighlight(fipsCode, false);
+					},
+
+					updateInfoCardHoverHighlight(fipsCode, doHover)
+					{
+						let card = document.getElementById("InfoCard_" + fipsCode);
+
+						if (card !== null)
+						{
+							if (doHover)
+								card.classList.add("Hovered");
+							else
+								card.classList.remove("Hovered");
+						}
 					}
 				},
 
@@ -713,7 +742,7 @@ function formatNumberWithCommas(number)
 			// A info card removal button was clicked.
 			let countyID = targetID.substring(14);
 			VueApp.infoCardCountyList = VueApp.infoCardCountyList.filter(countyEntry => (countyEntry.id !== countyID));
-			mapControls.setCountyHighlightingByID(countyID, false);
+			mapControls.setCountyHighlightingByID(countyID, mapControls.CountyHighlightType.Normal);
 		}
 	}
 

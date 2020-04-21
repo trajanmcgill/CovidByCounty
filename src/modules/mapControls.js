@@ -7,8 +7,17 @@ let mapControls = (function()
 			RealAndDragMaps: 2
 		};
 	
+	const CountyHighlightType =
+		{
+			Normal: 0,
+			Selected: 1,
+			Hovered: 2
+		};
+	
 	const MouseClickMovementTolerance = 5,
-		ZoomRatio = 1.5, MaxZoom = 12, MinZoom = 1;
+		ZoomRatio = 1.5, MaxZoom = 12, MinZoom = 1,
+		CountyBorderColorNormal = "#000000", CountyBorderColorSelected = "#00ffcf", CountyBorderColorHovered = "#000000",
+		CountyBorderWidthNormal = "0.17828999", CountyBorderWidthSelected = "1.5", CountyBorderWidthHovered = "3";
 
 	let vueObject = null,
 		svgObject = null, svgDocument = null, mapDragObject = null,
@@ -21,6 +30,36 @@ let mapControls = (function()
 		currentZoom = 1,
 		pagewideKeyDownHandler = null;
 	
+	function handleCountyMouseEnter(eventObject)
+	{
+		let targetElement = eventObject.currentTarget, targetID = targetElement.id;
+		if (targetID !== null && targetID.length === 6 && targetID[0] === "c")
+		{
+			let fipsCode = targetID.substring(1),
+				infoCardExists = vueObject.infoCardCountyList.some(county => ("c" + county.id === targetID));
+			if (infoCardExists)
+				vueObject.updateInfoCardHoverHighlight(fipsCode, true);
+			setCountyElementHighlighting(targetElement, CountyHighlightType.Hovered);
+		}
+	}
+
+	function handleCountyMouseLeave(eventObject)
+	{
+		let targetElement = eventObject.currentTarget, targetID = targetElement.id;
+		if (targetID !== null && targetID.length === 6 && targetID[0] === "c")
+		{
+			let fipsCode = targetID.substring(1),
+				infoCardExists = vueObject.infoCardCountyList.some(county => ("c" + county.id === targetID));
+			if (infoCardExists)
+			{
+				vueObject.updateInfoCardHoverHighlight(fipsCode, false);
+				setCountyElementHighlighting(targetElement, CountyHighlightType.Selected);
+			}
+			else
+				setCountyElementHighlighting(targetElement, CountyHighlightType.Normal);
+		}
+	}
+
 	function handleMapMouseDown(eventObject)
 	{
 		draggingMap = false;
@@ -62,26 +101,32 @@ let mapControls = (function()
 		svgDocument.onmouseup = null;
 	}
 
-	function setCountyHighlightingByFipsCode(fipsCode, highlightOn)
+	function setCountyHighlightingByFipsCode(fipsCode, highlightType)
 	{
 		// Make sure this is a county element id.
 		if (fipsCode !== null && fipsCode.length === 5)
-			setCountyElementHighlighting(svgDocument.getElementById("c" + fipsCode), highlightOn);
+			setCountyElementHighlighting(svgDocument.getElementById("c" + fipsCode), highlightType);
 	}
 
-	function setCountyElementHighlighting(targetElement, highlightOn)
+	function setCountyElementHighlighting(targetElement, highlightType)
 	{
 		if (targetElement !== null)
 		{
-			if (highlightOn)
+			if (highlightType === CountyHighlightType.Normal)
 			{
-				targetElement.style.stroke = "#00ffcf";
-				targetElement.style.strokeWidth = "1.5";
+				targetElement.classList.remove("hovered");
+				targetElement.style.stroke = CountyBorderColorNormal;
+				targetElement.style.strokeWidth = CountyBorderWidthNormal;
 			}
-			else
+			else if (highlightType === CountyHighlightType.Selected)
 			{
-				targetElement.style.stroke = "#000000";
-				targetElement.style.strokeWidth = "";
+				targetElement.style.stroke = CountyBorderColorSelected;
+				targetElement.style.strokeWidth = CountyBorderWidthSelected;
+			}
+			else if (highlightType === CountyHighlightType.Hovered)
+			{
+				targetElement.style.stroke = CountyBorderColorHovered;
+				targetElement.style.strokeWidth = CountyBorderWidthHovered;
 			}
 		}
 	}
@@ -110,7 +155,7 @@ let mapControls = (function()
 			vueObject.infoCardCountyList.push({ id: fipsCode, placeName: title });
 
 			// Add highlighting
-			setCountyElementHighlighting(clickTarget, true);
+			setCountyElementHighlighting(clickTarget, CountyHighlightType.Selected);
 		}
 	}
 
@@ -226,10 +271,17 @@ let mapControls = (function()
 		svgDocument.onwheel = handleMouseWheel;
 		svgDocument.onmousedown = handleMapMouseDown;
 		svgDocument.ondblclick = handleMapDoubleClick;
+		svgDocument.querySelectorAll("path[id^='c']").forEach(
+			element =>
+			{
+				element.addEventListener("mouseenter", handleCountyMouseEnter);
+				element.addEventListener("mouseleave", handleCountyMouseLeave);
+			});
 	} // end initializeMapUI()
 
 	let objectInterface =
 	{
+		CountyHighlightType: CountyHighlightType,
 		initializeMapUI: initializeMapUI,
 		setPagewideKeyDownController: setPagewideKeyDownController,
 		zoomInOneStep: zoomInOneStep,
