@@ -84,7 +84,7 @@
 									<th></th>
 									<th></th>
 									<th colspan="2">Absolute</th>
-									<th>{{ cardCol2Title }}</th>
+									<th>{{ infoCardPopulationScale }}</th>
 									<th colspan="2">Per Case (fatality rate)</th>
 								</tr>
 							</thead>
@@ -166,7 +166,7 @@
 		</div>
 		<div id="ConfigurationBox" v-bind:style="{ display: configurationBoxDisplay }">
 			<h3>Animated Report Configuration</h3>
-			<div class="ConfigurationRadioGroup">
+			<div class="ConfigurationControlSection">
 				<h4>Basic Fact to Report:</h4>
 				<input id="RdoFactCases" type="radio" v-bind:value="BasicFactType.Cases" v-model="configBasicFact">
 				<label for="RdoFactCases">Cumulative Cases</label>
@@ -175,28 +175,46 @@
 				<label for="RdoFactDeaths">Cumulative Deaths</label>
 			</div>
 
-			<div class="ConfigurationRadioGroup">
-				<h4>Measurement:</h4>
-				<input id="RdoMeasurementAbsolute" type="radio" v-bind:value="MeasurementType.Absolute" v-model="configMeasurement">
-				<label for="RdoMeasurementAbsolute">Absolute</label>
-				<br>
-				<input id="RdoMeasurementPopulationRelative" type="radio" v-bind:value="MeasurementType.PopulationRelative" v-model="configMeasurement">
-				<label for="RdoMeasurementPopulationRelative">
-					Per
+			<div class="ConfigurationControlSection">
+				<h4>Measurement Scales and Ranges</h4>
+				<div class="NonRadioQuestion">
+					Population density scale: Per
 					<select v-model="populationScale">
-						<option v-bind:value="100">100 (percentage)</option>
+						<option v-bind:value="100">100</option>
 						<option v-bind:value="1000">1,000</option>
 						<option v-bind:value="10000">10,000</option>
 						<option v-bind:value="100000">100,000</option>
 						<option v-bind:value="1000000">1,000,000</option>
 					</select>
-					Persons</label>
+					Persons
+				</div>
+				<div class="NonRadioQuestion">
+					Range for calculating change over time:
+					<select v-model="growthRangeDays">
+						<option v-bind:value="1">24 hours</option>
+						<option v-bind:value="3">3 days</option>
+						<option v-bind:value="5">5 days</option>
+						<option v-bind:value="7">7 days</option>
+						<option v-bind:value="14">2 weeks</option>
+						<option v-bind:value="21">3 weeks</option>
+						<option v-bind:value="28">4 weeks</option>
+					</select>
+				</div>
+			</div>
+
+			<div class="ConfigurationControlSection">
+				<h4>Measurement:</h4>
+				<input id="RdoMeasurementAbsolute" type="radio" v-bind:value="MeasurementType.Absolute" v-model="configMeasurement">
+				<label for="RdoMeasurementAbsolute">Absolute</label>
+				<br>
+				<input id="RdoMeasurementPopulationRelative" type="radio" v-bind:value="MeasurementType.PopulationRelative" v-model="configMeasurement">
+				<label for="RdoMeasurementPopulationRelative">Per {{ formattedPopulationScale }}</label>
 				<br>
 				<input id="RdoMeasurementCaseRelative" type="radio" v-bind:value="MeasurementType.CaseRelative" v-model="configMeasurement">
 				<label for="RdoMeasurementCaseRelative">Per Case (Fatality Rate)</label>
 			</div>
 
-			<div class="ConfigurationRadioGroup">
+			<div class="ConfigurationControlSection">
 				<h4>Value to Display:</h4>
 				<table>
 					<tr>
@@ -212,16 +230,7 @@
 							<label for="RdoViewChangeAbsolute">Change (Absolute)</label>
 						</td>
 						<td id="GrowthRangeChoiceCell" rowspan="2">
-							over the preceding
-							<select v-model="growthRangeDays">
-								<option v-bind:value="1">24 hours</option>
-								<option v-bind:value="3">3 days</option>
-								<option v-bind:value="5">5 days</option>
-								<option v-bind:value="7">7 days</option>
-								<option v-bind:value="14">2 weeks</option>
-								<option v-bind:value="21">3 weeks</option>
-								<option v-bind:value="28">4 weeks</option>
-							</select>
+							over the preceding {{ formattedGrowthRangeDays }}
 						</td>
 					<tr>
 						<td id="GrowthProportionalChoiceCell">

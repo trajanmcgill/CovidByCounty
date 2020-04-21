@@ -55,8 +55,6 @@ let appUI = (function()
 	
 			data:
 				{
-					cardCol1Title: "",
-					cardCol2Title: "",
 					waitMessage: "Loading Map...",
 					waitMessageDisplay: "block",
 					configurationBoxDisplay: "none",
@@ -82,6 +80,44 @@ let appUI = (function()
 
 			computed:
 				{
+					formattedPopulationScale:
+						function()
+						{
+							let populationScale = this.populationScale, formattedValue = "";
+							if (populationScale !== null)
+							{
+								formattedValue = formatNumberWithCommas(populationScale) + " Persons";
+								if (populationScale === 100)
+									formattedValue += " (population percentage)"
+							}
+							return formattedValue;
+						},
+
+					infoCardPopulationScale:
+						function()
+						{
+							let populationScale = this.populationScale, formattedValue = "";
+							if (populationScale !== null)
+								formattedValue = "Per " + formatNumberWithCommas(populationScale);
+							return formattedValue;
+						},
+
+					formattedGrowthRangeDays:
+						function()
+						{
+							let growthRangeDays = this.growthRangeDays, formattedValue = "";
+							if (growthRangeDays !== null)
+							{
+								if (growthRangeDays === 1)
+									formattedValue = "24 hours";
+								else if (growthRangeDays > 7 && growthRangeDays % 7 === 0)
+									formattedValue = (growthRangeDays / 7) + " weeks";
+								else
+									formattedValue = growthRangeDays + " days";
+							}
+							return formattedValue;
+						},
+
 					infoCards:
 						function()
 						{
@@ -472,8 +508,7 @@ let appUI = (function()
 			colorRanges = autoScaleColorRanges(rawMapAnimationData.minNonzeroValue, rawMapAnimationData.maxOverallDisplayFactValue);
 		let mapTransformations = getMapAnimationTransformations(rawMapAnimationData, zeroValueColor, colorGradients, colorRanges, unknownValueColor);
 		mapTransformations.forEach(transformation => { sequence.addTransformations(transformation); });
-		let mapConfigPhrase,
-			infoCardCol2Title = VueApp.cardCol2Title;
+		let mapConfigPhrase;
 		if (basicFact === appLogic.BasicFactType.Cases)
 			mapConfigPhrase = "Cumulative Cases";
 		else if (basicFact === appLogic.BasicFactType.Deaths)
@@ -483,11 +518,7 @@ let appUI = (function()
 		else if (measurement === appLogic.MeasurementType.CaseRelative)
 			mapConfigPhrase += " per Case [known fatality rate]";
 		else if (measurement === appLogic.MeasurementType.PopulationRelative)
-		{
-			let formattedPopulation = formatNumberWithCommas(populationScale);
-			mapConfigPhrase += " Per " + formattedPopulation + " People";
-			infoCardCol2Title = "Per " + formattedPopulation;
-		}
+			mapConfigPhrase += " Per " + formatNumberWithCommas(populationScale) + " People";
 		if (dataView === appLogic.DataViewType.DailyValue)
 			mapConfigPhrase += " (Daily Value)";
 		else if (dataView === appLogic.DataViewType.ChangeAbsolute)
@@ -500,7 +531,6 @@ let appUI = (function()
 		VueApp.growthRangeDays = growthRangeDays;
 		VueApp.populationScale = populationScale;
 		VueApp.mapConfigPhrase = mapConfigPhrase;
-		VueApp.cardCol2Title = infoCardCol2Title;
 		VueApp.maxOverallValue = rawMapAnimationData.maxOverallDisplayFactValue;
 		VueApp.unknownValueColor = unknownValueColor;
 		VueApp.zeroValueColor = zeroValueColor;
@@ -791,10 +821,6 @@ function formatNumberWithCommas(number)
 		if (apply)
 		{
 			setWaitMessage(appLogic.AppWaitType.BuildingVisualization);
-			if (VueApp.configMeasurement !== appLogic.MeasurementType.PopulationRelative)
-				VueApp.populationScale = savedConfigValues.populationScale; // User didn't select a population-relative measurement, so put the population scale number back to what it was.
-			if (VueApp.configDataView !== appLogic.DataViewType.ChangeAbsolute && VueApp.configDataView !== appLogic.DataViewType.ChangeProportional)
-				VueApp.growthRangeDays = savedConfigValues.growthRangeDays; // User didn't select a change-based display, so put the change date range back to what it was.
 			let animationSequence = setupDataAnimation(
 				appLogic.allCountyData, VueApp.configBasicFact, VueApp.configMeasurement, VueApp.configDataView,
 				VueApp.growthRangeDays, VueApp.populationScale,
