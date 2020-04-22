@@ -80,6 +80,15 @@ let appUI = (function()
 
 			computed:
 				{
+					configurationErrors:
+						function()
+						{
+							let errors = [];
+							if (this.configMeasurement === appLogic.MeasurementType.CaseRelative && this.configBasicFact !== appLogic.BasicFactType.Deaths)
+								errors.push("\"Per Case (Fatality Rate)\" measurement can only be selected with the \"Cumulative Deaths\" basic fact. (Cases per case doesn't make sense.)");
+							return errors;
+						},
+
 					formattedPopulationScale:
 						function()
 						{
@@ -811,24 +820,28 @@ function formatNumberWithCommas(number)
 		VueApp.configurationBoxDisplay = "block";
 		document.getElementById("BtnApplyConfigChanges").onclick = function() { hideConfigDialog(true); };
 		document.getElementById("BtnCancelConfigChanges").onclick = function() { hideConfigDialog(false); };
-} // end showConfigDialog()
+	} // end showConfigDialog()
 
 
 	function hideConfigDialog(apply)
 	{
-		VueApp.configurationBoxDisplay = "none";
 		if (apply)
 		{
-			setWaitMessage(appLogic.AppWaitType.BuildingVisualization);
-			let animationSequence = setupDataAnimation(
-				VueApp.configBasicFact, VueApp.configMeasurement, VueApp.configDataView,
-				VueApp.growthRangeDays, VueApp.populationScale,
-				VueApp.zeroValueColor, VueApp.colorGradients, VueApp.colorRanges, VueApp.unknownValueColor);
-			animationSequence.seek(animationSequence.getStartTime());
-			setWaitMessage(appLogic.AppWaitType.None);
+			if (VueApp.configurationErrors.length === 0)
+			{
+				VueApp.configurationBoxDisplay = "none";
+				setWaitMessage(appLogic.AppWaitType.BuildingVisualization);
+				let animationSequence = setupDataAnimation(
+					VueApp.configBasicFact, VueApp.configMeasurement, VueApp.configDataView,
+					VueApp.growthRangeDays, VueApp.populationScale,
+					VueApp.zeroValueColor, VueApp.colorGradients, VueApp.colorRanges, VueApp.unknownValueColor);
+				animationSequence.seek(animationSequence.getStartTime());
+				setWaitMessage(appLogic.AppWaitType.None);
+			}
 		}
 		else
 		{
+			VueApp.configurationBoxDisplay = "none";
 			VueApp.configBasicFact = savedConfigValues.basicFact;
 			VueApp.configMeasurement = savedConfigValues.measurement;
 			VueApp.configDataView = savedConfigValues.dataView;

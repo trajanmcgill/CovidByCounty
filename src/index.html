@@ -244,6 +244,10 @@
 				<br>
 			</div>
 
+			<div v-for="item in configurationErrors" class="ConfigurationErrorSection">
+				{{ item }}
+			</div>
+
 			<div id="ConfigurationButtons">
 				<button id="BtnApplyConfigChanges" type="button">Apply</button>
 				<button id="BtnCancelConfigChanges" type="button">Cancel</button>
