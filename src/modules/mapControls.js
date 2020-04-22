@@ -36,7 +36,7 @@ let mapControls = (function()
 		if (targetID !== null && targetID.length === 6 && targetID[0] === "c")
 		{
 			let fipsCode = targetID.substring(1),
-				infoCardExists = vueObject.infoCardCountyList.some(county => ("c" + county.id === targetID));
+				infoCardExists = vueObject.infoCardCountyList.some(cardItem => ("c" + cardItem.id === targetID));
 			if (infoCardExists)
 				vueObject.updateInfoCardHoverHighlight(fipsCode, true);
 			setCountyElementHighlighting(targetElement, CountyHighlightType.Hovered);
@@ -49,7 +49,7 @@ let mapControls = (function()
 		if (targetID !== null && targetID.length === 6 && targetID[0] === "c")
 		{
 			let fipsCode = targetID.substring(1),
-				infoCardExists = vueObject.infoCardCountyList.some(county => ("c" + county.id === targetID));
+				infoCardExists = vueObject.infoCardCountyList.some(cardItem => ("c" + cardItem.id === targetID));
 			if (infoCardExists)
 			{
 				vueObject.updateInfoCardHoverHighlight(fipsCode, false);
@@ -152,7 +152,8 @@ let mapControls = (function()
 			}
 
 			// Add info card for the county.
-			vueObject.infoCardCountyList.push({ id: fipsCode, placeName: title });
+			if (!vueObject.infoCardCountyList.some(cardEntry => (cardEntry.id === fipsCode)))
+				vueObject.infoCardCountyList.push({ id: fipsCode, placeName: title });
 
 			// Add highlighting
 			setCountyElementHighlighting(clickTarget, CountyHighlightType.Selected);
