@@ -60,6 +60,38 @@ let appLogic = (function()
 	} // end parseDate()
 
 
+	function bareDay(dateValue)
+	{
+		return new Date(dateValue.getFullYear(), dateValue.getMonth(), dateValue.getDate(), 0, 0, 0, 0);
+	} // end bareDay()
+
+
+	function countUniqueDays(date1, date2)
+	{
+		let startDate, endDate, datePointer, dayCount = 0;
+
+		if (date1 <= date2)
+		{
+			startDate = bareDay(date1);
+			endDate = bareDay(date2);
+		}
+		else
+		{
+			startDate = bareDay(date2);
+			endDate = bareDay(date1);
+		}
+
+		datePointer = new Date(startDate.getTime());
+		do
+		{
+			dayCount++;
+			datePointer.setDate(datePointer.getDate() + 1);
+		} while (datePointer <= endDate);
+
+		return dayCount;
+	} // end countUniqueDays()
+
+
 	function buildCountyList(csvText)
 	{
 		let parsedData =
@@ -227,7 +259,8 @@ let appLogic = (function()
 				getCountyByID: getCountyByID
 			},
 
-			loadData: loadData
+			loadData: loadData,
+			countUniqueDays: countUniqueDays
 		};
 	
 	return publicInterface;

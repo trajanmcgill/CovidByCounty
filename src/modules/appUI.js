@@ -537,7 +537,7 @@ let appUI = (function()
 		VueApp.colorRanges = colorRanges;
 
 		// Animate timeline
-		totalDays = Math.round((appLogic.data.lastReportedDate - appLogic.data.firstReportedDate + msPerDay) / msPerDay); // CHANGE CODE HERE
+		totalDays = appLogic.countUniqueDays(appLogic.data.firstReportedDate, appLogic.data.lastReportedDate);
 		let timelineTimes = [0], timelinePositions = [TimelineStartingOffset];
 		for (let i = 0; i < totalDays; i++)
 		{
