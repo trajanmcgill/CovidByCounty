@@ -125,7 +125,7 @@ let appUI = (function()
 							this.infoCardCountyList.forEach(
 								countyCard =>
 								{
-									let county = appLogic.allCountyData.counties[countyCard.id],
+									let county = appLogic.data.getCountyByID(countyCard.id),
 										matchingRecordIndex, currentDailyRecord, previousDailyRecord;
 									if (this.displayDate === null)
 										currentDailyRecord = previousDailyRecord = { cumulativeCases : 0, cumulativeDeaths: 0 };
@@ -265,14 +265,13 @@ let appUI = (function()
 			setWaitMessage,
 			function()
 			{
-				let allCountyData = appLogic.allCountyData;
 				svgObject = document.getElementById("SvgObject");
 				svgDocument = svgObject.getSVGDocument();
 				mapControls.initializeMapUI(VueApp);
-				buildTimelineViewData(allCountyData.firstDate, allCountyData.lastDate);
+				buildTimelineViewData(appLogic.data.firstReportedDate, appLogic.data.lastReportedDate);
 				setWaitMessage(appLogic.AppWaitType.BuildingVisualization);
 				let animationSequence = setupDataAnimation(
-					allCountyData, appLogic.DefaultFact, appLogic.DefaultMeasurementType, appLogic.DefaultDataView,
+					appLogic.DefaultFact, appLogic.DefaultMeasurementType, appLogic.DefaultDataView,
 					appLogic.DefaultGrowthRangeDays, appLogic.DefaultPopulationScale,
 					DefaultZeroValueColor, DefaultColorGradients, null, DefaultUnknownValueColor);
 				animationSequence.seek(animationSequence.getStartTime());
@@ -283,17 +282,17 @@ let appUI = (function()
 	} // end initializeApp()
 
 
-	function buildRawMapAnimationData(allCountyData, basicFact, measurement, dataView, populationScale, growthRangeDays)
+	function buildRawMapAnimationData(basicFact, measurement, dataView, populationScale, growthRangeDays)
 	{
 		let rawAnimationData =
 		{
 			minNonzeroValue: null,
 			maxOverallDisplayFactValue: 0,
-			firstDate: allCountyData.firstDate,
+			firstDate: appLogic.data.firstReportedDate,
 			counties: []
 		};
 
-		allCountyData.counties.forEach(
+		appLogic.data.counties.forEach(
 			county =>
 			{
 				let mapElement = svgDocument.getElementById("c" + county.id);
@@ -480,7 +479,7 @@ let appUI = (function()
 	} // end autoScaleColorRanges()
 
 
-	function setupDataAnimation(allCountyData, basicFact, measurement, dataView, growthRangeDays, populationScale, zeroValueColor, colorGradients, colorRanges, unknownValueColor)
+	function setupDataAnimation(basicFact, measurement, dataView, growthRangeDays, populationScale, zeroValueColor, colorGradients, colorRanges, unknownValueColor)
 	{
 		const BtnSeekStart = document.getElementById("BtnSeekStart"),
 			BtnStepBack = document.getElementById("BtnStepBack"),
@@ -503,7 +502,7 @@ let appUI = (function()
 			});
 		
 		// Animate map
-		let rawMapAnimationData = buildRawMapAnimationData(allCountyData, basicFact, measurement, dataView, populationScale, growthRangeDays);
+		let rawMapAnimationData = buildRawMapAnimationData(basicFact, measurement, dataView, populationScale, growthRangeDays);
 		if (colorRanges === null)
 			colorRanges = autoScaleColorRanges(rawMapAnimationData.minNonzeroValue, rawMapAnimationData.maxOverallDisplayFactValue);
 		let mapTransformations = getMapAnimationTransformations(rawMapAnimationData, zeroValueColor, colorGradients, colorRanges, unknownValueColor);
@@ -538,7 +537,7 @@ let appUI = (function()
 		VueApp.colorRanges = colorRanges;
 
 		// Animate timeline
-		totalDays = Math.round((allCountyData.lastDate - allCountyData.firstDate + msPerDay) / msPerDay);
+		totalDays = Math.round((appLogic.data.lastReportedDate - appLogic.data.firstReportedDate + msPerDay) / msPerDay); // CHANGE CODE HERE
 		let timelineTimes = [0], timelinePositions = [TimelineStartingOffset];
 		for (let i = 0; i < totalDays; i++)
 		{
@@ -822,7 +821,7 @@ function formatNumberWithCommas(number)
 		{
 			setWaitMessage(appLogic.AppWaitType.BuildingVisualization);
 			let animationSequence = setupDataAnimation(
-				appLogic.allCountyData, VueApp.configBasicFact, VueApp.configMeasurement, VueApp.configDataView,
+				VueApp.configBasicFact, VueApp.configMeasurement, VueApp.configDataView,
 				VueApp.growthRangeDays, VueApp.populationScale,
 				VueApp.zeroValueColor, VueApp.colorGradients, VueApp.colorRanges, VueApp.unknownValueColor);
 			animationSequence.seek(animationSequence.getStartTime());

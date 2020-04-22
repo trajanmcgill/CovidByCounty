@@ -133,8 +133,7 @@ let appLogic = (function()
 			{
 				if (item.id !== "00000")
 				{
-					let intId = parseInt(item.id, 10);
-					let currentCounty = allCountyData.counties[intId];
+					let currentCounty = getCountyByID(item.id);
 
 					if (typeof currentCounty === "undefined")
 						throw "Error: No such county as " + item.id;
@@ -199,6 +198,14 @@ let appLogic = (function()
 	} // end loadData()
 
 
+	function getCountyByID(id)
+	{
+		let index = parseInt(id, 10);
+		if (!isNaN(index))
+			return allCountyData.counties[index];
+	} // end getCountyByID()
+
+
 	let publicInterface =
 		{
 			BasicFactType: BasicFactType,
@@ -212,7 +219,14 @@ let appLogic = (function()
 			DefaultGrowthRangeDays: DefaultGrowthRangeDays,
 			DefaultPopulationScale: DefaultPopulationScale,
 
-			allCountyData: allCountyData,
+			data:
+			{
+				get counties() { return allCountyData.counties; },
+				get firstReportedDate() { return allCountyData.firstDate; },
+				get lastReportedDate() { return allCountyData.lastDate; },
+				getCountyByID: getCountyByID
+			},
+
 			loadData: loadData
 		};
 	
