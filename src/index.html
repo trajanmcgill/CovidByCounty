@@ -52,9 +52,9 @@
 				</div>
 				
 				<div class="RangeKeyPanel">
-					<div class="ColorKeyContainer" v-for="(item, index) in colorGradients">
-						<div class="ColorKey" v-bind:style="{ backgroundImage:'linear-gradient(to right,' + item.start + ',' + item.end + ')' }"></div>
-						<div>>{{ colorRanges[index].min }} to {{ colorRanges[index].max }}</div>
+					<div class="ColorKeyContainer" v-for="item in colorationRanges">
+						<div class="ColorKey" v-bind:style="{ backgroundImage:'linear-gradient(to right,' + item.colorRange.start + ',' + item.colorRange.end + ')' }"></div>
+						<div>>{{ item.dataRange.min }} to {{ item.dataRange.max }}</div>
 					</div>
 				</div>
 				<div class="RangeKeyPanel">

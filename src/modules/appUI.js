@@ -64,8 +64,7 @@ let appUI = (function()
 					maxOverallValue: 0,
 					unknownValueColor: null,
 					zeroValueColor: null,
-					colorGradients: [],
-					colorRanges: [],
+					colorationRanges: [],
 					BasicFactType: appLogic.BasicFactType,
 					MeasurementType: appLogic.MeasurementType,
 					DataViewType: appLogic.DataViewType,
@@ -282,7 +281,7 @@ let appUI = (function()
 				let animationSequence = setupDataAnimation(
 					appLogic.DefaultFact, appLogic.DefaultMeasurementType, appLogic.DefaultDataView,
 					appLogic.DefaultGrowthRangeDays, appLogic.DefaultPopulationScale,
-					DefaultZeroValueColor, DefaultColorGradients, null, DefaultUnknownValueColor);
+					DefaultZeroValueColor, null, DefaultUnknownValueColor);
 				animationSequence.seek(animationSequence.getStartTime());
 				setWaitMessage(appLogic.AppWaitType.None);
 
@@ -383,13 +382,13 @@ let appUI = (function()
 							else if (dataView === appLogic.DataViewType.ChangeAbsolute)
 								displayFactValue = currentMeasuredValue - previousMeasuredValue;
 							else if (dataView === appLogic.DataViewType.ChangeProportional)
-								displayFactValue = (currentMeasuredValue - previousMeasuredValue) / previousMeasuredValue;
+								displayFactValue = (currentMeasuredValue === previousMeasuredValue) ? 0 : (currentMeasuredValue - previousMeasuredValue) / previousMeasuredValue;
 							else
 								throw "Invalid data view parameter";
 							
 							if (displayFactValue > 0 && (rawAnimationData.minNonzeroValue === null || displayFactValue < rawAnimationData.minNonzeroValue))
 								rawAnimationData.minNonzeroValue = displayFactValue;
-							if (displayFactValue > rawAnimationData.maxOverallDisplayFactValue)
+							if (displayFactValue > rawAnimationData.maxOverallDisplayFactValue && displayFactValue !== Number.POSITIVE_INFINITY)
 								rawAnimationData.maxOverallDisplayFactValue = displayFactValue;
 						}
 						
@@ -403,7 +402,7 @@ let appUI = (function()
 	} // end buildRawMapAnimationData()
 
 
-	function getMapAnimationTransformations(rawAnimationData, zeroValueColor, colorGradients, colorRanges, unknownValueColor)
+	function getMapAnimationTransformations(rawAnimationData, zeroValueColor, colorationRanges, unknownValueColor)
 	{
 		let transformations = [];
 		
@@ -417,7 +416,7 @@ let appUI = (function()
 					dailyRecord =>
 					{
 						let displayFactValue = dailyRecord.displayFactValue;
-						let keyFrameTime = Math.round(((dailyRecord.date - rawAnimationData.firstDate) / msPerDay + 1) * animationTimeRatio);
+						let keyFrameTime = Math.round(((dailyRecord.date - rawAnimationData.firstDate) / msPerDay + 1) * animationTimeRatio); // CHANGE CODE HERE
 						let keyFrameValue;
 
 						keyFrameValue = unknownValueColor;
@@ -425,13 +424,16 @@ let appUI = (function()
 							keyFrameValue = zeroValueColor;
 						else if (displayFactValue !== "unknown")
 						{
-							for (let i = 0; i < colorRanges.length; i++)
+							for (let i = 0; i < colorationRanges.length; i++)
 							{
-								let currentRange = colorRanges[i];
-								if (currentRange.min <= displayFactValue && displayFactValue <= currentRange.max)
+								// CHANGE CODE HERE: handle values outside of range (in particular, infinity)
+								let currentRange = colorationRanges[i],
+									currentRangeMin = currentRange.dataRange.min,
+									currentRangeMax = currentRange.dataRange.max;
+								if (currentRangeMin <= displayFactValue && displayFactValue <= currentRangeMax)
 								{
-									let distance = (displayFactValue - currentRange.min) / (currentRange.max - currentRange.min);
-									keyFrameValue = Concert.Calculators.Color(distance, colorGradients[i].start, colorGradients[i].end);
+									let distance = (displayFactValue - currentRangeMin) / (currentRangeMax - currentRangeMin);
+									keyFrameValue = Concert.Calculators.Color(distance, currentRange.colorRange.start, currentRange.colorRange.end);
 									break;
 								}
 							}
@@ -454,7 +456,7 @@ let appUI = (function()
 
 	function autoScaleColorRanges(minNonzeroValue, maxValue)
 	{
-		let colorRanges;
+		let dataRanges;
 		if (minNonzeroValue)
 		{
 			let maxMinRatio = maxValue / minNonzeroValue;
@@ -462,7 +464,7 @@ let appUI = (function()
 			{
 				let base = Math.cbrt(maxValue),
 					secondPower = Math.pow(base, 2);
-				colorRanges =
+				dataRanges =
 					[
 						{ min: 0, max: base },
 						{ min: base, max: secondPower },
@@ -472,23 +474,34 @@ let appUI = (function()
 			else if (maxMinRatio > 100)
 			{
 				let base = Math.sqrt(maxValue);
-				colorRanges =
+				dataRanges =
 					[
 						{ min: 0, max: base },
 						{ min: base, max: maxValue }
 					];
 			}
 			else
-				colorRanges = [ { min: 0, max: maxValue }];
+				dataRanges = [ { min: 0, max: maxValue }];
 		}
 		else
-			colorRanges = [];
+			dataRanges = [];
+		
+		let colorationRanges = [];
+		dataRanges.forEach(
+			(dataRange, index) =>
+			{
+				colorationRanges.push(
+					{
+						dataRange: dataRange,
+						colorRange: DefaultColorGradients[index]
+					});
+			});
 
-		return colorRanges;
+		return colorationRanges;
 	} // end autoScaleColorRanges()
 
 
-	function setupDataAnimation(basicFact, measurement, dataView, growthRangeDays, populationScale, zeroValueColor, colorGradients, colorRanges, unknownValueColor)
+	function setupDataAnimation(basicFact, measurement, dataView, growthRangeDays, populationScale, zeroValueColor, colorationRanges, unknownValueColor)
 	{
 		const BtnSeekStart = document.getElementById("BtnSeekStart"),
 			BtnStepBack = document.getElementById("BtnStepBack"),
@@ -512,9 +525,9 @@ let appUI = (function()
 		
 		// Animate map
 		let rawMapAnimationData = buildRawMapAnimationData(basicFact, measurement, dataView, populationScale, growthRangeDays);
-		if (colorRanges === null)
-			colorRanges = autoScaleColorRanges(rawMapAnimationData.minNonzeroValue, rawMapAnimationData.maxOverallDisplayFactValue);
-		let mapTransformations = getMapAnimationTransformations(rawMapAnimationData, zeroValueColor, colorGradients, colorRanges, unknownValueColor);
+		if (colorationRanges === null)
+			colorationRanges = autoScaleColorRanges(rawMapAnimationData.minNonzeroValue, rawMapAnimationData.maxOverallDisplayFactValue);
+		let mapTransformations = getMapAnimationTransformations(rawMapAnimationData, zeroValueColor, colorationRanges, unknownValueColor);
 		mapTransformations.forEach(transformation => { sequence.addTransformations(transformation); });
 		let mapConfigPhrase;
 		if (basicFact === appLogic.BasicFactType.Cases)
@@ -542,8 +555,7 @@ let appUI = (function()
 		VueApp.maxOverallValue = rawMapAnimationData.maxOverallDisplayFactValue;
 		VueApp.unknownValueColor = unknownValueColor;
 		VueApp.zeroValueColor = zeroValueColor;
-		VueApp.colorGradients = colorGradients;
-		VueApp.colorRanges = colorRanges;
+		VueApp.colorationRanges = colorationRanges;
 
 		// Animate timeline
 		totalDays = appLogic.countUniqueDays(appLogic.data.firstReportedDate, appLogic.data.lastReportedDate);
@@ -834,7 +846,7 @@ function formatNumberWithCommas(number)
 				let animationSequence = setupDataAnimation(
 					VueApp.configBasicFact, VueApp.configMeasurement, VueApp.configDataView,
 					VueApp.growthRangeDays, VueApp.populationScale,
-					VueApp.zeroValueColor, VueApp.colorGradients, VueApp.colorRanges, VueApp.unknownValueColor);
+					VueApp.zeroValueColor, null, VueApp.unknownValueColor);
 				animationSequence.seek(animationSequence.getStartTime());
 				setWaitMessage(appLogic.AppWaitType.None);
 			}
