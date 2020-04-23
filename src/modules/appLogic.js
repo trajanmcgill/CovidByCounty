@@ -1,7 +1,7 @@
 let appLogic = (function()
 {
 	const DataSource_Population = "data/countyPopulations2018.csv";
-	const DataSource_CaseData = "data/countyCases.csv?cacheBuster=" + Math.floor(Math.random() * Math.floor(Number.MAX_SAFE_INTEGER));
+	const DataSource_CaseData = "data/us-counties.csv?cacheBuster=" + (new Date()).getTime();
 
 	const FIPS_Length = 5;
 

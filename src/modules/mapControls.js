@@ -17,7 +17,7 @@ let mapControls = (function()
 	const MouseClickMovementTolerance = 5,
 		ZoomRatio = 1.5, MaxZoom = 12, MinZoom = 1,
 		CountyBorderColorNormal = "#000000", CountyBorderColorSelected = "#00ffcf", CountyBorderColorHovered = "#000000",
-		CountyBorderWidthNormal = "0.17828999", CountyBorderWidthSelected = "1.5", CountyBorderWidthHovered = "3";
+		CountyBorderWidthNormal = "0.17828999", CountyBorderWidthSelected = "1.25", CountyBorderWidthHovered = "2";
 
 	let vueObject = null,
 		svgObject = null, svgDocument = null, mapDragObject = null,
