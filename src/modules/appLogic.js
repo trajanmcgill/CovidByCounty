@@ -1,6 +1,6 @@
 let appLogic = (function()
 {
-	const DataSource_Population = "data/countyPopulations2018.csv";
+	const DataSource_Population = "data/countyPopulations_JointNYC.csv";
 	const DataSource_CaseData = "data/us-counties.csv?cacheBuster=" + (new Date()).getTime();
 
 	const FIPS_Length = 5;
