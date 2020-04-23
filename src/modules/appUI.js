@@ -3,8 +3,6 @@ import mapControls from "./mapControls.js?ver=2";
 import Vue from "./vue.js?ver=2";
 import {Concert} from "./Concert.js?ver=2";
 
-const msPerDay = 1000 * 60 * 60 * 24;
-
 let appUI = (function()
 {
 	const TimelineDateBoxWidth = 90, TimelineStartingOffset = 541;
@@ -444,7 +442,7 @@ let appUI = (function()
 					dailyRecord =>
 					{
 						let displayFactValue = dailyRecord.displayFactValue;
-						let keyFrameTime = Math.round(((dailyRecord.date - rawAnimationData.firstDate) / msPerDay + 1) * animationTimeRatio); // CHANGE CODE HERE
+						let keyFrameTime = Math.round(appLogic.countUniqueDays(dailyRecord.date, rawAnimationData.firstDate) * animationTimeRatio);
 						let keyFrameValue = coloration.unknown;
 
 						if (displayFactValue === 0 && coloration.zero !== null)
