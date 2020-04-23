@@ -5,6 +5,8 @@ let appLogic = (function()
 
 	const FIPS_Length = 5;
 
+	const NYC_FIPS_CODES = ["36005", "36061", "36081", "36047", "36085"];
+
 	const BasicFactType =
 	{
 		Cases: 0,
@@ -54,8 +56,10 @@ let appLogic = (function()
 
 	function parseDate(dateString)
 	{
-		let pieces = dateString.split("/"),
-			parsedDate = new Date(pieces[2], parseInt(pieces[0], 10) - 1, pieces[1]);
+		let pieces = dateString.split("-"),
+			parsedDate = new Date(pieces[0], parseInt(pieces[1], 10) - 1, pieces[2]);
+		if (isNaN(parsedDate.getTime()))
+			throw "Error: invalid date string:" + dateString;
 		return parsedDate;
 	} // end parseDate()
 
@@ -143,6 +147,37 @@ let appLogic = (function()
 	} // end buildCountyList()
 
 
+	function storeSingleCountyCaseData(parsedRecord, countyID)
+	{
+		let currentCounty = getCountyByID(countyID);
+
+		if (typeof currentCounty === "undefined")
+			throw "Error: No such county as " + parsedRecord.id;
+		
+		let cases = parsedRecord.cases, deaths = parsedRecord.deaths, date = parseDate(parsedRecord.date);
+
+		if (cases > allCountyData.maxCaseCount)
+			allCountyData.maxCaseCount = cases;
+		if (deaths > allCountyData.maxDeaths)
+			allCountyData.maxDeaths = deaths;
+		if (allCountyData.firstDate === null || date < allCountyData.firstDate)
+			allCountyData.firstDate = date;
+		if (allCountyData.lastDate === null || date > allCountyData.lastDate)
+			allCountyData.lastDate = date;
+		
+		if (cases > currentCounty.maxCaseCount)
+			currentCounty.maxCaseCount = cases;
+		if (deaths > currentCounty.maxDeaths)
+			currentCounty.maxDeaths = deaths;
+		currentCounty.covid19Records.push(
+			{
+				date: date,
+				cumulativeCases: parsedRecord.cases,
+				cumulativeDeaths: parsedRecord.deaths
+			});
+	} // end storeSingleCountyCaseData()
+
+
 	function storeCountyCaseData(csvText)
 	{
 		let parsedData = Papa.parse(
@@ -161,37 +196,13 @@ let appLogic = (function()
 			}).data;
 		
 		parsedData.forEach(
-			item =>
+			parsedRecord =>
 			{
-				if (item.id !== "00000")
-				{
-					let currentCounty = getCountyByID(item.id);
-
-					if (typeof currentCounty === "undefined")
-						throw "Error: No such county as " + item.id;
-					
-					let cases = item.cases, deaths = item.deaths, date = parseDate(item.date);
-
-					if (cases > allCountyData.maxCaseCount)
-						allCountyData.maxCaseCount = cases;
-					if (deaths > allCountyData.maxDeaths)
-						allCountyData.maxDeaths = deaths;
-					if (allCountyData.firstDate === null || date < allCountyData.firstDate)
-						allCountyData.firstDate = date;
-					if (allCountyData.lastDate === null || date > allCountyData.lastDate)
-						allCountyData.lastDate = date;
-					
-					if (cases > currentCounty.maxCaseCount)
-						currentCounty.maxCaseCount = cases;
-					if (deaths > currentCounty.maxDeaths)
-						currentCounty.maxDeaths = deaths;
-					currentCounty.covid19Records.push(
-						{
-							date: date,
-							cumulativeCases: item.cases,
-							cumulativeDeaths: item.deaths
-						});
-					}
+				let countyID = parsedRecord.id;
+				if (countyID === "00000" && parsedRecord.county === "New York City" && parsedRecord.state === "New York")
+					NYC_FIPS_CODES.forEach(nycFipsCode => { storeSingleCountyCaseData(parsedRecord, nycFipsCode); });
+				else if (countyID !== "00000")
+					storeSingleCountyCaseData(parsedRecord, countyID);
 			});
 
 	} // end storeCountyCaseData()
