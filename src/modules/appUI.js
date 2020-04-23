@@ -338,8 +338,9 @@ let appUI = (function()
 					{
 						let currentCases = covid19Record.cumulativeCases,
 							currentDeaths = covid19Record.cumulativeDeaths,
-							previousCases = (index < growthRangeDays) ? 0 : covid19Records[index - growthRangeDays].cumulativeCases,
-							previousDeaths = (index < growthRangeDays) ? 0 : covid19Records[index - growthRangeDays].cumulativeDeaths;
+							previousRecordIndex = covid19Records.findIndex(record => dateComparison(record.date, covid19Record.date, growthRangeDays)),
+							previousCases = (previousRecordIndex < 0) ? 0 : covid19Records[previousRecordIndex].cumulativeCases,
+							previousDeaths = (previousRecordIndex < 0) ? 0 : covid19Records[previousRecordIndex].cumulativeDeaths;
 
 						if (currentCountyData.vueInfoCard != null)
 						{
