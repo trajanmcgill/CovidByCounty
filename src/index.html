@@ -52,19 +52,23 @@
 				</div>
 				
 				<div class="RangeKeyPanel">
-					<div class="ColorKeyContainer" v-for="item in colorationRanges">
+					<div class="ColorKeyContainer" v-for="item in coloration.ranges">
 						<div class="ColorKey" v-bind:style="{ backgroundImage:'linear-gradient(to right,' + item.colorRange.start + ',' + item.colorRange.end + ')' }"></div>
-						<div>>{{ item.dataRange.min }} to {{ item.dataRange.max }}</div>
+						<div>>{{ formatDataRangeDisplayNumber(item.dataRange.min) }} to {{ formatDataRangeDisplayNumber(item.dataRange.max) }}</div>
+					</div>
+					<div class="ColorKeyContainer">
+						<div class="ColorKey" v-bind:style="{ backgroundColor: coloration.exceedsMax }"></div>
+						<div>Exceeds {{ formatDataRangeDisplayNumber(maxColorRangeDataValue) }}</div>
 					</div>
 				</div>
 				<div class="RangeKeyPanel">
-					<div class="ColorKeyContainer">
-						<div class="ColorKey" v-bind:style="{ backgroundColor: zeroValueColor }"></div>
-						<div>Zero Value</div>
+					<div v-if="coloration.zero" class="ColorKeyContainer">
+						<div class="ColorKey" v-bind:style="{ backgroundColor: coloration.zero }"></div>
+						<div>Zero</div>
 					</div>
 					<div class="ColorKeyContainer">
-						<div class="ColorKey" v-bind:style="{ backgroundColor: unknownValueColor }"></div>
-						<div>Unknown Value</div>
+						<div class="ColorKey" v-bind:style="{ backgroundColor: coloration.unknown }"></div>
+						<div>Unknown</div>
 					</div>
 				</div>
 			</div>
@@ -85,7 +89,7 @@
 									<th></th>
 									<th colspan="2">Absolute</th>
 									<th>{{ infoCardPopulationScale }}</th>
-									<th colspan="2">Per Case (fatality rate)</th>
+									<th colspan="2">Per Case</th>
 								</tr>
 							</thead>
 							<tbody>

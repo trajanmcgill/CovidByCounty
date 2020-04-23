@@ -8,14 +8,25 @@ const msPerDay = 1000 * 60 * 60 * 24;
 let appUI = (function()
 {
 	const TimelineDateBoxWidth = 90, TimelineStartingOffset = 541;
-	const DefaultUnknownValueColor = "rgb(80,80,80)";
-	const DefaultZeroValueColor = "rgb(128,128,128)";
+	const DefaultSingleValueColors =
+		{
+			Unknown: "rgb(80, 80, 80)",
+			Zero: "rgb(128, 128, 128)",
+			ExceedsMax: "rgb(0, 0, 255)"
+		};
 	const DefaultColorGradients =
-		[
-			{ start: "rgb(255, 255, 255)", end: "rgb(255, 255, 0)" },
-			{ start: "rgb(255, 255, 0)", end: "rgb(255, 0, 0)" },
-			{ start: "rgb(255, 0, 0)", end: "rgb(77, 0, 153)" }
-		];
+		{
+			negative:
+				[
+					{ start: "rgb(0, 255, 0)", end: "rgb(0, 255, 255)" }
+				],
+			positive: 
+				[
+					{ start: "rgb(255, 255, 255)", end: "rgb(255, 255, 0)" },
+					{ start: "rgb(255, 255, 0)", end: "rgb(255, 0, 0)" },
+					{ start: "rgb(255, 0, 0)", end: "rgb(77, 0, 153)" }
+				]
+		};
 	const DefaultAnimationTimeRatio = 500;
 
 	let svgObject = null, svgDocument = null;
@@ -62,9 +73,7 @@ let appUI = (function()
 					dateList: [],
 					mapConfigPhrase: "",
 					maxOverallValue: 0,
-					unknownValueColor: null,
-					zeroValueColor: null,
-					colorationRanges: [],
+					coloration: { unknown: null, zero: null, ranges: [] },
 					BasicFactType: appLogic.BasicFactType,
 					MeasurementType: appLogic.MeasurementType,
 					DataViewType: appLogic.DataViewType,
@@ -142,7 +151,7 @@ let appUI = (function()
 										matchingRecordIndex = county.covid19Records.findIndex(record => dateComparison(record.date, this.displayDate, 0));
 										currentDailyRecord = (matchingRecordIndex >= 0) ? county.covid19Records[matchingRecordIndex] : { cumulativeCases : 0, cumulativeDeaths: 0 };
 
-										matchingRecordIndex = county.covid19Records.findIndex(record => dateComparison(record.date, this.displayDate, 1));
+										matchingRecordIndex = county.covid19Records.findIndex(record => dateComparison(record.date, this.displayDate, this.growthRangeDays));
 										previousDailyRecord = (matchingRecordIndex >= 0) ? county.covid19Records[matchingRecordIndex] : { cumulativeCases : 0, cumulativeDeaths: 0 };
 									}
 									let currentCases = currentDailyRecord.cumulativeCases,
@@ -188,6 +197,15 @@ let appUI = (function()
 						{
 							let displayStyle = (this.infoCardCountyList.length < 1 ? "block" : "none");
 							return displayStyle;
+						},
+
+					maxColorRangeDataValue:
+						function()
+						{
+							if (this.coloration.ranges.length < 1)
+								return null;
+							else
+								return this.coloration.ranges[this.coloration.ranges.length-1].dataRange.max;
 						}
 				},
 
@@ -211,6 +229,14 @@ let appUI = (function()
 							displayNumber = rawNumber.toPrecision(significantDigits);
 						
 						return displayNumber;
+					},
+
+					formatDataRangeDisplayNumber: function(rawNumber)
+					{
+						let displayValue = this.formatInfoCardDisplayNumber(rawNumber, false, 4);
+						if (this.configDataView === appLogic.DataViewType.ChangeProportional)
+							displayValue = (parseFloat(displayValue) * 100).toPrecision(4) + "%";
+						return displayValue;
 					},
 
 					isCurrentFact: function(factName)
@@ -280,8 +306,7 @@ let appUI = (function()
 				setWaitMessage(appLogic.AppWaitType.BuildingVisualization);
 				let animationSequence = setupDataAnimation(
 					appLogic.DefaultFact, appLogic.DefaultMeasurementType, appLogic.DefaultDataView,
-					appLogic.DefaultGrowthRangeDays, appLogic.DefaultPopulationScale,
-					DefaultZeroValueColor, null, DefaultUnknownValueColor);
+					appLogic.DefaultGrowthRangeDays, appLogic.DefaultPopulationScale, null);
 				animationSequence.seek(animationSequence.getStartTime());
 				setWaitMessage(appLogic.AppWaitType.None);
 
@@ -294,7 +319,7 @@ let appUI = (function()
 	{
 		let rawAnimationData =
 		{
-			minNonzeroValue: null,
+			minValueGreaterThanZero: null,
 			maxOverallDisplayFactValue: 0,
 			firstDate: appLogic.data.firstReportedDate,
 			counties: []
@@ -382,12 +407,15 @@ let appUI = (function()
 							else if (dataView === appLogic.DataViewType.ChangeAbsolute)
 								displayFactValue = currentMeasuredValue - previousMeasuredValue;
 							else if (dataView === appLogic.DataViewType.ChangeProportional)
-								displayFactValue = (currentMeasuredValue === previousMeasuredValue) ? 0 : (currentMeasuredValue - previousMeasuredValue) / previousMeasuredValue;
+							{
+								let valueChange = currentMeasuredValue - previousMeasuredValue;
+								displayFactValue = (valueChange === 0) ? 0 : ((previousMeasuredValue === 0) ? Number.POSITIVE_INFINITY : valueChange / previousMeasuredValue);
+							}
 							else
 								throw "Invalid data view parameter";
 							
-							if (displayFactValue > 0 && (rawAnimationData.minNonzeroValue === null || displayFactValue < rawAnimationData.minNonzeroValue))
-								rawAnimationData.minNonzeroValue = displayFactValue;
+							if (displayFactValue > 0 && (rawAnimationData.minValueGreaterThanZero === null || displayFactValue < rawAnimationData.minValueGreaterThanZero))
+								rawAnimationData.minValueGreaterThanZero = displayFactValue;
 							if (displayFactValue > rawAnimationData.maxOverallDisplayFactValue && displayFactValue !== Number.POSITIVE_INFINITY)
 								rawAnimationData.maxOverallDisplayFactValue = displayFactValue;
 						}
@@ -402,7 +430,7 @@ let appUI = (function()
 	} // end buildRawMapAnimationData()
 
 
-	function getMapAnimationTransformations(rawAnimationData, zeroValueColor, colorationRanges, unknownValueColor)
+	function getMapAnimationTransformations(rawAnimationData, coloration)
 	{
 		let transformations = [];
 		
@@ -411,34 +439,37 @@ let appUI = (function()
 			{
 				// Build map transformations
 				let countyMapKeyframeTimes = [0],
-					countyMapKeyframeValues = [zeroValueColor];
+					countyMapKeyframeValues = [coloration.unknown];
 				county.dailyRecords.forEach(
 					dailyRecord =>
 					{
 						let displayFactValue = dailyRecord.displayFactValue;
 						let keyFrameTime = Math.round(((dailyRecord.date - rawAnimationData.firstDate) / msPerDay + 1) * animationTimeRatio); // CHANGE CODE HERE
-						let keyFrameValue;
+						let keyFrameValue = coloration.unknown;
 
-						keyFrameValue = unknownValueColor;
-						if (displayFactValue === 0)
-							keyFrameValue = zeroValueColor;
-						else if (displayFactValue !== "unknown")
+						if (displayFactValue === 0 && coloration.zero !== null)
+							keyFrameValue = coloration.zero;
+						else if (displayFactValue !== null)
 						{
-							for (let i = 0; i < colorationRanges.length; i++)
+							let colorationRanges = coloration.ranges;
+							if (displayFactValue > colorationRanges[colorationRanges.length - 1].dataRange.max)
+								keyFrameValue = coloration.exceedsMax;
+							else
 							{
-								// CHANGE CODE HERE: handle values outside of range (in particular, infinity)
-								let currentRange = colorationRanges[i],
-									currentRangeMin = currentRange.dataRange.min,
-									currentRangeMax = currentRange.dataRange.max;
-								if (currentRangeMin <= displayFactValue && displayFactValue <= currentRangeMax)
+								for (let i = 0; i < colorationRanges.length; i++)
 								{
-									let distance = (displayFactValue - currentRangeMin) / (currentRangeMax - currentRangeMin);
-									keyFrameValue = Concert.Calculators.Color(distance, currentRange.colorRange.start, currentRange.colorRange.end);
-									break;
+									let currentRange = colorationRanges[i],
+										currentRangeMin = currentRange.dataRange.min,
+										currentRangeMax = currentRange.dataRange.max;
+									if (currentRangeMin <= displayFactValue && displayFactValue <= currentRangeMax)
+									{
+										let distance = (displayFactValue - currentRangeMin) / (currentRangeMax - currentRangeMin);
+										keyFrameValue = Concert.Calculators.Color(distance, currentRange.colorRange.start, currentRange.colorRange.end);
+										break;
+									}
 								}
 							}
 						}
-						
 						countyMapKeyframeTimes.push(keyFrameTime);
 						countyMapKeyframeValues.push(keyFrameValue);
 					});
@@ -454,12 +485,26 @@ let appUI = (function()
 	} // getMapAnimationTransformations
 
 
-	function autoScaleColorRanges(minNonzeroValue, maxValue)
+	function buildColoration_Percentages(minValueGreaterThanZero, maxValue)
+	{
+		let coloration = buildColoration_Positive(minValueGreaterThanZero, maxValue);
+		coloration.zero = null;
+		coloration.ranges.unshift(
+			{
+				dataRange: { min: -1, max: 0 },
+				colorRange: DefaultColorGradients.negative[0]
+			});
+
+		return coloration;
+	} // end buildColoration_Percentages()
+
+
+	function buildColoration_Positive(minValueGreaterThanZero, maxValue)
 	{
 		let dataRanges;
-		if (minNonzeroValue)
+		if (minValueGreaterThanZero)
 		{
-			let maxMinRatio = maxValue / minNonzeroValue;
+			let maxMinRatio = maxValue / minValueGreaterThanZero;
 			if (maxMinRatio > 10000)
 			{
 				let base = Math.cbrt(maxValue),
@@ -486,22 +531,28 @@ let appUI = (function()
 		else
 			dataRanges = [];
 		
-		let colorationRanges = [];
+		let coloration =
+			{
+				zero: DefaultSingleValueColors.Zero,
+				unknown: DefaultSingleValueColors.Unknown,
+				exceedsMax: DefaultSingleValueColors.ExceedsMax,
+				ranges: []
+			};
 		dataRanges.forEach(
 			(dataRange, index) =>
 			{
-				colorationRanges.push(
+				coloration.ranges.push(
 					{
 						dataRange: dataRange,
-						colorRange: DefaultColorGradients[index]
+						colorRange: DefaultColorGradients.positive[index]
 					});
 			});
 
-		return colorationRanges;
-	} // end autoScaleColorRanges()
+		return coloration;
+	} // end buildColoration_Positive()
 
 
-	function setupDataAnimation(basicFact, measurement, dataView, growthRangeDays, populationScale, zeroValueColor, colorationRanges, unknownValueColor)
+	function setupDataAnimation(basicFact, measurement, dataView, growthRangeDays, populationScale, coloration)
 	{
 		const BtnSeekStart = document.getElementById("BtnSeekStart"),
 			BtnStepBack = document.getElementById("BtnStepBack"),
@@ -525,9 +576,14 @@ let appUI = (function()
 		
 		// Animate map
 		let rawMapAnimationData = buildRawMapAnimationData(basicFact, measurement, dataView, populationScale, growthRangeDays);
-		if (colorationRanges === null)
-			colorationRanges = autoScaleColorRanges(rawMapAnimationData.minNonzeroValue, rawMapAnimationData.maxOverallDisplayFactValue);
-		let mapTransformations = getMapAnimationTransformations(rawMapAnimationData, zeroValueColor, colorationRanges, unknownValueColor);
+		if (coloration === null)
+		{
+			if (basicFact === appLogic.BasicFactType.Deaths && measurement === appLogic.MeasurementType.CaseRelative && dataView === appLogic.DataViewType.ChangeProportional)
+				coloration = buildColoration_Percentages(rawMapAnimationData.minValueGreaterThanZero, rawMapAnimationData.maxOverallDisplayFactValue);
+			else
+				coloration = buildColoration_Positive(rawMapAnimationData.minValueGreaterThanZero, rawMapAnimationData.maxOverallDisplayFactValue);
+		}
+		let mapTransformations = getMapAnimationTransformations(rawMapAnimationData, coloration);
 		mapTransformations.forEach(transformation => { sequence.addTransformations(transformation); });
 		let mapConfigPhrase;
 		if (basicFact === appLogic.BasicFactType.Cases)
@@ -537,7 +593,7 @@ let appUI = (function()
 		if (measurement === appLogic.MeasurementType.Absolute)
 			mapConfigPhrase += " (Total)";
 		else if (measurement === appLogic.MeasurementType.CaseRelative)
-			mapConfigPhrase += " per Case [known fatality rate]";
+			mapConfigPhrase += " per Case [fatality rate]";
 		else if (measurement === appLogic.MeasurementType.PopulationRelative)
 			mapConfigPhrase += " Per " + formatNumberWithCommas(populationScale) + " People";
 		if (dataView === appLogic.DataViewType.DailyValue)
@@ -553,9 +609,7 @@ let appUI = (function()
 		VueApp.populationScale = populationScale;
 		VueApp.mapConfigPhrase = mapConfigPhrase;
 		VueApp.maxOverallValue = rawMapAnimationData.maxOverallDisplayFactValue;
-		VueApp.unknownValueColor = unknownValueColor;
-		VueApp.zeroValueColor = zeroValueColor;
-		VueApp.colorationRanges = colorationRanges;
+		VueApp.coloration = coloration;
 
 		// Animate timeline
 		totalDays = appLogic.countUniqueDays(appLogic.data.firstReportedDate, appLogic.data.lastReportedDate);
@@ -845,8 +899,7 @@ function formatNumberWithCommas(number)
 				setWaitMessage(appLogic.AppWaitType.BuildingVisualization);
 				let animationSequence = setupDataAnimation(
 					VueApp.configBasicFact, VueApp.configMeasurement, VueApp.configDataView,
-					VueApp.growthRangeDays, VueApp.populationScale,
-					VueApp.zeroValueColor, null, VueApp.unknownValueColor);
+					VueApp.growthRangeDays, VueApp.populationScale, null);
 				animationSequence.seek(animationSequence.getStartTime());
 				setWaitMessage(appLogic.AppWaitType.None);
 			}

@@ -189,8 +189,7 @@ let appLogic = (function()
 						{
 							date: date,
 							cumulativeCases: item.cases,
-							cumulativeDeaths: item.deaths,
-							displayFactValue: null
+							cumulativeDeaths: item.deaths
 						});
 					}
 			});
