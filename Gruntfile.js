@@ -1,5 +1,9 @@
 module.exports = function(grunt)
 {
+	"use strict";
+
+	var Papa = require("papaparse");
+
 	const buildNumberFile = "nextBuildNumber.txt";
 	const cacheBusterVariableName = "build";
 	const buildNumber = parseInt(grunt.file.read(buildNumberFile));
@@ -79,6 +83,20 @@ module.exports = function(grunt)
 		{
 			pkg: grunt.file.readJSON("package.json"),
 
+
+			generateCaseData:
+			{
+				default:
+				{
+					files:
+					[
+						{
+							src: "sourceData/caseRecords/us-counties_*.csv",
+							dest: "src/data/caseRecords.csv"
+						}
+					]
+				}
+			},
 
 			eslint:
 			{
@@ -272,6 +290,115 @@ module.exports = function(grunt)
 		}); // end call to grunt.registerMultiTask("addBuildNumbers"...)
 
 
+	grunt.registerMultiTask(
+		"generateCaseData",
+		"Build case record file for web site from case record file from NYT",
+		function()
+		{
+			const NYC_FIPS_CODES = ["36005", "36061", "36081", "36047", "36085"];
+
+			function parseDate(dateString)
+			{
+				let pieces = dateString.split("-"),
+					parsedDate = new Date(pieces[0], parseInt(pieces[1], 10) - 1, pieces[2]);
+				if (isNaN(parsedDate.getTime()))
+					throw "Error: invalid date string:" + dateString;
+				return parsedDate;
+			} // end parseDate()
+
+			function addCountyRecord(counties, countyID, date, cases, deaths, state, countyName)
+			{
+				let intID = parseInt(countyID, 10),
+					currentCounty = counties[intID];
+				if (typeof currentCounty === "undefined")
+					currentCounty = counties[intID] = { id: intID, dailyRecords: [] };
+				currentCounty.dailyRecords.push({ date: date, cases: cases, deaths: deaths });
+			}
+		
+			let mostRecentFile = null, destFile = null;
+			this.files.forEach(
+				function(file)
+				{
+					for (let i = 0; i < file.src.length; i++)
+					{
+						let fileName = file.src[i],
+							datePortion = fileName.substring(fileName.lastIndexOf("_") + 1, fileName.length - 4),
+							datePieces = datePortion.split("."),
+							year = parseInt(datePieces[0], 10),
+							month = parseInt(datePieces[1], 10),
+							day = parseInt(datePieces[2], 10),
+							fileDate = new Date(year, month - 1, day);
+						if (mostRecentFile === null || mostRecentFile.fileDate < fileDate)
+							mostRecentFile = { fileName: fileName, fileDate: fileDate };
+					}
+					grunt.log.writeln("Reading file: " + mostRecentFile.fileName);
+					let fileContents = grunt.file.read(mostRecentFile.fileName);
+
+					let parsedData = Papa.parse(
+						fileContents,
+						{
+							header: true,
+							transformHeader: header => ((header === "fips") ? "id" : header),
+							skipEmptyLines: true
+						}).data;
+					fileContents = null;
+		
+					let counties = [], earliestDate = null, latestDate = null;
+					parsedData.forEach(
+						parsedRecord =>
+						{
+							let currentCountyID = parsedRecord.id, currentRecordDate = parseDate(parsedRecord.date);
+							if (currentCountyID === "" && parsedRecord.county === "New York City" && parsedRecord.state === "New York" )
+								NYC_FIPS_CODES.forEach(nycFipsCode => { addCountyRecord(counties, nycFipsCode, currentRecordDate, parsedRecord.cases, parsedRecord.deaths, parsedRecord.state, parsedRecord.county); });
+							else if (currentCountyID !== "")
+								addCountyRecord(counties, currentCountyID, currentRecordDate, parsedRecord.cases, parsedRecord.deaths, parsedRecord.state, parsedRecord.county);
+
+							if (earliestDate === null || currentRecordDate < earliestDate)
+								earliestDate = currentRecordDate;
+							if (latestDate === null || currentRecordDate > latestDate)
+								latestDate = currentRecordDate;
+						});
+					parsedData = null;
+					
+					let outputFileContents = "date,id,cases,deaths\r\n";
+					counties.forEach(
+						county =>
+						{
+							if (county.dailyRecords.length > 0)
+							{
+								county.dailyRecords.sort((a, b) => ((a < b) ? -1 : ((b > a) ? 1 : 0)));
+								let lastFoundDailyRecord = null;
+								for (let dateIterator = new Date(county.dailyRecords[0].date); dateIterator <= latestDate; dateIterator.setDate(dateIterator.getDate() + 1))
+								{
+									let currentDailyRecord = null;
+									let currentRecordIndex = county.dailyRecords.findIndex(record => (record.date.getTime() === dateIterator.getTime()));
+									if (currentRecordIndex >= 0)
+									{
+										currentDailyRecord = county.dailyRecords[currentRecordIndex];
+										lastFoundDailyRecord = currentDailyRecord;
+									}
+									else if (lastFoundDailyRecord !== null)
+										currentDailyRecord = lastFoundDailyRecord;
+									else
+										currentDailyRecord = { date: dateIterator, cases: 0, deaths: 0 };
+									outputFileContents += currentDailyRecord.date.getFullYear()
+										+ "-" + (currentDailyRecord.date.getMonth() + 1).toString().padStart(2, "0")
+										+ "-" + currentDailyRecord.date.getDate().toString().padStart(2, "0") + ","
+										+ county.id.toString().padStart(5, "0") + ","
+										+ currentDailyRecord.cases + ","
+										+ currentDailyRecord.deaths + "\r\n";
+								}
+							}
+						});
+					
+						grunt.log.writeln("Data target file:" + file.dest);
+						grunt.file.write(file.dest, outputFileContents);
+						outputFileContents = null;
+				});
+
+		})
+	
+
 	grunt.registerTask("clean_all", ["clean:assembly", "clean:www"]);
 
 	grunt.registerTask("lint_src", ["eslint:projectStandards"]);
@@ -279,6 +406,7 @@ module.exports = function(grunt)
 	grunt.registerTask(
 		"build_all",
 		[
+			"generateCaseData", // build the latest data file
 			"copy:assembleSrcFiles", // copy source files into assembly directory
 			"copy:copyOriginalToFull", // copy all .js and .css files in assembly directory to *.full.js and *.full.css
 			"clean:removeAssembledOriginalJSandCSS", // remove all original .js and css files from assembly directory

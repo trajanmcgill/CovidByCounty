@@ -1,11 +1,9 @@
 let appLogic = (function()
 {
 	const DataSource_Population = "data/countyPopulations_JointNYC.csv";
-	const DataSource_CaseData = "data/us-counties.csv?cacheBuster=" + (new Date()).getTime();
+	const DataSource_CaseData = "data/caseRecords.csv?cacheBuster=" + (new Date()).getTime();
 
 	const FIPS_Length = 5;
-
-	const NYC_FIPS_CODES = ["36005", "36061", "36081", "36047", "36085"];
 
 	const BasicFactType =
 	{
@@ -147,9 +145,9 @@ let appLogic = (function()
 	} // end buildCountyList()
 
 
-	function storeSingleCountyCaseData(parsedRecord, countyID)
+	function storeSingleCountyCaseData(parsedRecord)
 	{
-		let currentCounty = getCountyByID(countyID);
+		let currentCounty = getCountyByID(parsedRecord.id);
 
 		if (typeof currentCounty === "undefined")
 			throw "Error: No such county as " + parsedRecord.id;
@@ -184,27 +182,11 @@ let appLogic = (function()
 			csvText,
 			{
 				header: true,
-
-				transformHeader: header => ((header === "fips") ? "id" : header),
-
-				transform:
-					(value, header) => ((header === "id") ? value.padStart(FIPS_Length, "0") : value),
-
 				dynamicTyping: header => (header === "cases" || header === "deaths"),
-
 				skipEmptyLines: true
 			}).data;
 		
-		parsedData.forEach(
-			parsedRecord =>
-			{
-				let countyID = parsedRecord.id;
-				if (countyID === "00000" && parsedRecord.county === "New York City" && parsedRecord.state === "New York")
-					NYC_FIPS_CODES.forEach(nycFipsCode => { storeSingleCountyCaseData(parsedRecord, nycFipsCode); });
-				else if (countyID !== "00000")
-					storeSingleCountyCaseData(parsedRecord, countyID);
-			});
-
+		parsedData.forEach(parsedRecord => { storeSingleCountyCaseData(parsedRecord); });
 	} // end storeCountyCaseData()
 
 
@@ -222,6 +204,7 @@ let appLogic = (function()
 				text =>
 				{
 					buildCountyList(text);
+					text = null;
 					statusUpdateFunction(AppWaitType.LoadingCaseData);
 					return fetch(DataSource_CaseData);
 				})
@@ -235,6 +218,7 @@ let appLogic = (function()
 				text =>
 				{
 					storeCountyCaseData(text);
+					text = null;
 					completionCallback();
 				});
 	} // end loadData()
