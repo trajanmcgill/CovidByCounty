@@ -337,6 +337,12 @@ let appUI = (function()
 		mapControls.initializeMapUI(VueApp);
 
 		setWaitMessage(appLogic.AppWaitType.BuildingVisualization);
+		setTimeout(buildInitialVisualization, 0); // Let display update, then build visualization.
+	} // end doPostDataLoadInitialization()
+
+
+	function buildInitialVisualization()
+	{
 		VueApp.firstDateNumber = appLogic.data.firstReportedDate;
 		VueApp.totalDays = appLogic.data.lastReportedDate - appLogic.data.firstReportedDate + 1;
 		VueApp.configBasicFact = appLogic.DefaultFact;
@@ -352,7 +358,7 @@ let appUI = (function()
 
 		setWaitMessage(appLogic.AppWaitType.None);
 		window.appLogic = appLogic; // REMOVE CODE HERE
-	} // end doPostDataLoadInitialization()
+	} // end buildInitialVisualization()
 
 
 	function getMapAnimationTransformations(animationData)
@@ -739,9 +745,16 @@ let appUI = (function()
 			{
 				VueApp.configurationBoxDisplay = "none";
 				setWaitMessage(appLogic.AppWaitType.BuildingVisualization);
-				let animationSequence = setupDataAnimation();
-				animationSequence.seek(animationSequence.getStartTime());
-				setWaitMessage(appLogic.AppWaitType.None);
+				// Let the display update to indicate processing is underway, then do the processing.
+				setTimeout(
+					function()
+					{
+						let animationSequence = setupDataAnimation();
+						animationSequence.seek(animationSequence.getStartTime());
+						setWaitMessage(appLogic.AppWaitType.None);
+					},
+					0
+				)
 			}
 		}
 		else
@@ -773,7 +786,7 @@ let appUI = (function()
 				VueApp.waitMessage = "Loading County Case Data...";
 			else if (waitType === appLogic.AppWaitType.ProcessingCaseData)
 				VueApp.waitMessage = "Processing County Case Data...";
-			else if (waitType === appLogic.AppWaitType.Building)
+			else if (waitType === appLogic.AppWaitType.BuildingVisualization)
 				VueApp.waitMessage = "Building Visualization...";
 		}
 	} // end setWaitMessage()
