@@ -146,52 +146,65 @@ let appUI = (function()
 							this.infoCardCountyList.forEach(
 								countyCard =>
 								{
-									let county = appLogic.data.getCountyByID(countyCard.id),
-										matchingRecordIndex, currentDailyRecord, previousDailyRecord;
-									if (displayDateNumber === null)
-										currentDailyRecord = previousDailyRecord = { cases : 0, deaths: 0 };
+									let county = appLogic.data.getCountyByID(countyCard.id);
+									if (county === null)
+									{
+										cards.push(
+											{
+												id: countyCard.id,
+												placeName: countyCard.placeName,
+												dataExists: false
+											});
+									}
 									else
 									{
-										matchingRecordIndex = county.dailyRecords.findIndex(dailyRecord => (dailyRecord.date === displayDateNumber));
-										currentDailyRecord = (matchingRecordIndex >= 0) ? county.dailyRecords[matchingRecordIndex] : { cases : 0, deaths: 0 };
-
-										matchingRecordIndex = county.dailyRecords.findIndex(dailyRecord => (dailyRecord.date === displayDateNumber - growthRangeDays));
-										previousDailyRecord = (matchingRecordIndex >= 0) ? county.dailyRecords[matchingRecordIndex] : { cases : 0, deaths: 0 };
-									}
-									let currentCases = currentDailyRecord.cases,
-										previousCases = previousDailyRecord.cases,
-										casesAbsoluteChange = currentCases - previousCases,
-										casesByPopulation = currentCases / county.population * populationScale,
-										casesByPopulationChange = casesByPopulation - previousCases / county.population * populationScale,
-										casesChangePercentage = (casesAbsoluteChange === 0) ? 0 : ((previousCases === 0) ? Number.POSITIVE_INFINITY : 100 * casesAbsoluteChange / previousCases),
-										currentDeaths = currentDailyRecord.deaths,
-										previousDeaths = previousDailyRecord.deaths,
-										deathsAbsoluteChange = currentDeaths - previousDeaths,
-										deathsChangePercentage = (deathsAbsoluteChange === 0) ? 0 : ((previousDeaths === 0) ? Number.POSITIVE_INFINITY : 100 * deathsAbsoluteChange / previousDeaths),
-										deathsByPopulation = currentDeaths / county.population * populationScale,
-										deathsByPopulationChange = deathsByPopulation - previousDeaths / county.population * populationScale,
-										deathsPerCase = (currentDeaths === 0) ? 0 : currentDeaths / currentCases,
-										previousDeathsPerCase = (previousDeaths === 0) ? 0 : previousDeaths / previousCases,
-										deathsPerCaseChange = deathsPerCase - previousDeathsPerCase,
-										deathsPerCaseChangePercentage = (deathsPerCaseChange === 0) ? 0 : ((previousDeathsPerCase === 0) ? Number.POSITIVE_INFINITY : 100 * deathsPerCaseChange / previousDeathsPerCase);
-									cards.push(
+										let matchingRecordIndex, currentDailyRecord, previousDailyRecord;
+										if (displayDateNumber === null)
+											currentDailyRecord = previousDailyRecord = { cases : 0, deaths: 0 };
+										else
 										{
-											id: countyCard.id,
-											placeName: countyCard.placeName,
-											casesAbsolute: currentCases,
-											casesAbsoluteChange: casesAbsoluteChange,
-											casesChangePercentage: casesChangePercentage,
-											casesByPopulation: casesByPopulation,
-											casesByPopulationChange: casesByPopulationChange,
-											deathsAbsolute: currentDeaths,
-											deathsAbsoluteChange: deathsAbsoluteChange,
-											deathsChangePercentage: deathsChangePercentage,
-											deathsByPopulation: deathsByPopulation,
-											deathsByPopulationChange: deathsByPopulationChange,
-											deathsPerCase: deathsPerCase,
-											deathsPerCaseChange: deathsPerCaseChange,
-											deathsPerCaseChangePercentage: deathsPerCaseChangePercentage
-										});
+											matchingRecordIndex = county.dailyRecords.findIndex(dailyRecord => (dailyRecord.date === displayDateNumber));
+											currentDailyRecord = (matchingRecordIndex >= 0) ? county.dailyRecords[matchingRecordIndex] : { cases : 0, deaths: 0 };
+
+											matchingRecordIndex = county.dailyRecords.findIndex(dailyRecord => (dailyRecord.date === displayDateNumber - growthRangeDays));
+											previousDailyRecord = (matchingRecordIndex >= 0) ? county.dailyRecords[matchingRecordIndex] : { cases : 0, deaths: 0 };
+										}
+										let currentCases = currentDailyRecord.cases,
+											previousCases = previousDailyRecord.cases,
+											casesAbsoluteChange = currentCases - previousCases,
+											casesByPopulation = currentCases / county.population * populationScale,
+											casesByPopulationChange = casesByPopulation - previousCases / county.population * populationScale,
+											casesChangePercentage = (casesAbsoluteChange === 0) ? 0 : ((previousCases === 0) ? Number.POSITIVE_INFINITY : 100 * casesAbsoluteChange / previousCases),
+											currentDeaths = currentDailyRecord.deaths,
+											previousDeaths = previousDailyRecord.deaths,
+											deathsAbsoluteChange = currentDeaths - previousDeaths,
+											deathsChangePercentage = (deathsAbsoluteChange === 0) ? 0 : ((previousDeaths === 0) ? Number.POSITIVE_INFINITY : 100 * deathsAbsoluteChange / previousDeaths),
+											deathsByPopulation = currentDeaths / county.population * populationScale,
+											deathsByPopulationChange = deathsByPopulation - previousDeaths / county.population * populationScale,
+											deathsPerCase = (currentDeaths === 0) ? 0 : currentDeaths / currentCases,
+											previousDeathsPerCase = (previousDeaths === 0) ? 0 : previousDeaths / previousCases,
+											deathsPerCaseChange = deathsPerCase - previousDeathsPerCase,
+											deathsPerCaseChangePercentage = (deathsPerCaseChange === 0) ? 0 : ((previousDeathsPerCase === 0) ? Number.POSITIVE_INFINITY : 100 * deathsPerCaseChange / previousDeathsPerCase);
+										cards.push(
+											{
+												id: countyCard.id,
+												placeName: countyCard.placeName,
+												dataExists: true,
+												casesAbsolute: currentCases,
+												casesAbsoluteChange: casesAbsoluteChange,
+												casesChangePercentage: casesChangePercentage,
+												casesByPopulation: casesByPopulation,
+												casesByPopulationChange: casesByPopulationChange,
+												deathsAbsolute: currentDeaths,
+												deathsAbsoluteChange: deathsAbsoluteChange,
+												deathsChangePercentage: deathsChangePercentage,
+												deathsByPopulation: deathsByPopulation,
+												deathsByPopulationChange: deathsByPopulationChange,
+												deathsPerCase: deathsPerCase,
+												deathsPerCaseChange: deathsPerCaseChange,
+												deathsPerCaseChangePercentage: deathsPerCaseChangePercentage
+											});
+									}
 								});
 							return cards;
 						},
@@ -545,8 +558,7 @@ let appUI = (function()
 			allCountyPathElements.forEach(
 				countyPathElement =>
 				{
-					let countyID = parseInt(countyPathElement.id.substring(1), 10);
-					if (!isNaN(countyID) && appLogic.data.getCountyByID(countyID) === null)
+					if (appLogic.data.getCountyByID(countyPathElement.id.substring(1)) === null)
 						countyPathElement.style.fill = colorForUnknown;
 				});
 		}

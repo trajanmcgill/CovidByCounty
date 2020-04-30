@@ -79,10 +79,12 @@
 						<h3>{{ displayDateString }}</h3>
 					</div>
 					<div v-for="item in infoCards" class="InformationCard" v-bind:id="'InfoCard_' + item.id" v-bind:key="item.id"
-						v-on:mouseenter="mouseenterInfoCard" v-on:mouseleave="mouseleaveInfoCard">
+						 v-on:mouseenter="mouseenterInfoCard" v-on:mouseleave="mouseleaveInfoCard">
+
 						<h4>{{ item.placeName }}</h4>
 						<button v-bind:id="'BtnRemoveCard_' + item.id" class="InfoCardRemovalButton">X</button>
-						<table class="CountyInfoCardTable">
+
+						<table v-if="item.dataExists" class="CountyInfoCardTable">
 							<thead>
 								<tr>
 									<th></th>
@@ -153,6 +155,8 @@
 								</tr>
 							</tbody>
 						</table>
+
+						<h5 v-if="!item.dataExists">[No data for this county]</h5>
 					</div>
 
 					<div class="InformationCard" v-bind:style="{ display: infoCardInstructionDisplay }">
