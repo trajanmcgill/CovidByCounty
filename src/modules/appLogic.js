@@ -1,8 +1,7 @@
 let appLogic = (function()
 {
-	const DataSource_Population = "data/countyPopulations_JointNYC.csv";
-	const DataSource_CaseData = "data/caseRecords.csv?cacheBuster=" + (new Date()).getTime();
-
+	const DataSource = "data/caseRecords.json?cacheBuster=" + (new Date()).getTime();
+	
 	const FIPS_Length = 5;
 
 	const BasicFactType =
@@ -29,196 +28,81 @@ let appLogic = (function()
 	{
 		None: 0,
 		LoadingMap: 1,
-		LoadingPopulationData: 2,
-		ProcessingPopulationData: 3,
-		LoadingCaseData: 4,
-		ProcessingCaseData: 5,
-		BuildingVisualization: 6
+		LoadingCaseData: 2,
+		ProcessingCaseData: 3,
+		BuildingVisualization: 4
 	};
 	
+	const DefaultSingleValueColors =
+		{
+			Unknown: "rgb(80, 80, 80)",
+			Zero: "rgb(128, 128, 128)",
+			ExceedsMax: "rgb(0, 0, 255)"
+		};
+	const DefaultColorGradients =
+		{
+			negative:
+				[
+					{ start: "rgb(0, 255, 0)", end: "rgb(0, 255, 255)" }
+				],
+			positive: 
+				[
+					{ start: "rgb(255, 255, 255)", end: "rgb(255, 255, 0)" },
+					{ start: "rgb(255, 255, 0)", end: "rgb(255, 0, 0)" },
+					{ start: "rgb(255, 0, 0)", end: "rgb(77, 0, 153)" }
+				]
+		};
 	const DefaultBasicFact = BasicFactType.Cases;
 	const DefaultMeasurementType = MeasurementType.PopulationRelative;
 	const DefaultDataView = DataViewType.DailyValue;
 	const DefaultGrowthRangeDays = 1;
 	const DefaultPopulationScale = 100000;
+	const OverallStartDateUTC = new Date(Date.UTC(2000, 0, 1)); // All dates will be tracked as number of days since this date.
 	
-	const allCountyData =
+	let allCountyData = null;
+
+
+	function getDateUTC(daysSinceStart)
 	{
-		maxCaseCount: 0,
-		maxDeaths: 0,
-		firstDate: null,
-		lastDate: null,
-		counties: []
-	};
+		let dateUTC = new Date(OverallStartDateUTC);
+		dateUTC.setUTCDate(dateUTC.getUTCDate() + daysSinceStart);
+		return dateUTC;
+	} // end getDateUTC()
 
 
-	function parseDate(dateString)
+	function treatAsLocalDate(dateUTC)
 	{
-		let pieces = dateString.split("-"),
-			parsedDate = new Date(pieces[0], parseInt(pieces[1], 10) - 1, pieces[2]);
-		if (isNaN(parsedDate.getTime()))
-			throw "Error: invalid date string:" + dateString;
-		return parsedDate;
-	} // end parseDate()
+		let localDate = new Date(dateUTC.getUTCFullYear(), dateUTC.getUTCMonth(), dateUTC.getUTCDate());
+		return localDate;
+	}
 
 
-	function bareDay(dateValue)
+	function getDateFromDateNumber(dateNumber)
 	{
-		return new Date(dateValue.getFullYear(), dateValue.getMonth(), dateValue.getDate(), 0, 0, 0, 0);
-	} // end bareDay()
+		return treatAsLocalDate(getDateUTC(dateNumber));
+	}
 
-
-	function countUniqueDays(date1, date2)
+	/*
+	function cullCounties(validCountyList)
 	{
-		let startDate, endDate, datePointer, dayCount = 0;
-
-		if (date1 <= date2)
-		{
-			startDate = bareDay(date1);
-			endDate = bareDay(date2);
-		}
-		else
-		{
-			startDate = bareDay(date2);
-			endDate = bareDay(date1);
-		}
-
-		datePointer = new Date(startDate.getTime());
-		do
-		{
-			dayCount++;
-			datePointer.setDate(datePointer.getDate() + 1);
-		} while (datePointer <= endDate);
-
-		return dayCount;
-	} // end countUniqueDays()
-
-
-	function buildCountyList(csvText)
-	{
-		let parsedData =
-			Papa.parse(
-				csvText,
-				{
-					header: true,
-
-					transformHeader:
-						function(header)
-						{
-							if(header === "Id2")
-								return "fips";
-							else
-								return "population";
-						},
-
-					transform:
-						function(value, header)
-						{
-							if(header === "fips")
-								return value.padStart(FIPS_Length, "0");
-							else
-								return value;
-						},
-					
-					dynamicTyping: header => (header === "population"),
-
-					skipEmptyLines: true
-				}).data;
-		
-		allCountyData.maxCaseCount = 0;
-		allCountyData.maxDeaths = 0;
-		allCountyData.firstDate = null;
-		allCountyData.lastDate = null;
-		allCountyData.counties = [];
-		parsedData.forEach(
-			item =>
-			{
-				allCountyData.counties[parseInt(item.fips, 10)] =
-					{
-						id: item.fips,
-						population: item.population,
-						maxCaseCount: 0,
-						maxDeaths: 0,
-						covid19Records: []
-					};
-			});
-	} // end buildCountyList()
-
-
-	function storeSingleCountyCaseData(parsedRecord)
-	{
-		let currentCounty = getCountyByID(parsedRecord.id);
-
-		if (typeof currentCounty === "undefined")
-			throw "Error: No such county as " + parsedRecord.id;
-		
-		let cases = parsedRecord.cases, deaths = parsedRecord.deaths, date = parseDate(parsedRecord.date);
-
-		if (cases > allCountyData.maxCaseCount)
-			allCountyData.maxCaseCount = cases;
-		if (deaths > allCountyData.maxDeaths)
-			allCountyData.maxDeaths = deaths;
-		if (allCountyData.firstDate === null || date < allCountyData.firstDate)
-			allCountyData.firstDate = date;
-		if (allCountyData.lastDate === null || date > allCountyData.lastDate)
-			allCountyData.lastDate = date;
-		
-		if (cases > currentCounty.maxCaseCount)
-			currentCounty.maxCaseCount = cases;
-		if (deaths > currentCounty.maxDeaths)
-			currentCounty.maxDeaths = deaths;
-		currentCounty.covid19Records.push(
-			{
-				date: date,
-				cumulativeCases: parsedRecord.cases,
-				cumulativeDeaths: parsedRecord.deaths
-			});
-	} // end storeSingleCountyCaseData()
-
-
-	function storeCountyCaseData(csvText)
-	{
-		let parsedData = Papa.parse(
-			csvText,
-			{
-				header: true,
-				dynamicTyping: header => (header === "cases" || header === "deaths"),
-				skipEmptyLines: true
-			}).data;
-		
-		parsedData.forEach(parsedRecord => { storeSingleCountyCaseData(parsedRecord); });
-	} // end storeCountyCaseData()
-
+		allCountyData.counties = allCountyData.counties.filter(county => countyFilterList.some(includedCounty => includedCounty.id = county.id));
+	}
+	*/
 
 	function loadData(statusUpdateFunction, completionCallback)
 	{
-		statusUpdateFunction(AppWaitType.LoadingPopulationData);
-		fetch(DataSource_Population)
+		statusUpdateFunction(AppWaitType.LoadingCaseData);
+		fetch(DataSource)
+			.then(response => response.json())
 			.then(
-				response =>
-				{
-					statusUpdateFunction(AppWaitType.ProcessingPopulationData);
-					return response.text();
-				})
-			.then(
-				text =>
-				{
-					buildCountyList(text);
-					text = null;
-					statusUpdateFunction(AppWaitType.LoadingCaseData);
-					return fetch(DataSource_CaseData);
-				})
-			.then(
-				response =>
+				importedData =>
 				{
 					statusUpdateFunction(AppWaitType.ProcessingCaseData);
-					return response.text();
-				})
-			.then(
-				text =>
-				{
-					storeCountyCaseData(text);
-					text = null;
+					allCountyData = importedData;
+					importedData = null;
+					console.log("county count=" + allCountyData.counties.length);
+					console.log("about to call completionCallback");
+					window.allCountyData = allCountyData; // REMOVE CODE HERE
 					completionCallback();
 				});
 	} // end loadData()
@@ -226,14 +110,210 @@ let appLogic = (function()
 
 	function getCountyByID(id)
 	{
-		let index = parseInt(id, 10);
-		if (!isNaN(index))
-			return allCountyData.counties[index];
+		if (typeof id === "string")
+			id = parseInt(id, 10);
+		if (typeof id === "number" && !isNaN(id))
+		{
+			let matchingCounty = allCountyData.counties.find(county => (county.id === id));
+			if (matchingCounty !== undefined)
+				return matchingCounty;
+		}
+		return null;
 	} // end getCountyByID()
+
+
+	function buildColoration_Positive(minValueGreaterThanZero, maxValue)
+	{
+		let dataRanges;
+		if (minValueGreaterThanZero)
+		{
+			let maxMinRatio = maxValue / minValueGreaterThanZero;
+			if (maxMinRatio > 10000)
+			{
+				let base = Math.cbrt(maxValue),
+					secondPower = Math.pow(base, 2);
+				dataRanges =
+					[
+						{ min: 0, max: base },
+						{ min: base, max: secondPower },
+						{ min: secondPower, max: maxValue }
+					];
+			}
+			else if (maxMinRatio > 100)
+			{
+				let base = Math.sqrt(maxValue);
+				dataRanges =
+					[
+						{ min: 0, max: base },
+						{ min: base, max: maxValue }
+					];
+			}
+			else
+				dataRanges = [ { min: 0, max: maxValue }];
+		}
+		else
+			dataRanges = [];
+		
+		let coloration =
+			{
+				zero: DefaultSingleValueColors.Zero,
+				unknown: DefaultSingleValueColors.Unknown,
+				exceedsMax: DefaultSingleValueColors.ExceedsMax,
+				ranges: []
+			};
+		dataRanges.forEach(
+			(dataRange, index) =>
+			{
+				coloration.ranges.push(
+					{
+						dataRange: dataRange,
+						colorRange: DefaultColorGradients.positive[index]
+					});
+			});
+
+		return coloration;
+	} // end buildColoration_Positive()
+
+
+	function buildColoration_Percentages(minValueGreaterThanZero, maxValue)
+	{
+		let coloration = buildColoration_Positive(minValueGreaterThanZero, maxValue);
+		coloration.zero = null;
+		coloration.ranges.unshift(
+			{
+				dataRange: { min: -1, max: 0 },
+				colorRange: DefaultColorGradients.negative[0]
+			});
+
+		return coloration;
+	} // end buildColoration_Percentages()
+
+
+	function colorationIsValid(coloration)
+	{
+		if (typeof coloration === "undefined"
+			|| coloration === null
+			|| typeof coloration.unknown === "undefined"
+			|| typeof coloration.zero === "undefined"
+			|| typeof coloration.ranges !== "object"
+			|| typeof coloration.ranges.length !== "number"
+			|| coloration.ranges.length < 1)
+		{
+			return false;
+		}
+		return true;
+	} // end colorationIsValid()
+
+
+	function prepareDataForAnimation(basicFact, measurement, dataView, populationScale, growthRangeDays, coloration)
+	{
+		let animationData =
+		{
+			minValueGreaterThanZero: null,
+			maxOverallDisplayFactValue: 0,
+			firstDate: allCountyData.firstDate,
+			lastDate: allCountyData.lastDate,
+			counties: allCountyData.counties,
+			coloration: coloration
+		};
+
+		animationData.counties.forEach(
+			county =>
+			{
+				const countyPopulation = county.population;
+				county.dailyRecords.forEach(
+					(currentDailyRecord, index, dailyRecords) =>
+					{
+						const currentCases = currentDailyRecord.cases,
+							currentDeaths = currentDailyRecord.deaths,
+							previousRecordIndex = (growthRangeDays >= index) ? 0 : index - growthRangeDays,
+							previousCases = (previousRecordIndex < 0) ? 0 : dailyRecords[previousRecordIndex].cases,
+							previousDeaths = (previousRecordIndex < 0) ? 0 : dailyRecords[previousRecordIndex].deaths;
+						let currentBasicValue, previousBasicValue;
+						if (basicFact === BasicFactType.Cases)
+						{
+							currentBasicValue = currentCases;
+							previousBasicValue = previousCases;
+						}
+						else if (basicFact === BasicFactType.Deaths)
+						{
+							currentBasicValue = currentDeaths;
+							previousBasicValue = previousDeaths;
+						}
+						else
+							throw "Invalid fact parameter";
+						
+						let currentMeasuredValue, previousMeasuredValue;
+						if (measurement === MeasurementType.Absolute)
+						{
+							currentMeasuredValue = currentBasicValue;
+							previousMeasuredValue = previousBasicValue;
+						}
+						else if (measurement === MeasurementType.CaseRelative && basicFact === BasicFactType.Deaths)
+						{
+							currentMeasuredValue = currentBasicValue / currentCases;
+							previousMeasuredValue = previousBasicValue / previousCases;
+						}
+						else if (measurement === MeasurementType.PopulationRelative)
+						{
+							if (countyPopulation > 0)
+							{
+								currentMeasuredValue = currentBasicValue / countyPopulation * populationScale;
+								previousMeasuredValue = previousBasicValue / countyPopulation * populationScale;
+							}
+							else
+							{
+								currentMeasuredValue = undefined;
+								previousMeasuredValue = undefined;
+							}
+						}
+						else
+							throw "Invalid fact / measurement parameter combination";
+						
+						let displayFactValue;
+						if (typeof currentMeasuredValue === "undefined")
+							displayFactValue = undefined;
+						else
+						{
+							if (dataView === DataViewType.DailyValue)
+								displayFactValue = currentMeasuredValue;
+							else if (dataView === DataViewType.ChangeAbsolute)
+								displayFactValue = currentMeasuredValue - previousMeasuredValue;
+							else if (dataView === DataViewType.ChangeProportional)
+							{
+								let valueChange = currentMeasuredValue - previousMeasuredValue;
+								displayFactValue = (valueChange === 0) ? 0 : ((previousMeasuredValue === 0) ? Number.POSITIVE_INFINITY : valueChange / previousMeasuredValue);
+							}
+							else
+								throw "Invalid data view parameter";
+							
+							if (displayFactValue > 0 && (animationData.minValueGreaterThanZero === null || displayFactValue < animationData.minValueGreaterThanZero))
+								animationData.minValueGreaterThanZero = displayFactValue;
+							if (displayFactValue > animationData.maxOverallDisplayFactValue && displayFactValue !== Number.POSITIVE_INFINITY)
+								animationData.maxOverallDisplayFactValue = displayFactValue;
+						}
+						
+						currentDailyRecord.displayFactValue = displayFactValue;
+					}); // end forEach on county.covid19Records
+			}); // end forEach on counties
+		
+		if (!colorationIsValid(coloration))
+		{
+			// No valid coloration was specified; auto-generate one.
+			if (basicFact === BasicFactType.Deaths && measurement === MeasurementType.CaseRelative && dataView === DataViewType.ChangeProportional)
+				animationData.coloration = buildColoration_Percentages(animationData.minValueGreaterThanZero, animationData.maxOverallDisplayFactValue);
+			else
+				animationData.coloration = buildColoration_Positive(animationData.minValueGreaterThanZero, animationData.maxOverallDisplayFactValue);
+		}
+
+		return animationData;
+	} // end prepareDataForAnimation()
 
 
 	let publicInterface =
 		{
+			FIPS_Length: FIPS_Length,
+
 			BasicFactType: BasicFactType,
 			MeasurementType: MeasurementType,
 			DataViewType: DataViewType,
@@ -247,14 +327,14 @@ let appLogic = (function()
 
 			data:
 			{
-				get counties() { return allCountyData.counties; },
+				load: loadData,
+				//cullCounties: cullCounties,
+				prepareDataForAnimation: prepareDataForAnimation,
+				getCountyByID: getCountyByID,
+				getDateFromDateNumber: getDateFromDateNumber,
 				get firstReportedDate() { return allCountyData.firstDate; },
-				get lastReportedDate() { return allCountyData.lastDate; },
-				getCountyByID: getCountyByID
-			},
-
-			loadData: loadData,
-			countUniqueDays: countUniqueDays
+				get lastReportedDate() { return allCountyData.lastDate; }
+			}
 		};
 	
 	return publicInterface;

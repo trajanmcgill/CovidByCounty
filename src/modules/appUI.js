@@ -6,30 +6,10 @@ import {Concert} from "./Concert.js?ver=2";
 let appUI = (function()
 {
 	const TimelineDateBoxWidth = 90, TimelineStartingOffset = 541;
-	const DefaultSingleValueColors =
-		{
-			Unknown: "rgb(80, 80, 80)",
-			Zero: "rgb(128, 128, 128)",
-			ExceedsMax: "rgb(0, 0, 255)"
-		};
-	const DefaultColorGradients =
-		{
-			negative:
-				[
-					{ start: "rgb(0, 255, 0)", end: "rgb(0, 255, 255)" }
-				],
-			positive: 
-				[
-					{ start: "rgb(255, 255, 255)", end: "rgb(255, 255, 0)" },
-					{ start: "rgb(255, 255, 0)", end: "rgb(255, 0, 0)" },
-					{ start: "rgb(255, 0, 0)", end: "rgb(77, 0, 153)" }
-				]
-		};
 	const DefaultAnimationTimeRatio = 500;
 
 	let svgObject = null, svgDocument = null;
 	let animationTimeRatio = DefaultAnimationTimeRatio;
-	let totalDays = 0;
 	let sequence = null;
 	let animationEnabled = false;
 	let savedConfigValues = null;
@@ -67,9 +47,9 @@ let appUI = (function()
 					waitMessage: "Loading Map...",
 					waitMessageDisplay: "block",
 					configurationBoxDisplay: "none",
-					displayDate: null,
-					dateList: [],
-					mapConfigPhrase: "",
+					displayDateNumber: null,
+					firstDateNumber: null,
+					totalDays: 0,
 					maxOverallValue: 0,
 					coloration: { unknown: null, zero: null, ranges: [] },
 					BasicFactType: appLogic.BasicFactType,
@@ -95,6 +75,18 @@ let appUI = (function()
 							return errors;
 						},
 
+					displayDateString:
+						function()
+						{
+							let dateString = "";
+							if (this.displayDateNumber !== null)
+							{
+								let dateLocal = appLogic.data.getDateFromDateNumber(this.displayDateNumber);
+								dateString = (dateLocal.toLocaleString("en-us", { month: "long" }) + " " + dateLocal.getDate());
+							}
+							return dateString;
+						},
+					
 					formattedPopulationScale:
 						function()
 						{
@@ -133,37 +125,51 @@ let appUI = (function()
 							return formattedValue;
 						},
 
+					dateList:
+						function()
+						{
+							let list = [], firstDateNumber = this.firstDateNumber, totalDays = this.totalDays;
+							if (firstDateNumber !== null)
+							{
+								for (let i = 0; i < totalDays; i++)
+									list.push(appLogic.data.getDateFromDateNumber(firstDateNumber + i));
+							}
+							return list;
+						},
+
 					infoCards:
 						function()
 						{
+							let displayDateNumber = this.displayDateNumber, growthRangeDays = this.growthRangeDays,
+								populationScale = this.populationScale;
 							let cards = [];
 							this.infoCardCountyList.forEach(
 								countyCard =>
 								{
 									let county = appLogic.data.getCountyByID(countyCard.id),
 										matchingRecordIndex, currentDailyRecord, previousDailyRecord;
-									if (this.displayDate === null)
-										currentDailyRecord = previousDailyRecord = { cumulativeCases : 0, cumulativeDeaths: 0 };
+									if (displayDateNumber === null)
+										currentDailyRecord = previousDailyRecord = { cases : 0, deaths: 0 };
 									else
 									{
-										matchingRecordIndex = county.covid19Records.findIndex(record => dateComparison(record.date, this.displayDate, 0));
-										currentDailyRecord = (matchingRecordIndex >= 0) ? county.covid19Records[matchingRecordIndex] : { cumulativeCases : 0, cumulativeDeaths: 0 };
+										matchingRecordIndex = county.dailyRecords.findIndex(dailyRecord => (dailyRecord.date === displayDateNumber));
+										currentDailyRecord = (matchingRecordIndex >= 0) ? county.dailyRecords[matchingRecordIndex] : { cases : 0, deaths: 0 };
 
-										matchingRecordIndex = county.covid19Records.findIndex(record => dateComparison(record.date, this.displayDate, this.growthRangeDays));
-										previousDailyRecord = (matchingRecordIndex >= 0) ? county.covid19Records[matchingRecordIndex] : { cumulativeCases : 0, cumulativeDeaths: 0 };
+										matchingRecordIndex = county.dailyRecords.findIndex(dailyRecord => (dailyRecord.date === displayDateNumber - growthRangeDays));
+										previousDailyRecord = (matchingRecordIndex >= 0) ? county.dailyRecords[matchingRecordIndex] : { cases : 0, deaths: 0 };
 									}
-									let currentCases = currentDailyRecord.cumulativeCases,
-										previousCases = previousDailyRecord.cumulativeCases,
+									let currentCases = currentDailyRecord.cases,
+										previousCases = previousDailyRecord.cases,
 										casesAbsoluteChange = currentCases - previousCases,
-										casesByPopulation = currentCases / county.population * this.populationScale,
-										casesByPopulationChange = casesByPopulation - previousCases / county.population * this.populationScale,
+										casesByPopulation = currentCases / county.population * populationScale,
+										casesByPopulationChange = casesByPopulation - previousCases / county.population * populationScale,
 										casesChangePercentage = (casesAbsoluteChange === 0) ? 0 : ((previousCases === 0) ? Number.POSITIVE_INFINITY : 100 * casesAbsoluteChange / previousCases),
-										currentDeaths = currentDailyRecord.cumulativeDeaths,
-										previousDeaths = previousDailyRecord.cumulativeDeaths,
+										currentDeaths = currentDailyRecord.deaths,
+										previousDeaths = previousDailyRecord.deaths,
 										deathsAbsoluteChange = currentDeaths - previousDeaths,
 										deathsChangePercentage = (deathsAbsoluteChange === 0) ? 0 : ((previousDeaths === 0) ? Number.POSITIVE_INFINITY : 100 * deathsAbsoluteChange / previousDeaths),
-										deathsByPopulation = currentDeaths / county.population * this.populationScale,
-										deathsByPopulationChange = deathsByPopulation - previousDeaths / county.population * this.populationScale,
+										deathsByPopulation = currentDeaths / county.population * populationScale,
+										deathsByPopulationChange = deathsByPopulation - previousDeaths / county.population * populationScale,
 										deathsPerCase = (currentDeaths === 0) ? 0 : currentDeaths / currentCases,
 										previousDeathsPerCase = (previousDeaths === 0) ? 0 : previousDeaths / previousCases,
 										deathsPerCaseChange = deathsPerCase - previousDeathsPerCase,
@@ -204,6 +210,29 @@ let appUI = (function()
 								return null;
 							else
 								return this.coloration.ranges[this.coloration.ranges.length-1].dataRange.max;
+						},
+					
+					mapConfigPhrase:
+						function()
+						{
+							let configPhrase = "";
+							if (this.configBasicFact === appLogic.BasicFactType.Cases)
+								configPhrase = "Cumulative Cases";
+							else if (this.configBasicFact === appLogic.BasicFactType.Deaths)
+								configPhrase = "Cumulative Deaths";
+							if (this.configMeasurement === appLogic.MeasurementType.Absolute)
+								configPhrase += " (Total)";
+							else if (this.configMeasurement === appLogic.MeasurementType.CaseRelative)
+								configPhrase += " per Case [fatality rate]";
+							else if (this.configMeasurement === appLogic.MeasurementType.PopulationRelative)
+								configPhrase += " Per " + formatNumberWithCommas(this.populationScale) + " People";
+							if (this.configDataView === appLogic.DataViewType.DailyValue)
+								configPhrase += " (Daily Value)";
+							else if (this.configDataView === appLogic.DataViewType.ChangeAbsolute)
+								configPhrase += " (Last " + this.growthRangeDays + " Days Total Increase)";
+							else if (this.configDataView === appLogic.DataViewType.ChangeProportional)
+								configPhrase += " (Last " + this.growthRangeDays + " Days Percentage Increase)"
+							return configPhrase;
 						}
 				},
 
@@ -291,159 +320,61 @@ let appUI = (function()
 			mounted: function() { whenDocumentLoaded(initializeApp); }
 		});
 
+
 	function initializeApp()
 	{
-		appLogic.loadData(
-			setWaitMessage,
-			function()
-			{
-				svgObject = document.getElementById("SvgObject");
-				svgDocument = svgObject.getSVGDocument();
-				mapControls.initializeMapUI(VueApp);
-				buildTimelineViewData(appLogic.data.firstReportedDate, appLogic.data.lastReportedDate);
-				setWaitMessage(appLogic.AppWaitType.BuildingVisualization);
-				let animationSequence = setupDataAnimation(
-					appLogic.DefaultFact, appLogic.DefaultMeasurementType, appLogic.DefaultDataView,
-					appLogic.DefaultGrowthRangeDays, appLogic.DefaultPopulationScale, null);
-				animationSequence.seek(animationSequence.getStartTime());
-				setWaitMessage(appLogic.AppWaitType.None);
-
-				window.appLogic = appLogic; // REMOVE CODE HERE
-			});
+		appLogic.data.load(setWaitMessage, doPostDataLoadInitialization);
 	} // end initializeApp()
 
 
-	function buildRawMapAnimationData(basicFact, measurement, dataView, populationScale, growthRangeDays)
+	function doPostDataLoadInitialization()
 	{
-		let rawAnimationData =
-		{
-			minValueGreaterThanZero: null,
-			maxOverallDisplayFactValue: 0,
-			firstDate: appLogic.data.firstReportedDate,
-			counties: []
-		};
+		svgObject = document.getElementById("SvgObject");
+		svgDocument = svgObject.getSVGDocument();
 
-		appLogic.data.counties.forEach(
+		console.log("county count on map=" + svgDocument.querySelectorAll("[id^=c]").length);
+
+		mapControls.initializeMapUI(VueApp);
+
+		setWaitMessage(appLogic.AppWaitType.BuildingVisualization);
+		VueApp.firstDateNumber = appLogic.data.firstReportedDate;
+		VueApp.totalDays = appLogic.data.lastReportedDate - appLogic.data.firstReportedDate + 1;
+		VueApp.configBasicFact = appLogic.DefaultFact;
+		VueApp.configMeasurement = appLogic.DefaultMeasurementType;
+		VueApp.configDataView = appLogic.DefaultDataView;
+		VueApp.growthRangeDays = appLogic.DefaultGrowthRangeDays;
+		VueApp.populationScale = appLogic.DefaultPopulationScale;
+		VueApp.coloration = { unknown: null, zero: null, ranges: [] };
+
+		console.log("about to call setupDataAnimation()");
+		let animationSequence = setupDataAnimation();
+		animationSequence.seek(animationSequence.getStartTime());
+
+		setWaitMessage(appLogic.AppWaitType.None);
+		window.appLogic = appLogic; // REMOVE CODE HERE
+	} // end doPostDataLoadInitialization()
+
+
+	function getMapAnimationTransformations(animationData)
+	{
+		// Build map transformations
+
+		let transformations = [], coloration = animationData.coloration;
+		animationData.counties.forEach(
 			county =>
 			{
-				let mapElement = svgDocument.getElementById("c" + county.id);
-				if (mapElement === null)
-					return;
+				let target = svgDocument.getElementById("c" + county.id.toString().padStart(appLogic.FIPS_Length, "0"));
 
-				let currentCountyData = { id: county.id, dailyRecords: [] };
+				if (target === null)
+					return; // There is no map feature corresponding to this county in the data set, so don't build animation transformations for it.
 
-				let countyPopulation = county.population;
-				county.covid19Records.forEach(
-					(covid19Record, index, covid19Records) =>
-					{
-						let currentCases = covid19Record.cumulativeCases,
-							currentDeaths = covid19Record.cumulativeDeaths,
-							previousRecordIndex = covid19Records.findIndex(record => dateComparison(record.date, covid19Record.date, growthRangeDays)),
-							previousCases = (previousRecordIndex < 0) ? 0 : covid19Records[previousRecordIndex].cumulativeCases,
-							previousDeaths = (previousRecordIndex < 0) ? 0 : covid19Records[previousRecordIndex].cumulativeDeaths;
-
-						if (currentCountyData.vueInfoCard != null)
-						{
-							currentCountyData.infoCardDailyRecords.push(
-								{
-									date: covid19Record.date,
-									casesAbsolute: currentCases,
-									casesByPopulation: currentCases / countyPopulation * populationScale,
-									deathsAbsolute: currentDeaths,
-									deathsByPopulation: currentDeaths / countyPopulation * populationScale,
-									deathsPerCase: currentDeaths / currentCases
-								});
-						}
-
-						let currentBasicValue, previousBasicValue;
-						if (basicFact === appLogic.BasicFactType.Cases)
-						{
-							currentBasicValue = currentCases;
-							previousBasicValue = previousCases;
-						}
-						else if (basicFact === appLogic.BasicFactType.Deaths)
-						{
-							currentBasicValue = currentDeaths;
-							previousBasicValue = previousDeaths;
-						}
-						else
-							throw "Invalid fact parameter";
-						
-						let currentMeasuredValue, previousMeasuredValue;
-						if (measurement === appLogic.MeasurementType.Absolute)
-						{
-							currentMeasuredValue = currentBasicValue;
-							previousMeasuredValue = previousBasicValue;
-						}
-						else if (measurement === appLogic.MeasurementType.CaseRelative && basicFact === appLogic.BasicFactType.Deaths)
-						{
-							currentMeasuredValue = currentBasicValue / currentCases;
-							previousMeasuredValue = previousBasicValue / previousCases;
-						}
-						else if (measurement === appLogic.MeasurementType.PopulationRelative)
-						{
-							if (countyPopulation > 0)
-							{
-								currentMeasuredValue = currentBasicValue / countyPopulation * populationScale;
-								previousMeasuredValue = previousBasicValue / countyPopulation * populationScale;
-							}
-							else
-							{
-								currentMeasuredValue = undefined;
-								previousMeasuredValue = undefined;
-							}
-						}
-						else
-							throw "Invalid fact / measurement parameter combination";
-						
-						let displayFactValue;
-						if (typeof currentMeasuredValue === "undefined")
-							displayFactValue = currentMeasuredValue;
-						else
-						{
-							if (dataView === appLogic.DataViewType.DailyValue)
-								displayFactValue = currentMeasuredValue;
-							else if (dataView === appLogic.DataViewType.ChangeAbsolute)
-								displayFactValue = currentMeasuredValue - previousMeasuredValue;
-							else if (dataView === appLogic.DataViewType.ChangeProportional)
-							{
-								let valueChange = currentMeasuredValue - previousMeasuredValue;
-								displayFactValue = (valueChange === 0) ? 0 : ((previousMeasuredValue === 0) ? Number.POSITIVE_INFINITY : valueChange / previousMeasuredValue);
-							}
-							else
-								throw "Invalid data view parameter";
-							
-							if (displayFactValue > 0 && (rawAnimationData.minValueGreaterThanZero === null || displayFactValue < rawAnimationData.minValueGreaterThanZero))
-								rawAnimationData.minValueGreaterThanZero = displayFactValue;
-							if (displayFactValue > rawAnimationData.maxOverallDisplayFactValue && displayFactValue !== Number.POSITIVE_INFINITY)
-								rawAnimationData.maxOverallDisplayFactValue = displayFactValue;
-						}
-						
-						currentCountyData.dailyRecords.push({ date: covid19Record.date, displayFactValue: displayFactValue });
-					}); // end forEach on county.covid19Records
-				
-				rawAnimationData.counties.push(currentCountyData);
-			}); // end forEach on counties
-		
-		return rawAnimationData;
-	} // end buildRawMapAnimationData()
-
-
-	function getMapAnimationTransformations(rawAnimationData, coloration)
-	{
-		let transformations = [];
-		
-		rawAnimationData.counties.forEach(
-			county =>
-			{
-				// Build map transformations
 				let countyMapKeyframeTimes = [0],
 					countyMapKeyframeValues = [coloration.unknown];
 				county.dailyRecords.forEach(
 					dailyRecord =>
 					{
-						let displayFactValue = dailyRecord.displayFactValue;
-						let keyFrameTime = Math.round(appLogic.countUniqueDays(dailyRecord.date, rawAnimationData.firstDate) * animationTimeRatio);
+						const displayFactValue = dailyRecord.displayFactValue;
+						const keyFrameTime = (dailyRecord.date - animationData.firstDate) * animationTimeRatio;
 						let keyFrameValue = coloration.unknown;
 
 						if (displayFactValue === 0 && coloration.zero !== null)
@@ -474,7 +405,7 @@ let appUI = (function()
 					});
 				transformations.push(
 					{
-						target: svgDocument.getElementById("c" + county.id),
+						target: target,
 						feature: "fill",
 						keyframes: { times: countyMapKeyframeTimes, values: countyMapKeyframeValues }
 					});
@@ -484,74 +415,78 @@ let appUI = (function()
 	} // getMapAnimationTransformations
 
 
-	function buildColoration_Percentages(minValueGreaterThanZero, maxValue)
+	function getTimelineAnimationTransformations()
 	{
-		let coloration = buildColoration_Positive(minValueGreaterThanZero, maxValue);
-		coloration.zero = null;
-		coloration.ranges.unshift(
-			{
-				dataRange: { min: -1, max: 0 },
-				colorRange: DefaultColorGradients.negative[0]
-			});
-
-		return coloration;
-	} // end buildColoration_Percentages()
-
-
-	function buildColoration_Positive(minValueGreaterThanZero, maxValue)
-	{
-		let dataRanges;
-		if (minValueGreaterThanZero)
+		let totalDays = VueApp.totalDays,
+			timelineTimes = [0], timelinePositions = [TimelineStartingOffset];
+		for (let i = 1; i <= totalDays; i++)
 		{
-			let maxMinRatio = maxValue / minValueGreaterThanZero;
-			if (maxMinRatio > 10000)
-			{
-				let base = Math.cbrt(maxValue),
-					secondPower = Math.pow(base, 2);
-				dataRanges =
-					[
-						{ min: 0, max: base },
-						{ min: base, max: secondPower },
-						{ min: secondPower, max: maxValue }
-					];
-			}
-			else if (maxMinRatio > 100)
-			{
-				let base = Math.sqrt(maxValue);
-				dataRanges =
-					[
-						{ min: 0, max: base },
-						{ min: base, max: maxValue }
-					];
-			}
-			else
-				dataRanges = [ { min: 0, max: maxValue }];
+			timelineTimes.push(i * animationTimeRatio);
+			timelinePositions.push(TimelineStartingOffset - i * TimelineDateBoxWidth);
 		}
-		else
-			dataRanges = [];
-		
-		let coloration =
-			{
-				zero: DefaultSingleValueColors.Zero,
-				unknown: DefaultSingleValueColors.Unknown,
-				exceedsMax: DefaultSingleValueColors.ExceedsMax,
-				ranges: []
-			};
-		dataRanges.forEach(
-			(dataRange, index) =>
-			{
-				coloration.ranges.push(
-					{
-						dataRange: dataRange,
-						colorRange: DefaultColorGradients.positive[index]
-					});
-			});
 
-		return coloration;
-	} // end buildColoration_Positive()
+		let transformationSet =
+		{
+			target: document.getElementById("Timeline"),
+			feature: "margin-left",
+			applicator: Concert.Applicators.Style,
+			calculator: Concert.Calculators.Discrete,
+			easing: Concert.EasingFunctions.ConstantRate,
+			unit: "px",
+			keyframes: { times: timelineTimes, values: timelinePositions }
+		};
+
+		return transformationSet;
+	} // end getTimelineAnimationTransformations()
+	
+	
+	function getSliderAnimationTransformations()
+	{
+		let totalDays = VueApp.totalDays,
+			sliderTimes = [0], sliderPositions = [0];
+		for (let i = 1; i <= totalDays; i++)
+		{
+			sliderTimes.push(i * animationTimeRatio);
+			sliderPositions.push(i)
+		}
+
+		let transformationSet =
+		{
+			target: document.getElementById("AnimationSlider"),
+			feature: "value",
+			applicator: Concert.Applicators.Property,
+			calculator: Concert.Calculators.Discrete,
+			keyframes: { times: sliderTimes, values: sliderPositions }
+		};
+
+		return transformationSet;
+	} // end getSliderAnimationTransformations()
+	
+	
+	function getInfoTitleCardAnimationTransformations()
+	{
+		let firstDateNumber = VueApp.firstDateNumber, totalDays = VueApp.totalDays,
+			titleCardTimes = [0], titleCardValues = [null];
+		for (let i = 1; i <= totalDays; i++)
+		{
+			titleCardTimes.push(i * animationTimeRatio);
+			titleCardValues.push(firstDateNumber + i - 1);
+		}
+
+		let transformationSet = 
+		{
+			target: VueApp,
+			feature: "displayDateNumber",
+			applicator: Concert.Applicators.Property,
+			calculator: Concert.Calculators.Discrete,
+			keyframes: { times: titleCardTimes, values: titleCardValues }
+		};
+
+		return transformationSet;
+	} // end getInfoTitleCardAnimationTransformations()
 
 
-	function setupDataAnimation(basicFact, measurement, dataView, growthRangeDays, populationScale, coloration)
+	function setupDataAnimation()
 	{
 		const BtnSeekStart = document.getElementById("BtnSeekStart"),
 			BtnStepBack = document.getElementById("BtnStepBack"),
@@ -573,95 +508,26 @@ let appUI = (function()
 				unit: null
 			});
 		
-		// Animate map
-		let rawMapAnimationData = buildRawMapAnimationData(basicFact, measurement, dataView, populationScale, growthRangeDays);
-		if (coloration === null)
-		{
-			if (basicFact === appLogic.BasicFactType.Deaths && measurement === appLogic.MeasurementType.CaseRelative && dataView === appLogic.DataViewType.ChangeProportional)
-				coloration = buildColoration_Percentages(rawMapAnimationData.minValueGreaterThanZero, rawMapAnimationData.maxOverallDisplayFactValue);
-			else
-				coloration = buildColoration_Positive(rawMapAnimationData.minValueGreaterThanZero, rawMapAnimationData.maxOverallDisplayFactValue);
-		}
-		let mapTransformations = getMapAnimationTransformations(rawMapAnimationData, coloration);
-		mapTransformations.forEach(transformation => { sequence.addTransformations(transformation); });
-		let mapConfigPhrase;
-		if (basicFact === appLogic.BasicFactType.Cases)
-			mapConfigPhrase = "Cumulative Cases";
-		else if (basicFact === appLogic.BasicFactType.Deaths)
-			mapConfigPhrase = "Cumulative Deaths";
-		if (measurement === appLogic.MeasurementType.Absolute)
-			mapConfigPhrase += " (Total)";
-		else if (measurement === appLogic.MeasurementType.CaseRelative)
-			mapConfigPhrase += " per Case [fatality rate]";
-		else if (measurement === appLogic.MeasurementType.PopulationRelative)
-			mapConfigPhrase += " Per " + formatNumberWithCommas(populationScale) + " People";
-		if (dataView === appLogic.DataViewType.DailyValue)
-			mapConfigPhrase += " (Daily Value)";
-		else if (dataView === appLogic.DataViewType.ChangeAbsolute)
-			mapConfigPhrase += " (Last " + growthRangeDays + " Days Total Increase)";
-		else if (dataView === appLogic.DataViewType.ChangeProportional)
-			mapConfigPhrase += " (Last " + growthRangeDays + " Days Percentage Increase)"
-		VueApp.configBasicFact = basicFact;
-		VueApp.configMeasurement = measurement;
-		VueApp.configDataView = dataView;
-		VueApp.growthRangeDays = growthRangeDays;
-		VueApp.populationScale = populationScale;
-		VueApp.mapConfigPhrase = mapConfigPhrase;
-		VueApp.maxOverallValue = rawMapAnimationData.maxOverallDisplayFactValue;
-		VueApp.coloration = coloration;
+		// Build data set used for animating things.
+		console.log("about to call prepareDataForAnimation()");
+		let animationData =
+			appLogic.data.prepareDataForAnimation(
+				VueApp.configBasicFact, VueApp.configMeasurement, VueApp.configDataView, VueApp.populationScale, VueApp.growthRangeDays, VueApp.coloration);
+		VueApp.maxOverallValue = animationData.maxOverallDisplayFactValue;
+		VueApp.coloration = animationData.coloration;
 
-		// Animate timeline
-		totalDays = appLogic.countUniqueDays(appLogic.data.firstReportedDate, appLogic.data.lastReportedDate);
-		let timelineTimes = [0], timelinePositions = [TimelineStartingOffset];
-		for (let i = 0; i < totalDays; i++)
-		{
-			let nextLandingTime = (i + 1) * animationTimeRatio;
+		// Set up map animation.
+		console.log("about to call addTransformations() but first getMapAnimationTransformations()");
+		sequence.addTransformations(getMapAnimationTransformations(animationData));
 
-			timelineTimes.push(nextLandingTime);
-			timelinePositions.push(TimelineStartingOffset - (i + 1) * TimelineDateBoxWidth);
-		}
-		sequence.addTransformations(
-			{
-				target: document.getElementById("Timeline"),
-				feature: "margin-left",
-				applicator: Concert.Applicators.Style,
-				calculator: Concert.Calculators.Discrete,
-				easing: Concert.EasingFunctions.ConstantRate,
-				unit: "px",
-				keyframes: { times: timelineTimes, values: timelinePositions }
-			});
+		// Set up timeline animation.
+		sequence.addTransformations(getTimelineAnimationTransformations());
 		
-		// Animate slider 
-		let sliderTimes = [0], sliderPositions = [0];
-		for (let i = 1; i <= totalDays; i++)
-		{
-			sliderTimes.push(i * animationTimeRatio);
-			sliderPositions.push(i)
-		}
-		sequence.addTransformations(
-			{
-				target: document.getElementById("AnimationSlider"),
-				feature: "value",
-				applicator: Concert.Applicators.Property,
-				calculator: Concert.Calculators.Discrete,
-				keyframes: { times: sliderTimes, values: sliderPositions }
-			});
+		// Set up slider control animation.
+		sequence.addTransformations(getSliderAnimationTransformations());
 		
 		// Animate info title card
-		let titleCardTimes = [0], titleCardValues = [null];
-		for (let i = 1; i <= totalDays; i++)
-		{
-			titleCardTimes.push(i * animationTimeRatio);
-			titleCardValues.push(VueApp.dateList[i - 1]);
-		}
-		sequence.addTransformations(
-			{
-				target: VueApp,
-				feature: "displayDate",
-				applicator: Concert.Applicators.Property,
-				calculator: Concert.Calculators.Discrete,
-				keyframes: { times: titleCardTimes, values: titleCardValues }
-			});
+		sequence.addTransformations(getInfoTitleCardAnimationTransformations());
 		
 		document.getElementById("ConfigPhrase").onclick = showConfigDialog;
 		InformationPanel.onclick = informationPanelClick;
@@ -683,32 +549,7 @@ let appUI = (function()
 	} // end setupDataAnimation()
 
 
-	function buildTimelineViewData(firstDate, lastDate)
-	{
-		let currentDate = firstDate;
-		while (currentDate <= lastDate)
-		{
-			VueApp.dateList.push(currentDate);
-			let nextDate = new Date(currentDate);
-			nextDate.setDate(nextDate.getDate() + 1);
-			currentDate = nextDate;
-		}
-	} // end buildTimelineData()
-
-
-	function dateComparison(firstDate, secondDate, targetedDifference)
-	{
-		let adjustedDate = new Date(firstDate);
-		adjustedDate.setDate(adjustedDate.getDate() + targetedDifference);
-		let match =
-			(adjustedDate.getFullYear() === secondDate.getFullYear()
-			&& adjustedDate.getMonth() === secondDate.getMonth()
-			&& adjustedDate.getDate() === secondDate.getDate());
-		return match;
-	} // end dateComparison()
-
-
-function formatNumberWithCommas(number)
+	function formatNumberWithCommas(number)
 	{
 		let rawString = number.toString(),
 			decimalPosition = rawString.indexOf("."),
@@ -759,7 +600,7 @@ function formatNumberWithCommas(number)
 	function animationStepForward()
 	{
 		if (animationEnabled)
-			animationSeekToSpecificDay(Math.min(Math.round(sequence.getCurrentTime() / animationTimeRatio) + 1, totalDays));
+			animationSeekToSpecificDay(Math.min(Math.round(sequence.getCurrentTime() / animationTimeRatio) + 1, VueApp.totalDays));
 	}
 
 
@@ -773,7 +614,7 @@ function formatNumberWithCommas(number)
 	function animationSeekEnd()
 	{
 		if (animationEnabled)
-			animationSeekToSpecificDay(totalDays);
+			animationSeekToSpecificDay(VueApp.totalDays);
 	}
 
 
@@ -782,7 +623,7 @@ function formatNumberWithCommas(number)
 		if (animationEnabled)
 		{
 			sequence.stop();
-			sequence.seek(Math.min(Math.max(dayNumber, 0), totalDays) * animationTimeRatio);
+			sequence.seek(Math.min(Math.max(dayNumber, 0), VueApp.totalDays) * animationTimeRatio);
 		}
 	}
 
@@ -834,6 +675,7 @@ function formatNumberWithCommas(number)
 		}
 	}
 
+
 	function informationPanelClick(eventObject)
 	{
 		let targetID = eventObject.target.id;
@@ -845,6 +687,7 @@ function formatNumberWithCommas(number)
 			mapControls.setCountyHighlightingByID(countyID, mapControls.CountyHighlightType.Normal);
 		}
 	}
+
 
 	function handleKeyboardControl(eventObject)
 	{
@@ -896,9 +739,7 @@ function formatNumberWithCommas(number)
 			{
 				VueApp.configurationBoxDisplay = "none";
 				setWaitMessage(appLogic.AppWaitType.BuildingVisualization);
-				let animationSequence = setupDataAnimation(
-					VueApp.configBasicFact, VueApp.configMeasurement, VueApp.configDataView,
-					VueApp.growthRangeDays, VueApp.populationScale, null);
+				let animationSequence = setupDataAnimation();
 				animationSequence.seek(animationSequence.getStartTime());
 				setWaitMessage(appLogic.AppWaitType.None);
 			}
@@ -928,10 +769,6 @@ function formatNumberWithCommas(number)
 			VueApp.waitMessageDisplay = "block";
 			if (waitType === appLogic.AppWaitType.LoadingMap)
 				VueApp.waitMessage = "Loading Map...";
-			if (waitType === appLogic.AppWaitType.LoadingPopulationData)
-				VueApp.waitMessage = "Loading County Population Data...";
-			else if (waitType === appLogic.AppWaitType.ProcessingPopulationData)
-				VueApp.waitMessage = "Processing County Population Data...";
 			else if (waitType === appLogic.AppWaitType.LoadingCaseData)
 				VueApp.waitMessage = "Loading County Case Data...";
 			else if (waitType === appLogic.AppWaitType.ProcessingCaseData)

@@ -84,15 +84,15 @@ module.exports = function(grunt)
 			pkg: grunt.file.readJSON("package.json"),
 
 
-			generateCaseData:
+			generateData:
 			{
 				default:
 				{
 					files:
 					[
 						{
-							src: "sourceData/caseRecords/us-counties_*.csv",
-							dest: "src/data/caseRecords.csv"
+							src: ["src/data/caseRecords/us-counties_*.csv", "src/data/population/countyPopulations2018.csv"],
+							dest: "assembly/data/caseRecords.json"
 						}
 					]
 				}
@@ -149,7 +149,7 @@ module.exports = function(grunt)
 			{
 				assembleSrcFiles:
 				{
-					files: [ { expand: true, cwd: "src/", src: ["**/*"], dest: "assembly/" } ]
+					files: [ { expand: true, cwd: "src/", src: ["**/*", "!data/**/*"], dest: "assembly/" } ]
 				},
 
 				copyOriginalToFull:
@@ -291,37 +291,90 @@ module.exports = function(grunt)
 
 
 	grunt.registerMultiTask(
-		"generateCaseData",
+		"generateData",
 		"Build case record file for web site from case record file from NYT",
 		function()
 		{
+			const FIPS_Length = 5;
 			const NYC_FIPS_CODES = ["36005", "36061", "36081", "36047", "36085"];
+			const MS_PER_DAY = 1000 * 60 * 60 * 24;
+			const OverallStartDateUTC = new Date(Date.UTC(2000, 0, 1)); // All dates will be tracked as number of days since this date.
 
-			function parseDate(dateString)
+			function bareDay(dateValue)
+			{
+				return new Date(dateValue.getFullYear(), dateValue.getMonth(), dateValue.getDate(), 0, 0, 0, 0);
+			} // end bareDay()
+		
+			/*
+			function dateDifference(date1, date2)
+			{
+				let startDate, endDate;
+		
+				if (date1 <= date2)
+				{
+					startDate = bareDay(date1);
+					endDate = bareDay(date2);
+				}
+				else
+				{
+					startDate = bareDay(date2);
+					endDate = bareDay(date1);
+				}
+		
+				return Math.ceil((endDate.getTime() - startDate.getTime()) / MS_PER_DAY);
+			} // end countUniqueDays()
+			*/
+
+			function daysSinceStart(dateValueUTC)
+			{
+				return Math.round((dateValueUTC.getTime() - OverallStartDateUTC.getTime()) / MS_PER_DAY);
+			}
+
+			function parseDateAsUTC(dateString)
 			{
 				let pieces = dateString.split("-"),
-					parsedDate = new Date(pieces[0], parseInt(pieces[1], 10) - 1, pieces[2]);
+					parsedDate = new Date(Date.UTC(pieces[0], parseInt(pieces[1], 10) - 1, pieces[2]));
 				if (isNaN(parsedDate.getTime()))
 					throw "Error: invalid date string:" + dateString;
 				return parsedDate;
-			} // end parseDate()
+			} // end parseDateAsUTC()
 
-			function addCountyRecord(counties, countyID, date, cases, deaths, state, countyName)
+			function getCountyByID(counties, countyID)
+			{
+				let matchingCounties = counties.filter(county => (county.id === countyID));
+				if (matchingCounties.length > 0)
+					return matchingCounties[0];
+				else
+					return null;
+			} // end getCountyByID()
+
+			function addCountyRecord(counties, countyID, date, cases, deaths)
 			{
 				let intID = parseInt(countyID, 10),
-					currentCounty = counties[intID];
-				if (typeof currentCounty === "undefined")
-					currentCounty = counties[intID] = { id: intID, dailyRecords: [] };
+					currentCounty = getCountyByID(counties, intID);
+				if (currentCounty === null)
+				{
+					currentCounty = { id: intID, population: 0, dailyRecords: [] };
+					counties.push(currentCounty);
+				}
 				currentCounty.dailyRecords.push({ date: date, cases: cases, deaths: deaths });
-			}
+			} // end addCountyRecord()
+
+			function dailyRecordSortFunction(record1, record2)
+			{
+				let sortValue = ((record1.date < record2.date) ? -1 : ((record2.date > record1.date) ? 1 : 0 ));
+				return sortValue;
+			} // end dailyRecordSortFunction()
 		
 			let mostRecentFile = null, destFile = null;
 			this.files.forEach(
 				function(file)
 				{
-					for (let i = 0; i < file.src.length; i++)
+					// Look through the data files and find the most recent one.
+					let caseRecordFiles = file.src.filter(fileName => (fileName.indexOf("/caseRecords/") > 0));
+					for (let i = 0; i < caseRecordFiles.length; i++)
 					{
-						let fileName = file.src[i],
+						let fileName = caseRecordFiles[i],
 							datePortion = fileName.substring(fileName.lastIndexOf("_") + 1, fileName.length - 4),
 							datePieces = datePortion.split("."),
 							year = parseInt(datePieces[0], 10),
@@ -331,69 +384,145 @@ module.exports = function(grunt)
 						if (mostRecentFile === null || mostRecentFile.fileDate < fileDate)
 							mostRecentFile = { fileName: fileName, fileDate: fileDate };
 					}
-					grunt.log.writeln("Reading file: " + mostRecentFile.fileName);
-					let fileContents = grunt.file.read(mostRecentFile.fileName);
 
-					let parsedData = Papa.parse(
+					// Read the most recent case records CSV data file and parse its contents.
+					grunt.log.writeln("Reading case records file: " + mostRecentFile.fileName);
+					let fileContents = grunt.file.read(mostRecentFile.fileName);
+					let caseRecords = Papa.parse(
 						fileContents,
 						{
 							header: true,
 							transformHeader: header => ((header === "fips") ? "id" : header),
+							transform: function(value, header) { return ((header === "date") ? daysSinceStart(parseDateAsUTC(value)) : value); },
+							dynamicTyping: header => (header === "cases" || header === "deaths"),
 							skipEmptyLines: true
 						}).data;
 					fileContents = null;
 		
+					// Go through the flat array of daily records and build a data set consisting of
+					// an array of counties, each of which has an ID and an array of daily records for it.
 					let counties = [], earliestDate = null, latestDate = null;
-					parsedData.forEach(
-						parsedRecord =>
+					let maxCaseCount = 0, maxDeaths = 0;
+					caseRecords.forEach(
+						caseRecord =>
 						{
-							let currentCountyID = parsedRecord.id, currentRecordDate = parseDate(parsedRecord.date);
-							if (currentCountyID === "" && parsedRecord.county === "New York City" && parsedRecord.state === "New York" )
-								NYC_FIPS_CODES.forEach(nycFipsCode => { addCountyRecord(counties, nycFipsCode, currentRecordDate, parsedRecord.cases, parsedRecord.deaths, parsedRecord.state, parsedRecord.county); });
-							else if (currentCountyID !== "")
-								addCountyRecord(counties, currentCountyID, currentRecordDate, parsedRecord.cases, parsedRecord.deaths, parsedRecord.state, parsedRecord.county);
+							let currentCountyID = caseRecord.id, currentRecordDate = caseRecord.date;
+							if (currentCountyID !== "" || (caseRecord.county === "New York City" && caseRecord.state === "New York"))
+							{
+								if (currentCountyID !== "")
+									addCountyRecord(counties, currentCountyID, currentRecordDate, caseRecord.cases, caseRecord.deaths);
+								else if (caseRecord.county === "New York City" && caseRecord.state === "New York")
+								{
+									// NYC is a special case; data is recorded for the whole city, not each county within it.
+									// So in our data set, we will store that same NYC data in all five NYC counties.
+									NYC_FIPS_CODES.forEach(nycFipsCode => { addCountyRecord(counties, nycFipsCode, currentRecordDate, caseRecord.cases, caseRecord.deaths); });
+								}
+								if (caseRecord.cases > maxCaseCount)
+									maxCaseCount = caseRecord.cases;
+								if (caseRecord.deaths > maxDeaths)
+									maxDeaths = caseRecord.deaths;
+							}
 
+							// Keep track of the earliest and latest dates seen in any of the records, for further use below.
 							if (earliestDate === null || currentRecordDate < earliestDate)
 								earliestDate = currentRecordDate;
 							if (latestDate === null || currentRecordDate > latestDate)
 								latestDate = currentRecordDate;
 						});
-					parsedData = null;
+					caseRecords = null;
 					
-					let outputFileContents = "date,id,cases,deaths\r\n";
+					// Fill in any holes in county daily records, so all counties have records from the earliest to the latest date.
 					counties.forEach(
 						county =>
 						{
-							if (county.dailyRecords.length > 0)
+							let dailyRecords = county.dailyRecords,
+								lastFoundDailyRecord = null;
+							dailyRecords.sort(dailyRecordSortFunction); // Sort before processing so that we can track the most recent record found in date order.
+							for (let dateIterator = earliestDate; dateIterator <= latestDate; dateIterator++)
 							{
-								county.dailyRecords.sort((a, b) => ((a < b) ? -1 : ((b > a) ? 1 : 0)));
-								let lastFoundDailyRecord = null;
-								for (let dateIterator = new Date(county.dailyRecords[0].date); dateIterator <= latestDate; dateIterator.setDate(dateIterator.getDate() + 1))
+								let matchingRecordIndex = dailyRecords.findIndex(record => (record.date === dateIterator));
+								if (matchingRecordIndex < 0)
 								{
-									let currentDailyRecord = null;
-									let currentRecordIndex = county.dailyRecords.findIndex(record => (record.date.getTime() === dateIterator.getTime()));
-									if (currentRecordIndex >= 0)
-									{
-										currentDailyRecord = county.dailyRecords[currentRecordIndex];
-										lastFoundDailyRecord = currentDailyRecord;
-									}
-									else if (lastFoundDailyRecord !== null)
-										currentDailyRecord = lastFoundDailyRecord;
+									if (lastFoundDailyRecord === null)
+										lastFoundDailyRecord = { date: dateIterator, cases: 0, deaths: 0 };
+									dailyRecords.push({ date: dateIterator, cases: lastFoundDailyRecord.cases, deaths: lastFoundDailyRecord.deaths });
+								}
+								else
+									lastFoundDailyRecord = dailyRecords[matchingRecordIndex];
+							}
+							dailyRecords.sort(dailyRecordSortFunction); // Sort again so the JSON output is in chronological order.
+						});
+					
+					// Read the populations CSV data file and parse its contents.
+					let populationFiles = file.src.filter(fileName => (fileName.indexOf("/population/") > 0));
+					if (populationFiles.length !== 1)
+						throw "Population file not specified or too many files present.";
+					let populationFile = populationFiles[0];
+					grunt.log.writeln("Reading population file: " + populationFile);
+					fileContents = grunt.file.read(populationFile);
+					let populationRecords = Papa.parse(
+						fileContents,
+						{
+							header: true,
+							transformHeader: function(header) { return ((header === "Id2") ? "fips" : "population"); },
+							transform: function(value, header) { return ((header === "fips") ? value.padStart(FIPS_Length, "0") : value); },
+							dynamicTyping: header => (header === "population"),
+							skipEmptyLines: true
+						}).data;
+					fileContents = null;
+
+					// Load population data into county data structure.
+					let combinedPopulationNYC = 0, newYorkCounties = [];
+					populationRecords.forEach(
+						populationRecord =>
+						{
+							let countyID = parseInt(populationRecord.fips, 10);
+							if (!isNaN(countyID))
+							{
+								let matchingCounty = getCountyByID(counties, countyID);
+								if (matchingCounty !== null)
+								{
+									if (populationRecord.population !== null && !isNaN(populationRecord.population))
+										matchingCounty.population = populationRecord.population;
 									else
-										currentDailyRecord = { date: dateIterator, cases: 0, deaths: 0 };
-									outputFileContents += currentDailyRecord.date.getFullYear()
-										+ "-" + (currentDailyRecord.date.getMonth() + 1).toString().padStart(2, "0")
-										+ "-" + currentDailyRecord.date.getDate().toString().padStart(2, "0") + ","
-										+ county.id.toString().padStart(5, "0") + ","
-										+ currentDailyRecord.cases + ","
-										+ currentDailyRecord.deaths + "\r\n";
+										matchingCounty.population = 0;
+									if (NYC_FIPS_CODES.some(newYorkFIPS => (parseInt(newYorkFIPS, 10) === countyID)))
+									{
+										combinedPopulationNYC += matchingCounty.population;
+										newYorkCounties.push(matchingCounty);
+									}
 								}
 							}
 						});
+					populationRecords = null;
 					
-						grunt.log.writeln("Data target file:" + file.dest);
-						grunt.file.write(file.dest, outputFileContents);
-						outputFileContents = null;
+					// All the NYC counties are tracked together in this data set, so give them all the same
+					// population as well, to avoid disparate and incorrect per capita displays.
+					newYorkCounties.forEach(newYorkCounty => { newYorkCounty.population = combinedPopulationNYC; });
+
+					// Sort counties so they are in ascending order by FIPS Code.
+					counties.sort((county1, county2) => ((county1.id < county2.id) ? -1 : ((county2.id < county1.id) ? 1 : 0)));
+
+					// Assemble all the data into a larger structure.
+					let allCountyData =
+					{
+						maxCaseCount: maxCaseCount,
+						maxDeaths, maxDeaths,
+						firstDate: earliestDate,
+						lastDate: latestDate,
+						counties: counties
+					}
+					counties = null;
+
+					// Serialize the county data and write it out to the data file.
+					let outputFileContents =
+						JSON.stringify(
+							allCountyData,
+							(key, value) => ((key === "date" || key === "firstDate" || key === "lastDate") ? (new Date(value)).getTime() : value));
+					allCountyData = null;
+					grunt.log.writeln("Data target file:" + file.dest);
+					grunt.file.write(file.dest, outputFileContents);
+					outputFileContents = null;
 				});
 
 		})
@@ -406,7 +535,7 @@ module.exports = function(grunt)
 	grunt.registerTask(
 		"build_all",
 		[
-			"generateCaseData", // build the latest data file
+			"generateData", // build the latest data file
 			"copy:assembleSrcFiles", // copy source files into assembly directory
 			"copy:copyOriginalToFull", // copy all .js and .css files in assembly directory to *.full.js and *.full.css
 			"clean:removeAssembledOriginalJSandCSS", // remove all original .js and css files from assembly directory

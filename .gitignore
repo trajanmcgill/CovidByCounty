@@ -8,6 +8,9 @@ node_modules/
 *.suo
 *.csproj.user
 
+# Visual Studio Code config files
+.vscode/*
+
 # Project build output
 assembly/*
 dist/*
