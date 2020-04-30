@@ -518,7 +518,7 @@ let appUI = (function()
 		console.log("about to call prepareDataForAnimation()");
 		let animationData =
 			appLogic.data.prepareDataForAnimation(
-				VueApp.configBasicFact, VueApp.configMeasurement, VueApp.configDataView, VueApp.populationScale, VueApp.growthRangeDays, VueApp.coloration);
+				VueApp.configBasicFact, VueApp.configMeasurement, VueApp.configDataView, VueApp.populationScale, VueApp.growthRangeDays, null);
 		VueApp.maxOverallValue = animationData.maxOverallDisplayFactValue;
 		VueApp.coloration = animationData.coloration;
 
