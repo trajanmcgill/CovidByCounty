@@ -334,10 +334,12 @@ let appUI = (function()
 
 		console.log("county count on map=" + svgDocument.querySelectorAll("[id^=c]").length);
 
+		// Set up map controls.
 		mapControls.initializeMapUI(VueApp);
 
+		 // Update user message display, then build visualization.
 		setWaitMessage(appLogic.AppWaitType.BuildingVisualization);
-		setTimeout(buildInitialVisualization, 0); // Let display update, then build visualization.
+		setTimeout(buildInitialVisualization, 0);
 	} // end doPostDataLoadInitialization()
 
 
@@ -532,9 +534,24 @@ let appUI = (function()
 		// Set up slider control animation.
 		sequence.addTransformations(getSliderAnimationTransformations());
 		
-		// Animate info title card
+		// Animate info title card.
 		sequence.addTransformations(getInfoTitleCardAnimationTransformations());
-		
+
+		// Give all counties with no data the "unknown" color.
+		let colorForUnknown = VueApp.coloration.unknown;
+		if (colorForUnknown !== null)
+		{
+			let allCountyPathElements = svgDocument.querySelectorAll("[id^='c']");
+			allCountyPathElements.forEach(
+				countyPathElement =>
+				{
+					let countyID = parseInt(countyPathElement.id.substring(1), 10);
+					if (!isNaN(countyID) && appLogic.data.getCountyByID(countyID) === null)
+						countyPathElement.style.fill = colorForUnknown;
+				});
+		}
+
+		// Wire up controls.
 		document.getElementById("ConfigPhrase").onclick = showConfigDialog;
 		InformationPanel.onclick = informationPanelClick;
 		BtnSeekStart.onclick = animationSeekStart;
