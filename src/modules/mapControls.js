@@ -15,7 +15,7 @@ let mapControls = (function()
 		};
 	
 	const MouseClickMovementTolerance = 5,
-		ZoomRatio = 1.5, MaxZoom = 12, MinZoom = 1,
+		ZoomRatio = 1.4, MaxZoom = 21, MinZoom = 1,
 		CountyBorderColorNormal = "#000000", CountyBorderColorSelected = "#00ffcf", CountyBorderColorHovered = "#000000",
 		CountyBorderWidthNormal = "0.17828999", CountyBorderWidthSelected = "1.25", CountyBorderWidthHovered = "2";
 
@@ -121,12 +121,12 @@ let mapControls = (function()
 			else if (highlightType === CountyHighlightType.Selected)
 			{
 				targetElement.style.stroke = CountyBorderColorSelected;
-				targetElement.style.strokeWidth = CountyBorderWidthSelected;
+				targetElement.style.strokeWidth = Math.max(CountyBorderWidthSelected / currentZoom, CountyBorderWidthNormal * 2);
 			}
 			else if (highlightType === CountyHighlightType.Hovered)
 			{
 				targetElement.style.stroke = CountyBorderColorHovered;
-				targetElement.style.strokeWidth = CountyBorderWidthHovered;
+				targetElement.style.strokeWidth = Math.max(CountyBorderWidthHovered / currentZoom, CountyBorderWidthNormal * 2);
 			}
 		}
 	}
