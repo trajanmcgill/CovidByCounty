@@ -251,8 +251,8 @@ let appLogic = (function()
 						}
 						else if (measurement === MeasurementType.CaseRelative && basicFact === BasicFactType.Deaths)
 						{
-							currentMeasuredValue = currentBasicValue / currentCases;
-							previousMeasuredValue = previousBasicValue / previousCases;
+							currentMeasuredValue = (currentBasicValue === 0) ? 0 : (currentBasicValue / currentCases);
+							previousMeasuredValue = (previousBasicValue === 0) ? 0 : (previousBasicValue / previousCases);
 						}
 						else if (measurement === MeasurementType.PopulationRelative)
 						{
