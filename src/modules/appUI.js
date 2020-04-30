@@ -380,7 +380,7 @@ let appUI = (function()
 					dailyRecord =>
 					{
 						const displayFactValue = dailyRecord.displayFactValue;
-						const keyFrameTime = (dailyRecord.date - animationData.firstDate) * animationTimeRatio;
+						const keyFrameTime = (dailyRecord.date - animationData.firstDate + 1) * animationTimeRatio;
 						let keyFrameValue = coloration.unknown;
 
 						if (displayFactValue === 0 && coloration.zero !== null)
