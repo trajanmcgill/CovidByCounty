@@ -74,20 +74,14 @@ let appLogic = (function()
 	{
 		let localDate = new Date(dateUTC.getUTCFullYear(), dateUTC.getUTCMonth(), dateUTC.getUTCDate());
 		return localDate;
-	}
+	} // end treatAsLocalDate()
 
 
 	function getDateFromDateNumber(dateNumber)
 	{
 		return treatAsLocalDate(getDateUTC(dateNumber));
-	}
+	} // end getDateFromDateNumber()
 
-	/* CHANGE CODE HERE
-	function cullCounties(validCountyList)
-	{
-		allCountyData.counties = allCountyData.counties.filter(county => countyFilterList.some(includedCounty => includedCounty.id = county.id));
-	}
-	*/
 
 	function loadData(statusUpdateFunction, completionCallback)
 	{
