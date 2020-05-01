@@ -47,6 +47,7 @@ let appUI = (function()
 					waitMessage: "Loading Map...",
 					waitMessageDisplay: "block",
 					configurationBoxDisplay: "none",
+					colorationConfigDisplay: "none",
 					pageInfoBoxDisplay: "none",
 					displayDateNumber: null,
 					firstDateNumber: null,
@@ -348,10 +349,13 @@ let appUI = (function()
 		// Set up map controls.
 		mapControls.initializeMapUI(VueApp);
 
+		// Set up coloration config box display
+		document.getElementById("ColorationConfigLink").onclick = showColorationConfigBox;
+		document.getElementById("PageInfoBoxBackground").onclick = hideColorationConfigBox;
+		document.getElementById("PageInfoBoxCloseButton").onclick = hideColorationConfigBox;
+
 		// Set up page info box display.
 		document.getElementById("SourcesAndInfoLink").onclick = showPageInfoBox;
-		document.getElementById("PageInfoBoxBackground").onclick = hidePageInfoBox;
-		document.getElementById("PageInfoBoxCloseButton").onclick = hidePageInfoBox;
 
 		 // Update user message display, then build visualization.
 		setWaitMessage(appLogic.AppWaitType.BuildingVisualization);
@@ -772,6 +776,18 @@ let appUI = (function()
 				mapControls.zoomFull();
 		}
 	} // end handleKeyboardControl()
+
+
+	function showColorationConfigBox()
+	{
+		VueApp.colorationConfigDisplay = "block";
+	} // end showColorationConfigBox()
+
+
+	function hideColorationConfigBox()
+	{
+		VueApp.colorationConfigDisplay = "none";
+	} // end hideColorationConfigBox()
 
 
 	function showPageInfoBox()

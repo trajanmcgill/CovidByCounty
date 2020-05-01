@@ -42,13 +42,19 @@
 
 				<input id="AnimationSlider" type="range" min="0" v-bind:max="totalDays" value="0">
 
-				<div id="ControlButtonsContainer">
-					<button id="BtnSeekStart" type="button">|&lt;</button>
-					<button id="BtnStepBack" type="button">&lt;</button>
-					<button id="BtnPlay" type="button">&#9658;</button>
-					<button id="BtnStepForward" type="button">></button>
-					<button id="BtnPause" type="button">||</button>
-					<button id="BtnSeekEnd" type="button">>|</button>
+				<div id="ControlButtonsOuterContainer">
+					<div id="ColorationControlContainer">
+						<span id="ColorationConfigLink">Coloration: Auto</span>
+					</div>
+					<div id="ControlButtonsContainer">
+						<button id="BtnSeekStart" type="button">|&lt;</button>
+						<button id="BtnStepBack" type="button">&lt;</button>
+						<button id="BtnPlay" type="button">&#9658;</button>
+						<button id="BtnStepForward" type="button">></button>
+						<button id="BtnPause" type="button">||</button>
+						<button id="BtnSeekEnd" type="button">>|</button>
+					</div>
+					<div id="ControlButtonSpacer"></div>
 				</div>
 				
 				<div id="RangeKeyPanel">
@@ -168,8 +174,7 @@
 			</div>
 		</div>
 
-		<div id="ConfigurationModalBackground" v-bind:style="{ display: configurationBoxDisplay }">
-		</div>
+		<div id="ConfigurationModalBackground" v-bind:style="{ display: configurationBoxDisplay }"></div>
 		<div id="ConfigurationBox" v-bind:style="{ display: configurationBoxDisplay }">
 			<h3>Animated Report Configuration</h3>
 			<div class="ConfigurationControlSection">
@@ -260,8 +265,13 @@
 			</div>
 		</div>
 
-		<div id="PageInfoBoxBackground" v-bind:style="{ display: pageInfoBoxDisplay }">
+		<div id="ColorationConfigBackground" v-bind:style="{ display: colorationConfigDisplay }"></div>
+		<div id="ColorationConfigBox" v-bind:style="{ display: colorationConfigDisplay }">
+			<h3>Coloration Configuration</h3>
+			
 		</div>
+
+		<div id="PageInfoBoxBackground" v-bind:style="{ display: pageInfoBoxDisplay }"></div>
 		<div id="PageInfoBox" v-bind:style="{ display: pageInfoBoxDisplay }">
 			<h3>This Site</h3>
 			<div id="PageInfoBoxCloseButton">X</div>
