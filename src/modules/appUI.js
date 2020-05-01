@@ -47,6 +47,7 @@ let appUI = (function()
 					waitMessage: "Loading Map...",
 					waitMessageDisplay: "block",
 					configurationBoxDisplay: "none",
+					pageInfoBoxDisplay: "none",
 					displayDateNumber: null,
 					firstDateNumber: null,
 					totalDays: 0,
@@ -346,6 +347,11 @@ let appUI = (function()
 
 		// Set up map controls.
 		mapControls.initializeMapUI(VueApp);
+
+		// Set up page info box display.
+		document.getElementById("SourcesAndInfoLink").onclick = showPageInfoBox;
+		document.getElementById("PageInfoBoxBackground").onclick = hidePageInfoBox;
+		document.getElementById("PageInfoBoxCloseButton").onclick = hidePageInfoBox;
 
 		 // Update user message display, then build visualization.
 		setWaitMessage(appLogic.AppWaitType.BuildingVisualization);
@@ -740,6 +746,18 @@ let appUI = (function()
 				mapControls.zoomFull();
 		}
 	} // end handleKeyboardControl()
+
+
+	function showPageInfoBox()
+	{
+		VueApp.pageInfoBoxDisplay = "block";
+	} // end showPageInfoBox()
+
+
+	function hidePageInfoBox()
+	{
+		VueApp.pageInfoBoxDisplay = "none";
+	} // end hidePageInfoBox()
 
 
 	function showConfigDialog()

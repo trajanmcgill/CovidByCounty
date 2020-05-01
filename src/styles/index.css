@@ -121,28 +121,56 @@ h3, h4
 	position: absolute;
 	left: 50%;
 	top: 50%;
-	width: 800px;
+	width: 1000px;
 	height: auto;
-	margin: -227px 0 0 -400px;
+	margin: -450px 0 0 -500px;
 	padding: 12px;
 	border: none;
 	border-radius: 6px;
-	background-color: #808080;
+	background-color: #303030;
 	z-index: 999;
 }
+
+
+#PageInfoBoxCloseButton
+{
+	cursor: pointer;
+	border-width: 1px;
+	border-style: solid;
+	border-radius: 2px;
+	position: absolute;
+	top: 10px;
+	left: 10px;
+	font-size: smaller;
+}
+  
 
 .PageInfoSection
 {
 	margin-top: 14px;
 	color: #efefef;
 	border: 1px solid #ababab;
-	border-radios: ;
 	border-radius: 6px;
+}
+
+.PageInfoSection a
+{
+	color: #7d96d7;
 }
 
 .PageInfoSection h4
 {
 	text-align: center;
+}
+
+.PageInfoSection li
+{
+	margin-bottom: 10px;
+}
+
+.ComponentsUsedSection
+{
+	display: inline-block;
 }
 
 #WaitBox

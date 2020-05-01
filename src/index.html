@@ -260,27 +260,38 @@
 			</div>
 		</div>
 
-		<div id="PageInfoBoxBackground">
+		<div id="PageInfoBoxBackground" v-bind:style="{ display: pageInfoBoxDisplay }">
 		</div>
-		<div id="PageInfoBox">
+		<div id="PageInfoBox" v-bind:style="{ display: pageInfoBoxDisplay }">
 			<h3>This Site</h3>
+			<div id="PageInfoBoxCloseButton">X</div>
 			<div class="PageInfoSection">
 				<h4>Updates and General Information</h4>
-				asdf
+				<ul>
+					<li>
+						2020-05-01: This site is now live. All displays are now as accurate as the underlying source data, to the best of my knowledge.
+						Please note that the source data is always being revised, since public health officials often do revisit earlier tallies when
+						new information or errors are discovered. This site therefore displays trends, with as much accuracy as possible, but should not
+						be treated as definitive or as having high precision.
+					</li>
+				</ul>
 			</div>
 			<div class="PageInfoSection">
 				<h4>Data Sources</h4>
 				<ul>
 					<li>
 						<strong>Daily case and death reports by county:</strong>
-						Case and death data used in this project is built from the New York Times data set housed here:
+						Case and death data used in this project is built from the public New York Times data set housed here:
 						<a href="https://github.com/nytimes/covid-19-data">https://github.com/nytimes/covid-19-data</a>
 						<br>
 						<ul>
 							<li>
-								This NYT project is presently tracking county-level data based on the date deaths were <em>publicly reported</em> by the relevant government agency.
-								A minority of counties are not represented in this data set. Those are visually represented on the map (with the color designating "unknown")
-								so they can be distinguished from counties reporting zero cases or deaths.
+								That project is presently tracking county-level data based on the date deaths were <em>publicly reported</em> by the relevant government agency.
+								A minority of counties are not represented in this data set. In many cases this may be because there are no cases in those counties over the
+								entire timespan to the present day. However, since this application cannot guarantee that is the case, counties without any data at all
+								are visually represented on the map (with the color designating "unknown") so they can be distinguished from counties reporting zero cases
+								or deaths. It also should be noted that some cases and deaths in this data set are assigned to no county and therefore are not
+								mapped here at all.
 							</li>
 							<li>
 								All five counties which make up New York City are combined in the data set, and so they are treated as combined by this visualization as well.
@@ -290,17 +301,67 @@
 					</li>
 					<li>
 						<strong>County population data:</strong>
-						Populations data is derived from an American FactFinder 
+						Population data is derived from U.S. Census 2019 population estimates, as recorded in this file:
+						<a href="https://www2.census.gov/programs-surveys/popest/datasets/2010-2019/counties/totals/co-est2019-alldata.csv">Population, Population Change, and Estimated Components of Population Change: April 1, 2010 to July 1, 2019 (CO-EST2019-alldata)</a>,
+						which is found on this Census Bureau data page:
+						<a href="https://www.census.gov/data/tables/time-series/demo/popest/2010s-counties-total.html">County Population Totals: 2010-2019</a>
+					</li>
+					<li>
+						<strong>USA Counties Map:</strong>
+						<a href="https://commons.wikimedia.org/wiki/File:Usa_counties_large.svg">https://commons.wikimedia.org/wiki/File:Usa_counties_large.svg</a>
+						(License: public domain)
 					</li>
 				</ul>
 			</div>
 			<div class="PageInfoSection">
-				<h4>Components</h4>
-				<asdf>
+				<h4>Components Used</h4>
+				<div class="ComponentsUsedSection">
+					<h5>Browser Application</h5>
+					<ul>
+						<li>
+							<strong>MVVM Framework:</strong>
+							<a href="https://vuejs.org/">Vue.js</a> (License: <a href="https://github.com/vuejs/vue/blob/dev/LICENSE">MIT</a>)
+						</li>
+						<li>
+							<strong>JavaScript Animation:</strong>
+							<a href="https://www.concertjs.com/">Concert.js</a> (License: <a href="https://www.concertjs.com/license.html">MIT</a>)
+						</li>
+					</ul>
+				</div>
+				<div class="ComponentsUsedSection">
+					<h5>Data Pre-processing</h5>
+					<ul>
+						<li>
+							<strong>Build and data processing:</strong>
+							<a href="https://gruntjs.com/">Grunt</a> (License: <a href="https://github.com/gruntjs/grunt/blob/master/LICENSE">MIT</a>)
+						</li>
+						<li>
+							<strong>Data import:</strong>
+							<a href="https://www.papaparse.com/">Papa Parse</a> (License: <a href="https://github.com/mholt/PapaParse/blob/master/LICENSE">MIT</a>)
+						</li>
+					</ul>
+				</div>
 			</div>
 			<div class="PageInfoSection">
 				<h4>Project</h4>
-				<p>This is a project of Trajan McGill</p>
+				<ul>
+					<li>
+						It is to be hoped that this tool, having many options for customized visualizations, will be found useful.
+						Various improvements are already planned. Bug reports or suggestions for improvements are welcome at
+						<a href="https://github.com/trajanmcgill/CovidByCounty">the project's GitHub page</a>
+						or by email at <a href="mailto:code@trajanmcgill.com">code@trajanmcgill.com</a>.
+					</li>
+					<li>
+						Apologies to the people of Puerto Rico and other U.S. non-state areas for not yet having you on here.
+						I hope to include your data soon-- some additional areas are already represented in the NYT data set
+						but not on the public domain map I was able to find quickly and put to use in this project.
+					</li>
+					<li>
+						This project was built by Trajan McGill. Thanks to those who are counting and tracking and building the
+						data on which this data visualization relies. My condolences and prayers to everyone whose lives
+						are a part of the numbers and colors on this web site. Everyone who isn't yet, please stay safe.
+					</li>
+				</ul>
 			</div>
 		</div>
 

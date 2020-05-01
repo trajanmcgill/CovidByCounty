@@ -58,7 +58,7 @@ module.exports = function(grunt)
 			{
 				let serverUrl = concertjsServerUrlMatch[1],
 					filePath = (typeof(concertjsServerUrlMatch[3]) === "undefined" ? "" : concertjsServerUrlMatch[3]),
-					fileNameOrFinalPathSegment = (typeof(concertjsServerUrlMatch[4]) === "undefined" ? "" : concertjsServerUrlMatch[4])
+					fileNameOrFinalPathSegment = (typeof(concertjsServerUrlMatch[4]) === "undefined" ? "" : concertjsServerUrlMatch[4]),
 					argumentsExist = (typeof(concertjsServerUrlMatch[5]) !== "undefined"),
 					existingArgumentString = (argumentsExist ? concertjsServerUrlMatch[5] : ""),
 					namedAnchorString = (typeof(concertjsServerUrlMatch[6]) === "undefined" ? "" : concertjsServerUrlMatch[6]);
@@ -91,7 +91,7 @@ module.exports = function(grunt)
 					files:
 					[
 						{
-							src: ["src/data/caseRecords/us-counties_*.csv", "src/data/population/countyPopulations2018.csv"],
+							src: ["src/data/caseRecords/us-counties_*.csv", "src/data/population/countyPopulations2019.csv"],
 							dest: "assembly/data/caseRecords.json"
 						}
 					]
@@ -439,28 +439,33 @@ module.exports = function(grunt)
 						fileContents,
 						{
 							header: true,
-							transformHeader: function(header) { return ((header === "Id2") ? "fips" : "population"); },
-							transform: function(value, header) { return ((header === "fips") ? value.padStart(FIPS_Length, "0") : value); },
-							dynamicTyping: header => (header === "population"),
+							transform: function(value, header) { return ((header === "FIPS") ? value.padStart(FIPS_Length, "0") : value); },
+							dynamicTyping: header => (header === "Population"),
 							skipEmptyLines: true
 						}).data;
 					fileContents = null;
 
 					// Load population data into county data structure.
-					let combinedPopulationNYC = 0, newYorkCounties = [];
+					let combinedPopulationNYC = 0, newYorkCounties = [], populationCountiesWithoutCaseData = 0;
 					populationRecords.forEach(
 						populationRecord =>
 						{
-							let countyID = parseInt(populationRecord.fips, 10);
+							let countyID = parseInt(populationRecord.FIPS, 10);
 							if (!isNaN(countyID))
 							{
 								let matchingCounty = getCountyByID(counties, countyID);
 								if (matchingCounty === null)
-									grunt.log.writeln("Population record found for FIPS " + countyID + " but no such county in case data.");
+								{
+									populationCountiesWithoutCaseData++;
+									grunt.log.writeln(
+										"Population record found for FIPS " + populationRecord.FIPS
+										+ " (" + populationRecord.State + ", " + populationRecord.County + ")"
+										+ " but no such county in case data.");
+								}
 								else
 								{
-									if (populationRecord.population !== null && !isNaN(populationRecord.population))
-										matchingCounty.population = populationRecord.population;
+									if (populationRecord.Population !== null && !isNaN(populationRecord.Population))
+										matchingCounty.population = populationRecord.Population;
 									else
 										matchingCounty.population = 0;
 									if (NYC_FIPS_CODES.some(newYorkFIPS => (parseInt(newYorkFIPS, 10) === countyID)))
@@ -472,6 +477,8 @@ module.exports = function(grunt)
 							}
 						});
 					populationRecords = null;
+					grunt.log.writeln("Total " + populationCountiesWithoutCaseData + " counties with population but no case data.");
+					grunt.log.writeln("");
 					
 					// All the NYC counties are tracked together in this data set, so give them all the same
 					// population as well, to avoid disparate and incorrect per capita displays.
@@ -486,6 +493,7 @@ module.exports = function(grunt)
 							grunt.log.writeln("No population data existed for FIPS " + countyWithNoPopulation.id + ". Setting population to zero.");
 							countyWithNoPopulation.population = 0;
 						});
+					grunt.log.writeln("");
 
 					// Sort counties so they are in ascending order by FIPS Code.
 					counties.sort((county1, county2) => ((county1.id < county2.id) ? -1 : ((county2.id < county1.id) ? 1 : 0)));
