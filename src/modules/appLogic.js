@@ -82,7 +82,7 @@ let appLogic = (function()
 		return treatAsLocalDate(getDateUTC(dateNumber));
 	}
 
-	/*
+	/* CHANGE CODE HERE
 	function cullCounties(validCountyList)
 	{
 		allCountyData.counties = allCountyData.counties.filter(county => countyFilterList.some(includedCounty => includedCounty.id = county.id));
@@ -100,9 +100,6 @@ let appLogic = (function()
 					statusUpdateFunction(AppWaitType.ProcessingCaseData);
 					allCountyData = importedData;
 					importedData = null;
-					console.log("county count=" + allCountyData.counties.length);
-					console.log("about to call completionCallback");
-					window.allCountyData = allCountyData; // REMOVE CODE HERE
 					completionCallback();
 				});
 	} // end loadData()

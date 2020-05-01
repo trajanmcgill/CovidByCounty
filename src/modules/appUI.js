@@ -60,8 +60,7 @@ let appUI = (function()
 					configDataView: null,
 					growthRangeDays: null,
 					populationScale: null,
-					infoCardCountyList: [],
-					consoleEntries: [] // REMOVE CODE HERE
+					infoCardCountyList: []
 				},
 
 			computed:
@@ -345,8 +344,6 @@ let appUI = (function()
 		svgObject = document.getElementById("SvgObject");
 		svgDocument = svgObject.getSVGDocument();
 
-		console.log("county count on map=" + svgDocument.querySelectorAll("[id^=c]").length);
-
 		// Set up map controls.
 		mapControls.initializeMapUI(VueApp);
 
@@ -367,12 +364,10 @@ let appUI = (function()
 		VueApp.populationScale = appLogic.DefaultPopulationScale;
 		VueApp.coloration = { unknown: null, zero: null, ranges: [] };
 
-		console.log("about to call setupDataAnimation()");
 		let animationSequence = setupDataAnimation();
 		animationSequence.seek(animationSequence.getStartTime());
 
 		setWaitMessage(appLogic.AppWaitType.None);
-		window.appLogic = appLogic; // REMOVE CODE HERE
 	} // end buildInitialVisualization()
 
 
@@ -530,7 +525,6 @@ let appUI = (function()
 			});
 		
 		// Build data set used for animating things.
-		console.log("about to call prepareDataForAnimation()");
 		let animationData =
 			appLogic.data.prepareDataForAnimation(
 				VueApp.configBasicFact, VueApp.configMeasurement, VueApp.configDataView, VueApp.populationScale, VueApp.growthRangeDays, null);
@@ -538,7 +532,6 @@ let appUI = (function()
 		VueApp.coloration = animationData.coloration;
 
 		// Set up map animation.
-		console.log("about to call addTransformations() but first getMapAnimationTransformations()");
 		sequence.addTransformations(getMapAnimationTransformations(animationData));
 
 		// Set up timeline animation.
