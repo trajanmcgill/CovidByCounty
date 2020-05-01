@@ -11,7 +11,7 @@ let appUI = (function()
 	let svgObject = null, svgDocument = null;
 	let animationTimeRatio = DefaultAnimationTimeRatio;
 	let sequence = null;
-	let animationEnabled = false;
+	let animationEnabled = false, animationTimeout = null, currentAnimationDay = 0;
 	let savedConfigValues = null;
 
 
@@ -565,14 +565,14 @@ let appUI = (function()
 		// Wire up controls.
 		document.getElementById("ConfigPhrase").onclick = showConfigDialog;
 		InformationPanel.onclick = informationPanelClick;
-		BtnSeekStart.onclick = animationSeekStart;
-		BtnStepBack.onclick = animationStepBack;
+		BtnSeekStart.onclick = animationUserSeekStart;
+		BtnStepBack.onclick = animationUserStepBack;
 		BtnPlay.onclick = animationPlay;
-		BtnStepForward.onclick = animationStepForward;
+		BtnStepForward.onclick = animationUserStepForward;
 		BtnPause.onclick = animationPause;
-		BtnSeekEnd.onclick = animationSeekEnd;
+		BtnSeekEnd.onclick = animationUserSeekEnd;
 		AnimationSlider.onkeydown = function(eventObject) { eventObject.preventDefault(); };
-		AnimationSlider.oninput = function(eventObject) { animationSeekToSpecificDay(parseInt(eventObject.target.value, 10)); };
+		AnimationSlider.oninput = function(eventObject) { animationUserSeekDay(parseInt(eventObject.target.value, 10)); };
 		TimelineCoverRight.onclick = timelineClickRight;
 		TimelineCoverLeft.onclick = timelineClickLeft;
 		document.onkeydown = handleKeyboardControl;
@@ -603,70 +603,96 @@ let appUI = (function()
 
 	function animationDisable()
 	{
-		if (sequence !== null)
-			sequence.stop();
-
+		animationPause();
 		animationEnabled = false;
 	} // end animationDisable()
 
 
-	function animationSeekStart()
+	function animationUserSeekStart()
 	{
 		if (animationEnabled)
-			animationSeekToSpecificDay(0);
-	} // end animationSeekStart()
+			animationUserSeekDay(0);
+	} // end animationUserSeekStart()
 
 
-	function animationStepBack()
+	function animationUserSeekEnd()
 	{
 		if (animationEnabled)
-			animationSeekToSpecificDay(Math.max(Math.round(sequence.getCurrentTime() / animationTimeRatio) - 1, 0));
-	} // end animationSeekStart()
+			animationUserSeekDay(VueApp.totalDays);
+	} // end animationUserSeekEnd()
+
+
+	function animationUserSeekDay(dayNumber)
+	{
+		if (animationEnabled)
+		{
+			animationPause();
+			animationInternalSeekDay(dayNumber);
+		}
+	} // end animationUserSeekDay()
+
+
+	function animationInternalSeekDay(dayNumber)
+	{
+		currentAnimationDay = Math.min(Math.max(dayNumber, 0), VueApp.totalDays);
+		sequence.seek(currentAnimationDay * animationTimeRatio);
+	} // end animationInternalSeekDay()
+
+
+	function animationUserStepForward()
+	{
+		if (animationEnabled)
+			animationUserSeekDay(Math.round(sequence.getCurrentTime() / animationTimeRatio) + 1);
+	} // end animationUserStepForward()
+
+
+	function animationUserStepBack()
+	{
+		if (animationEnabled)
+			animationUserSeekDay(Math.round(sequence.getCurrentTime() / animationTimeRatio) - 1);
+	} // end animationUserStepBack()
 
 
 	function animationPlay()
 	{
 		if (animationEnabled)
-			sequence.run();
+			animationTimeout = setTimeout(continueAnimation, animationTimeRatio);
 	} // end animationSeekStart()
 
 
-	function animationStepForward()
+	function continueAnimation()
 	{
-		if (animationEnabled)
-			animationSeekToSpecificDay(Math.min(Math.round(sequence.getCurrentTime() / animationTimeRatio) + 1, VueApp.totalDays));
-	} // end animationSeekStart()
+		if (currentAnimationDay < VueApp.totalDays)
+		{
+			animationInternalSeekDay(++currentAnimationDay);
+			animationTimeout = setTimeout(continueAnimation, animationTimeRatio);
+		}
+		else
+			animationTimeout = null;
+	} // end continueAnimation()
 
 
 	function animationPause()
 	{
-		if (sequence !== null)
-			sequence.stop();
+		if (animationTimeout !== null)
+		{
+			clearTimeout(animationTimeout);
+			animationTimeout = null;
+		}
 	} // end animationSeekStart()
 
 
-	function animationSeekEnd()
+	function animationIsRunning()
 	{
-		if (animationEnabled)
-			animationSeekToSpecificDay(VueApp.totalDays);
-	} // end animationSeekEnd()
-
-
-	function animationSeekToSpecificDay(dayNumber)
-	{
-		if (animationEnabled)
-		{
-			sequence.stop();
-			sequence.seek(Math.min(Math.max(dayNumber, 0), VueApp.totalDays) * animationTimeRatio);
-		}
-	} // end animationSeekToSpecificDay()
+		return (animationTimeout !== null);
+	} // end animationIsRunning()
 
 
 	function animationToggleStartStop()
 	{
 		if (animationEnabled)
 		{
-			if (sequence.isRunning())
+			if (animationIsRunning())
 				animationPause();
 			else
 				animationPlay();
@@ -692,7 +718,7 @@ let appUI = (function()
 				daysToMove = getTimelineClickDayPosition(eventObject, false),
 				sliderValue = parseInt(AnimationSlider.value, 10);
 			if (parseInt(AnimationSlider.max, 10) - sliderValue >= daysToMove)
-				animationSeekToSpecificDay(sliderValue + daysToMove);
+				animationUserSeekDay(sliderValue + daysToMove);
 		}
 	} // end timelineClickRight()
 
@@ -705,7 +731,7 @@ let appUI = (function()
 				daysToMove = getTimelineClickDayPosition(eventObject, true),
 				sliderValue = parseInt(AnimationSlider.value, 10);
 			if (sliderValue - parseInt(AnimationSlider.min, 10) >= daysToMove)
-				animationSeekToSpecificDay(sliderValue - daysToMove);
+				animationUserSeekDay(sliderValue - daysToMove);
 		}
 	} // end timelineClickLeft()
 
@@ -729,15 +755,15 @@ let appUI = (function()
 		{
 			let keyCode = eventObject.keyCode;
 			if (keyCode === 36 || keyCode === 38) // home key or up arrow
-				animationSeekStart();
+				animationUserSeekStart();
 			else if (keyCode === 37) // left arrow
-				animationStepBack();
+				animationUserStepBack();
 			else if (keyCode === 32) // space bar
 				animationToggleStartStop();
 			else if (keyCode === 39) // right arrow
-				animationStepForward();
+				animationUserStepForward();
 			else if (keyCode === 35 || keyCode === 40) // end key or down arrow
-				animationSeekEnd();
+				animationUserSeekEnd();
 			else if (keyCode === 107 || keyCode === 61) // plus key
 				mapControls.zoomInOneStep();
 			else if (keyCode === 109 || keyCode === 173) // minus key
