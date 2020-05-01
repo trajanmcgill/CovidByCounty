@@ -614,42 +614,42 @@ let appUI = (function()
 	{
 		if (animationEnabled)
 			animationSeekToSpecificDay(0);
-	}
+	} // end animationSeekStart()
 
 
 	function animationStepBack()
 	{
 		if (animationEnabled)
 			animationSeekToSpecificDay(Math.max(Math.round(sequence.getCurrentTime() / animationTimeRatio) - 1, 0));
-	}
+	} // end animationSeekStart()
 
 
 	function animationPlay()
 	{
 		if (animationEnabled)
 			sequence.run();
-	}
+	} // end animationSeekStart()
 
 
 	function animationStepForward()
 	{
 		if (animationEnabled)
 			animationSeekToSpecificDay(Math.min(Math.round(sequence.getCurrentTime() / animationTimeRatio) + 1, VueApp.totalDays));
-	}
+	} // end animationSeekStart()
 
 
 	function animationPause()
 	{
 		if (sequence !== null)
 			sequence.stop();
-	}
+	} // end animationSeekStart()
 
 
 	function animationSeekEnd()
 	{
 		if (animationEnabled)
 			animationSeekToSpecificDay(VueApp.totalDays);
-	}
+	} // end animationSeekEnd()
 
 
 	function animationSeekToSpecificDay(dayNumber)
@@ -659,7 +659,7 @@ let appUI = (function()
 			sequence.stop();
 			sequence.seek(Math.min(Math.max(dayNumber, 0), VueApp.totalDays) * animationTimeRatio);
 		}
-	}
+	} // end animationSeekToSpecificDay()
 
 
 	function animationToggleStartStop()
@@ -671,7 +671,7 @@ let appUI = (function()
 			else
 				animationPlay();
 		}
-	}
+	} // end animationToggleStartStop()
 
 
 	function getTimelineClickDayPosition(eventObject, invert)
@@ -681,7 +681,7 @@ let appUI = (function()
 			dayPosition = Math.trunc(clickPositionX / TimelineDateBoxWidth) + 1,
 			invertedDayPosition = eventObject.target.clientWidth / TimelineDateBoxWidth + 1 - dayPosition;
 		return (invert ? invertedDayPosition : dayPosition);
-	}
+	} // end getTimelineClickDayPosition()
 
 
 	function timelineClickRight(eventObject)
@@ -694,7 +694,7 @@ let appUI = (function()
 			if (parseInt(AnimationSlider.max, 10) - sliderValue >= daysToMove)
 				animationSeekToSpecificDay(sliderValue + daysToMove);
 		}
-	}
+	} // end timelineClickRight()
 
 
 	function timelineClickLeft(eventObject)
@@ -707,7 +707,7 @@ let appUI = (function()
 			if (sliderValue - parseInt(AnimationSlider.min, 10) >= daysToMove)
 				animationSeekToSpecificDay(sliderValue - daysToMove);
 		}
-	}
+	} // end timelineClickLeft()
 
 
 	function informationPanelClick(eventObject)
@@ -720,7 +720,7 @@ let appUI = (function()
 			VueApp.infoCardCountyList = VueApp.infoCardCountyList.filter(countyEntry => (countyEntry.id !== countyID));
 			mapControls.setCountyHighlightingByID(countyID, mapControls.CountyHighlightType.Normal);
 		}
-	}
+	} // end informationPanelClick()
 
 
 	function handleKeyboardControl(eventObject)
