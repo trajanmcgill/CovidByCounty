@@ -100,16 +100,54 @@ h3, h4
 	border-bottom: 1px solid white;
 }
 
-#WaitBox
+#PageInfoBoxBackground, #WaitBox
 {
 	position: absolute;
 	top: 0;
 	left: 0;
 	width: 100%;
 	height: 100%;
-	z-index: 1000;
 	background-color: #aaaaaadd;
 	color: #1e1e1e;
+}
+
+#PageInfoBoxBackground
+{
+	z-index: 998;
+}
+
+#PageInfoBox
+{
+	position: absolute;
+	left: 50%;
+	top: 50%;
+	width: 800px;
+	height: auto;
+	margin: -227px 0 0 -400px;
+	padding: 12px;
+	border: none;
+	border-radius: 6px;
+	background-color: #808080;
+	z-index: 999;
+}
+
+.PageInfoSection
+{
+	margin-top: 14px;
+	color: #efefef;
+	border: 1px solid #ababab;
+	border-radios: ;
+	border-radius: 6px;
+}
+
+.PageInfoSection h4
+{
+	text-align: center;
+}
+
+#WaitBox
+{
+	z-index: 1000;
 	text-align: center;
 	font-size: 28pt;
 }
@@ -339,7 +377,7 @@ li.TimeLineDateBox
 	text-align: center;
 }
 
-.RangeKeyPanel
+#RangeKeyPanel
 {
 	margin-top: 10px;
 	box-sizing: border-box;
@@ -354,10 +392,26 @@ li.TimeLineDateBox
 	margin-right: 30px;
 }
 
+.ColorKeyContainer:last-of-type
+{
+	margin-right: 10px;
+}
+
 div.ColorKey
 {
 	width: 135px;
 	height: 20px;
+}
+
+#SourcesAndInfoLinkPanel
+{
+	margin-top: 15px;
+	text-align: center;
+	text-decoration: underline;
+	text-decoration-style: dotted;
+	font-weight: normal;
+	color: #7d96d7;
+	cursor: pointer;
 }
 
 #SvgObject

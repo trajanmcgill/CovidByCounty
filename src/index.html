@@ -51,7 +51,15 @@
 					<button id="BtnSeekEnd" type="button">>|</button>
 				</div>
 				
-				<div class="RangeKeyPanel">
+				<div id="RangeKeyPanel">
+					<div class="ColorKeyContainer">
+						<div class="ColorKey" v-bind:style="{ backgroundColor: coloration.unknown }"></div>
+						<div>Unknown</div>
+					</div>
+					<div v-if="coloration.zero" class="ColorKeyContainer">
+						<div class="ColorKey" v-bind:style="{ backgroundColor: coloration.zero }"></div>
+						<div>Zero</div>
+					</div>
 					<div class="ColorKeyContainer" v-for="item in coloration.ranges">
 						<div class="ColorKey" v-bind:style="{ backgroundImage:'linear-gradient(to right,' + item.colorRange.start + ',' + item.colorRange.end + ')' }"></div>
 						<div>>{{ formatDataRangeDisplayNumber(item.dataRange.min) }} to {{ formatDataRangeDisplayNumber(item.dataRange.max) }}</div>
@@ -61,15 +69,9 @@
 						<div>Exceeds {{ formatDataRangeDisplayNumber(maxColorRangeDataValue) }}</div>
 					</div>
 				</div>
-				<div class="RangeKeyPanel">
-					<div v-if="coloration.zero" class="ColorKeyContainer">
-						<div class="ColorKey" v-bind:style="{ backgroundColor: coloration.zero }"></div>
-						<div>Zero</div>
-					</div>
-					<div class="ColorKeyContainer">
-						<div class="ColorKey" v-bind:style="{ backgroundColor: coloration.unknown }"></div>
-						<div>Unknown</div>
-					</div>
+
+				<div id="SourcesAndInfoLinkPanel">
+					<span id="SourcesAndInfoLink">Page Info, Data Sources, Components, and Feedback</span>
 				</div>
 			</div>
 			
@@ -255,6 +257,50 @@
 			<div id="ConfigurationButtons">
 				<button id="BtnApplyConfigChanges" type="button">Apply</button>
 				<button id="BtnCancelConfigChanges" type="button">Cancel</button>
+			</div>
+		</div>
+
+		<div id="PageInfoBoxBackground">
+		</div>
+		<div id="PageInfoBox">
+			<h3>This Site</h3>
+			<div class="PageInfoSection">
+				<h4>Updates and General Information</h4>
+				asdf
+			</div>
+			<div class="PageInfoSection">
+				<h4>Data Sources</h4>
+				<ul>
+					<li>
+						<strong>Daily case and death reports by county:</strong>
+						Case and death data used in this project is built from the New York Times data set housed here:
+						<a href="https://github.com/nytimes/covid-19-data">https://github.com/nytimes/covid-19-data</a>
+						<br>
+						<ul>
+							<li>
+								This NYT project is presently tracking county-level data based on the date deaths were <em>publicly reported</em> by the relevant government agency.
+								A minority of counties are not represented in this data set. Those are visually represented on the map (with the color designating "unknown")
+								so they can be distinguished from counties reporting zero cases or deaths.
+							</li>
+							<li>
+								All five counties which make up New York City are combined in the data set, and so they are treated as combined by this visualization as well.
+								Each county can be individually viewed, but all five show the same (combined) population, case counts, and death numbers.
+							</li>
+						</ul>
+					</li>
+					<li>
+						<strong>County population data:</strong>
+						Populations data is derived from an American FactFinder 
+					</li>
+				</ul>
+			</div>
+			<div class="PageInfoSection">
+				<h4>Components</h4>
+				<asdf>
+			</div>
+			<div class="PageInfoSection">
+				<h4>Project</h4>
+				<p>This is a project of Trajan McGill</p>
 			</div>
 		</div>
 
