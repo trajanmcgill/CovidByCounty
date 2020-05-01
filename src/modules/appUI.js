@@ -703,7 +703,7 @@ let appUI = (function()
 	function getTimelineClickDayPosition(eventObject, invert)
 	{
 		let boundingRect = eventObject.target.getBoundingClientRect(),
-			clickPositionX = eventObject.clientX - boundingRect.x,
+			clickPositionX = eventObject.clientX - boundingRect.left,
 			dayPosition = Math.trunc(clickPositionX / TimelineDateBoxWidth) + 1,
 			invertedDayPosition = eventObject.target.clientWidth / TimelineDateBoxWidth + 1 - dayPosition;
 		return (invert ? invertedDayPosition : dayPosition);
