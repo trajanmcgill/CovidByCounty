@@ -300,35 +300,10 @@ module.exports = function(grunt)
 			const MS_PER_DAY = 1000 * 60 * 60 * 24;
 			const OverallStartDateUTC = new Date(Date.UTC(2000, 0, 1)); // All dates will be tracked as number of days since this date.
 
-			function bareDay(dateValue)
-			{
-				return new Date(dateValue.getFullYear(), dateValue.getMonth(), dateValue.getDate(), 0, 0, 0, 0);
-			} // end bareDay()
-		
-			/*
-			function dateDifference(date1, date2)
-			{
-				let startDate, endDate;
-		
-				if (date1 <= date2)
-				{
-					startDate = bareDay(date1);
-					endDate = bareDay(date2);
-				}
-				else
-				{
-					startDate = bareDay(date2);
-					endDate = bareDay(date1);
-				}
-		
-				return Math.ceil((endDate.getTime() - startDate.getTime()) / MS_PER_DAY);
-			} // end countUniqueDays()
-			*/
-
 			function daysSinceStart(dateValueUTC)
 			{
 				return Math.round((dateValueUTC.getTime() - OverallStartDateUTC.getTime()) / MS_PER_DAY);
-			}
+			} // end daysSinceStart()
 
 			function parseDateAsUTC(dateString)
 			{
@@ -354,7 +329,7 @@ module.exports = function(grunt)
 					currentCounty = getCountyByID(counties, intID);
 				if (currentCounty === null)
 				{
-					currentCounty = { id: intID, population: 0, dailyRecords: [] };
+					currentCounty = { id: intID, population: null, dailyRecords: [] };
 					counties.push(currentCounty);
 				}
 				currentCounty.dailyRecords.push({ date: date, cases: cases, deaths: deaths });
@@ -480,7 +455,9 @@ module.exports = function(grunt)
 							if (!isNaN(countyID))
 							{
 								let matchingCounty = getCountyByID(counties, countyID);
-								if (matchingCounty !== null)
+								if (matchingCounty === null)
+									grunt.log.writeln("Population record found for FIPS " + countyID + " but no such county in case data.");
+								else
 								{
 									if (populationRecord.population !== null && !isNaN(populationRecord.population))
 										matchingCounty.population = populationRecord.population;
@@ -499,6 +476,16 @@ module.exports = function(grunt)
 					// All the NYC counties are tracked together in this data set, so give them all the same
 					// population as well, to avoid disparate and incorrect per capita displays.
 					newYorkCounties.forEach(newYorkCounty => { newYorkCounty.population = combinedPopulationNYC; });
+
+					// Report any counties in the case data set that had no population data, and set their population to zero.
+					let countiesWithNoPopulation = counties.filter(county => (county.population === null));
+					grunt.log.writeln("Total counties: " + counties.length + ". Counties with no population data: " + countiesWithNoPopulation.length);
+					countiesWithNoPopulation.forEach(
+						countyWithNoPopulation =>
+						{
+							grunt.log.writeln("No population data existed for FIPS " + countyWithNoPopulation.id + ". Setting population to zero.");
+							countyWithNoPopulation.population = 0;
+						});
 
 					// Sort counties so they are in ascending order by FIPS Code.
 					counties.sort((county1, county2) => ((county1.id < county2.id) ? -1 : ((county2.id < county1.id) ? 1 : 0)));
