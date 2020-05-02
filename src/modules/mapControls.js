@@ -63,14 +63,14 @@ let mapControls = (function()
 	function handleMapMouseDown(eventObject)
 	{
 		draggingMap = false;
-		mapMouseDownPosition = { x: eventObject.pageX, y: eventObject.pageY };
+		mapMouseDownPosition = { x: eventObject.screenX, y: eventObject.screenY };
 		document.onmousemove = svgDocument.onmousemove = monitorMapMouseMove;
 		svgDocument.onmouseup = endMapClick;
 	}
 
 	function monitorMapMouseMove(eventObject)
 	{
-		let totalDragDistance = { x: eventObject.pageX - mapMouseDownPosition.x, y: eventObject.pageY - mapMouseDownPosition.y };
+		let totalDragDistance = { x: eventObject.screenX - mapMouseDownPosition.x, y: eventObject.screenY - mapMouseDownPosition.y };
 		if (Math.abs(totalDragDistance.x) > MouseClickMovementTolerance || Math.abs(totalDragDistance.y) > MouseClickMovementTolerance)
 		{
 			mapDragObject.style.zIndex = 3;
