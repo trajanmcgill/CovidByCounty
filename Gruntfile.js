@@ -175,11 +175,9 @@ module.exports = function(grunt)
 					files:
 					[
 						{ src: "node_modules/concert.js/dist/Concert.mjs", dest: "dist/dev/modules/Concert.js" },
-						{ src: "node_modules/papaparse/papaparse.js", dest: "dist/dev/scripts/papaparse.js" },
 						{ src: "node_modules/vue/dist/vue.esm.browser.js", dest: "dist/dev/modules/vue.js" },
 
 						{ src: "node_modules/concert.js/dist/Concert.min.mjs", dest: "dist/prod/modules/Concert.js" },
-						{ src: "node_modules/papaparse/papaparse.min.js", dest: "dist/prod/scripts/papaparse.js" },
 						{ src: "node_modules/vue/dist/vue.esm.browser.min.js", dest: "dist/prod/modules/vue.js" }
 					]
 				},
