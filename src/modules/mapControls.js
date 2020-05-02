@@ -208,18 +208,25 @@ let mapControls = (function()
 	{
 		let newMagnificationRatio = currentZoom * scaleAmount;
 
-		if (newMagnificationRatio <= MaxZoom && newMagnificationRatio >= MinZoom)
+		if (newMagnificationRatio > MaxZoom)
+			return;
+		if (newMagnificationRatio < MinZoom)
 		{
-			let currentMapSize = getMapSize(),
-				focalPositionFractional = getMapFractionalPosition(focalPosition, mapCommittedPosition, currentMapSize);
-			setMapPosition(
-				MapType.RealAndDragMaps,
-				{
-					x: focalPosition.x - focalPositionFractional.x * currentMapSize.width * scaleAmount,
-					y: focalPosition.y - focalPositionFractional.y * currentMapSize.height * scaleAmount
-				});
-			rescaleMapDrawing(newMagnificationRatio);
+			if (currentZoom > MinZoom)
+				newMagnificationRatio = MinZoom;
+			else
+				return;
 		}
+
+		let currentMapSize = getMapSize(),
+			focalPositionFractional = getMapFractionalPosition(focalPosition, mapCommittedPosition, currentMapSize);
+		setMapPosition(
+			MapType.RealAndDragMaps,
+			{
+				x: focalPosition.x - focalPositionFractional.x * currentMapSize.width * scaleAmount,
+				y: focalPosition.y - focalPositionFractional.y * currentMapSize.height * scaleAmount
+			});
+		rescaleMapDrawing(newMagnificationRatio);
 	}
 
 	function zoomInOneStep()
