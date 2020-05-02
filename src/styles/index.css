@@ -120,10 +120,10 @@ h3, h4
 {
 	position: absolute;
 	left: 50%;
-	top: 50%;
+	top: 10px;
 	width: 1000px;
 	height: auto;
-	margin: -450px 0 0 -500px;
+	margin: 0 0 0 -500px;
 	padding: 12px;
 	border: none;
 	border-radius: 6px;
