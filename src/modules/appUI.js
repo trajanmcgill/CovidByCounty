@@ -8,7 +8,7 @@ let appUI = (function()
 	const TimelineDateBoxWidth = 90;
 	const DefaultAnimationTimeRatio = 500;
 
-	let svgObject = null, svgDocument = null;
+	let mapContainer = null, svgObject = null, svgDocument = null;
 	let animationTimeRatio = DefaultAnimationTimeRatio;
 	let sequence = null;
 	let animationEnabled = false, animationTimeout = null, currentAnimationDay = 0;
@@ -49,6 +49,9 @@ let appUI = (function()
 					configurationBoxDisplay: "none",
 					pageInfoBoxDisplay: "none",
 					dragMapDisplay: "none",
+					mapMagnification: 1,
+					mapContainerWidth: 0,
+					mapContainerHeight: 0,
 					displayDateNumber: null,
 					firstDateNumber: null,
 					totalDays: 0,
@@ -369,21 +372,31 @@ let appUI = (function()
 
 	function doPostDataLoadInitialization()
 	{
+		mapContainer = document.getElementById("MapContainer");
 		svgObject = document.getElementById("SvgObject");
 		svgDocument = svgObject.getSVGDocument();
 
-		// Set up map controls.
+		// Set up map and controls.
+		resizeMapContainer();
 		mapControls.initializeMapUI(VueApp);
 
 		// Set up page info box display.
 		document.getElementById("SourcesAndInfoLink").onclick = showPageInfoBox;
 		document.getElementById("PageInfoBoxBackground").onclick = hidePageInfoBox;
 		document.getElementById("PageInfoBoxCloseButton").onclick = hidePageInfoBox;
+		window.onresize = resizeMapContainer;
 
 		 // Update user message display, then build visualization.
 		setWaitMessage(appLogic.AppWaitType.BuildingVisualization);
 		setTimeout(buildInitialVisualization, 0);
 	} // end doPostDataLoadInitialization()
+
+
+	function resizeMapContainer()
+	{
+		VueApp.mapContainerWidth = mapContainer.clientWidth;
+		VueApp.mapContainerHeight = mapContainer.clientHeight;
+	} // end resizeMapContainer()
 
 
 	function buildInitialVisualization()
@@ -767,9 +780,9 @@ let appUI = (function()
 			else if (keyCode === 35 || keyCode === 40) // end key or down arrow
 				animationUserSeekEnd();
 			else if (keyCode === 107 || keyCode === 61) // plus key
-				mapControls.zoomInOneStep();
+				mapControls.zoomInOneStepCentered();
 			else if (keyCode === 109 || keyCode === 173) // minus key
-				mapControls.zoomOutOneStep();
+				mapControls.zoomOutOneStepCentered();
 			else if (keyCode === 220) // backslash key
 				mapControls.zoomFull();
 		}

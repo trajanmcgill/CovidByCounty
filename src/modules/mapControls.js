@@ -15,7 +15,7 @@ let mapControls = (function()
 		};
 	
 	const MouseClickMovementTolerance = 5,
-		ZoomRatio = 1.4, MaxZoom = 21, MinZoom = 1,
+		ZoomStepRatio = 1.4, MaxZoom = 21, MinZoom = 1, DragMapAspectRatio = 990 / 628,
 		CountyBorderColorNormal = "#000000", CountyBorderColorSelected = "#00ffcf", CountyBorderColorHovered = "#000000",
 		CountyBorderWidthNormal = "0.17828999", CountyBorderWidthSelected = "1.25", CountyBorderWidthHovered = "2";
 
@@ -26,10 +26,9 @@ let mapControls = (function()
 		mapDragPosition = mapCommittedPosition,
 		mapMouseDownPosition = null,
 		draggingMap = false,
-		initialMapSize = null,
-		currentZoom = 1,
 		pagewideKeyDownHandler = null;
 	
+
 	function handleCountyMouseEnter(eventObject)
 	{
 		let targetElement = eventObject.currentTarget, targetID = targetElement.id;
@@ -41,7 +40,8 @@ let mapControls = (function()
 				vueObject.updateInfoCardHoverHighlight(fipsCode, true);
 			setCountyElementHighlighting(targetElement, CountyHighlightType.Hovered);
 		}
-	}
+	} // end handleCountyMouseEnter()
+
 
 	function handleCountyMouseLeave(eventObject)
 	{
@@ -58,7 +58,8 @@ let mapControls = (function()
 			else
 				setCountyElementHighlighting(targetElement, CountyHighlightType.Normal);
 		}
-	}
+	} // end handleCountyMouseLeave()
+
 
 	function handleMapMouseDown(eventObject)
 	{
@@ -66,21 +67,45 @@ let mapControls = (function()
 		mapMouseDownPosition = { x: eventObject.screenX, y: eventObject.screenY };
 		document.onmousemove = svgDocument.onmousemove = monitorMapMouseMove;
 		svgDocument.onmouseup = endMapClick;
-	}
+	} // end handleMapMouseDown()
+
+
+	function showDragMap()
+	{
+		let svgMapSize = getMapSize(),
+			svgMapAspectRatio = svgMapSize.width / svgMapSize.height;
+		
+		// Size the drag map to match the main map
+		if (svgMapAspectRatio < DragMapAspectRatio)
+		{
+			mapDragObject.style.width = svgMapSize.width + "px";
+			mapDragObject.style.height = svgMapSize.width / DragMapAspectRatio;
+		}
+		else
+		{
+			mapDragObject.style.height = svgMapSize.height + "px";
+			mapDragObject.style.width = svgMapSize.height * DragMapAspectRatio;
+		}
+
+		// Make it visible.
+		vueObject.dragMapDisplay = "block";
+	} // end showDragMap()
+
 
 	function monitorMapMouseMove(eventObject)
 	{
 		let totalDragDistance = { x: eventObject.screenX - mapMouseDownPosition.x, y: eventObject.screenY - mapMouseDownPosition.y };
 		if (Math.abs(totalDragDistance.x) > MouseClickMovementTolerance || Math.abs(totalDragDistance.y) > MouseClickMovementTolerance)
 		{
-			vueObject.dragMapDisplay = "block";
+			showDragMap();
 			draggingMap = true;
 			mapDragObject.onmousemove = monitorMapMouseMove;
 			document.onmouseup = svgDocument.onmouseup = mapDragObject.onmouseup = function() { endMapDrag(false); };
 		}
 		if (draggingMap)
 			setMapPosition(MapType.DragMap, { x: mapCommittedPosition.x + totalDragDistance.x, y: mapCommittedPosition.y + totalDragDistance.y });
-	}
+	} // end monitorMapMouseMove()
+
 
 	function endMapDrag(cancel)
 	{
@@ -92,24 +117,29 @@ let mapControls = (function()
 		document.onmouseup = svgDocument.onmouseup = mapDragObject.onmouseup = null;
 		vueObject.dragMapDisplay = "none";
 		draggingMap = false;
-	}
+	} // end endMapDrag()
+
 
 	function endMapClick()
 	{
 		mapMouseDownPosition = null;
 		document.onmousemove = svgDocument.onmousemove = null;
 		svgDocument.onmouseup = null;
-	}
+	} // end endMapClick()
+
 
 	function setCountyHighlightingByFipsCode(fipsCode, highlightType)
 	{
 		// Make sure this is a county element id.
 		if (fipsCode !== null && fipsCode.length === 5)
 			setCountyElementHighlighting(svgDocument.getElementById("c" + fipsCode), highlightType);
-	}
+	} // end setCountyHighlightingByFipsCode()
+
 
 	function setCountyElementHighlighting(targetElement, highlightType)
 	{
+		let currentZoom = vueObject.mapMagnification;
+
 		if (targetElement !== null)
 		{
 			if (highlightType === CountyHighlightType.Normal)
@@ -129,7 +159,8 @@ let mapControls = (function()
 				targetElement.style.strokeWidth = Math.max(CountyBorderWidthHovered / currentZoom, CountyBorderWidthNormal * 2);
 			}
 		}
-	}
+	} // end setCountyElementHighlighting()
+
 
 	function handleMapDoubleClick(eventObject)
 	{
@@ -158,22 +189,8 @@ let mapControls = (function()
 			// Add highlighting
 			setCountyElementHighlighting(clickTarget, CountyHighlightType.Selected);
 		}
-	}
+	} // end handleMapDoubleClick()
 
-	function handleMouseWheel(eventObject)
-	{
-		doPointZoom(eventObject.clientX, eventObject.clientY, (eventObject.deltaY < 0) ? ZoomRatio : (1 / ZoomRatio));
-	}
-
-	function doPointZoom(clientX, clientY, scaleAmount)
-	{
-		let focalPosition =
-			{
-				x: mapCommittedPosition.x + clientX,
-				y: mapCommittedPosition.y + clientY
-			};
-		zoom(focalPosition, scaleAmount);
-	}
 
 	function setMapPosition(map, newPosition)
 	{
@@ -189,25 +206,31 @@ let mapControls = (function()
 			mapDragObject.style.left = newPosition.x + "px";
 			mapDragObject.style.top = newPosition.y + "px";
 		}
-	}
-		
+	} // end setMapPosition()
+
+
 	function getMapSize()
 	{
 		let svgObjectRect = svgObject.getBoundingClientRect();
 		return { width: svgObjectRect.width, height: svgObjectRect.height };
-	}
+	} // end getMapSize()
+
 
 	function getMapFractionalPosition(mapContainerPosition, mapPosition, mapSize)
 	{
 		let fractionalX = (mapContainerPosition.x - mapPosition.x) / mapSize.width,
 			fractionalY = (mapContainerPosition.y - mapPosition.y) / mapSize.height;
 		return { x: fractionalX, y: fractionalY };
-	}
+	} // end getMapFractionalPosition()
 
-	function zoom(focalPosition, scaleAmount)
+
+	function zoom(focalPosition, scaleRatio)
 	{
-		let newMagnificationRatio = currentZoom * scaleAmount;
+		let currentZoom = vueObject.mapMagnification,
+			newMagnificationRatio = currentZoom * scaleRatio;
 
+		// If new zoom level will exceed the maximum, don't do anything.
+		// If it will be below the minimum, set it to (or leave it at) the minumum.
 		if (newMagnificationRatio > MaxZoom)
 			return;
 		if (newMagnificationRatio < MinZoom)
@@ -218,47 +241,66 @@ let mapControls = (function()
 				return;
 		}
 
+		// Move the map so that the focal position will still be in the same screen location after the zoom.
 		let currentMapSize = getMapSize(),
 			focalPositionFractional = getMapFractionalPosition(focalPosition, mapCommittedPosition, currentMapSize);
 		setMapPosition(
 			MapType.RealAndDragMaps,
 			{
-				x: focalPosition.x - focalPositionFractional.x * currentMapSize.width * scaleAmount,
-				y: focalPosition.y - focalPositionFractional.y * currentMapSize.height * scaleAmount
+				x: focalPosition.x - focalPositionFractional.x * currentMapSize.width * scaleRatio,
+				y: focalPosition.y - focalPositionFractional.y * currentMapSize.height * scaleRatio
 			});
-		rescaleMapDrawing(newMagnificationRatio);
-	}
 
-	function zoomInOneStep()
-	{
-		zoom({ x: initialMapSize.width / 2, y: initialMapSize.height / 2 }, ZoomRatio);
-	}
+		// Resize the map itself.
+		vueObject.mapMagnification = newMagnificationRatio;
+	} // end zoom()
 
-	function zoomOutOneStep()
-	{
-		zoom({ x: initialMapSize.width / 2, y: initialMapSize.height / 2 }, 1 / ZoomRatio);
-	}
 
 	function zoomFull()
 	{
-		rescaleMapDrawing(1);
+		vueObject.mapMagnification = 1;
 		let newPosition = { x: 0, y: 0 };
 		setMapPosition(MapType.RealAndDragMaps, newPosition);
-	}
+	} // end zoomFull()
 
-	function rescaleMapDrawing(magnificationRatio)
+
+	function zoomInOneStepCentered()
 	{
-		currentZoom = magnificationRatio;
-		svgObject.style.width = mapDragObject.style.width = (initialMapSize.width * currentZoom) + "px";
-		svgObject.style.height = mapDragObject.style.height = (initialMapSize.height * currentZoom) + "px";
-	}
+		let currentMapSize = getMapSize();
+		zoom({ x: currentMapSize.width / 2, y: currentMapSize.height / 2 }, ZoomStepRatio);
+	} // end zoomInOneStepCentered()
+
+
+	function zoomOutOneStepCentered()
+	{
+		let currentMapSize = getMapSize();
+		zoom({ x: currentMapSize.width / 2, y: currentMapSize.height / 2 }, 1 / ZoomStepRatio);
+	} // end zoomOutOneStepCentered()
+
+
+	function doPointZoom(clientX, clientY, scaleRatio)
+	{
+		let focalPosition =
+			{
+				x: mapCommittedPosition.x + clientX,
+				y: mapCommittedPosition.y + clientY
+			};
+		zoom(focalPosition, scaleRatio);
+	} // end doPointZoom()
+
+	function handleMouseWheel(eventObject)
+	{
+		doPointZoom(eventObject.clientX, eventObject.clientY, (eventObject.deltaY < 0) ? ZoomStepRatio : (1 / ZoomStepRatio));
+	} // end handleMouseWheel()
+
 
 	function setPagewideKeyDownController(keyDownHandler)
 	{
 		pagewideKeyDownHandler = keyDownHandler;
 		if (svgDocument !== null)
 			svgDocument.onkeydown = pagewideKeyDownHandler;
-	}
+	} // end setPagewideKeyDownController()
+
 
 	function initializeMapUI(vueAppObject)
 	{
@@ -267,14 +309,13 @@ let mapControls = (function()
 		svgDocument = svgObject.getSVGDocument();
 		svgDocument.onkeydown = pagewideKeyDownHandler;
 		mapDragObject = document.getElementById("DragMap");
-		initialMapSize = getMapSize();
 
 		btnZoomIn = document.getElementById("BtnZoomIn");
 		btnZoomOut = document.getElementById("BtnZoomOut");
 		btnZoomFull = document.getElementById("BtnZoomFull");
 
-		btnZoomIn.onclick = zoomInOneStep;
-		btnZoomOut.onclick = zoomOutOneStep;
+		btnZoomIn.onclick = zoomInOneStepCentered;
+		btnZoomOut.onclick = zoomOutOneStepCentered;
 		btnZoomFull.onclick = zoomFull;
 		svgDocument.onwheel = handleMouseWheel;
 		svgDocument.onmousedown = handleMapMouseDown;
@@ -287,13 +328,14 @@ let mapControls = (function()
 			});
 	} // end initializeMapUI()
 
+
 	let objectInterface =
 	{
 		CountyHighlightType: CountyHighlightType,
 		initializeMapUI: initializeMapUI,
 		setPagewideKeyDownController: setPagewideKeyDownController,
-		zoomInOneStep: zoomInOneStep,
-		zoomOutOneStep: zoomOutOneStep,
+		zoomInOneStepCentered: zoomInOneStepCentered,
+		zoomOutOneStepCentered: zoomOutOneStepCentered,
 		zoomFull: zoomFull,
 		setCountyHighlightingByID: setCountyHighlightingByFipsCode
 	};

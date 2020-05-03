@@ -14,7 +14,10 @@
 			</div>
 
 			<div id="MapContainer">
-				<object id="SvgObject" type="image/svg+xml" data="images/Usa_counties_large.svg?ver=4">
+				<object id="SvgObject"
+					v-bind:style="{ width:((mapContainerWidth * mapMagnification) + 'px'), height:((mapContainerHeight * mapMagnification) + 'px') }"
+					type="image/svg+xml"
+					data="images/Usa_counties_large.svg?ver=4">
 					Browser not supported.
 				</object>
 				<img id="DragMap" src="images/Usa_counties_large.png" v-bind:style="{ display: dragMapDisplay }">
