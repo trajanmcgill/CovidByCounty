@@ -1,7 +1,22 @@
+[v-cloak]
+{
+	display: none;
+}
+
+html
+{
+	padding: 0;
+	margin: 0;
+	height: 100%;
+}
+
 body
 {
 	background-color: #1e1e1e;
 	color: #d7ba7d;
+	padding: 0;
+	margin: 0;
+	height: 100%;
 }
 
 h3
@@ -15,473 +30,512 @@ h3, h4
 	margin-bottom: 3px;
 }
 
-#ConfigPhrase
-{
-	text-decoration: underline;
-	text-decoration-style: dotted;
-	font-weight: normal;
-	font-size: 18px;
-	color: #7d96d7;
-	cursor: pointer;
-}
-
 #Everything
 {
 	z-index: 1;
-}
-
-[v-cloak]
-{
-	display: none;
-}
-
-#ConfigurationModalBackground
-{
-	position: absolute;
-	top: 0;
-	left: 0;
-	width: 100%;
 	height: 100%;
-	z-index: 998;
-	background-color: rgba(170,170,170,0.87);
 }
 
-#ConfigurationBox
-{
-	position: absolute;
-	left: 50%;
-	top: 50%;
-	width: 600px;
-	height: auto;
-	margin: -227px 0 0 -300px;
-	padding: 12px;
-	border: none;
-	border-radius: 6px;
-	background-color: #808080;
-	z-index: 999;
-}
+	#GridContainer
+	{
+		position: relative;
+		height: 100%;
+		display: grid;
+		grid-template-columns: 1fr 550px;
+		grid-template-rows: 80px 1fr 90px 25px 22px auto 30px;
+	}
 
-.ConfigurationControlSection
-{
-	margin-top: 14px;
-	color: #efefef;
-}
+		#ConfigPhraseContainer
+		{
+			grid-column-start: 1;
+			grid-column-end: 3;
+			grid-row-start: 1;
+			grid-row-end: 2;
+		}
 
-.ConfigurationErrorSection
-{
-	font-weight: bold;
-	color: #820000;
-}
+			#ConfigPhrase
+			{
+				text-decoration: underline;
+				text-decoration-style: dotted;
+				font-weight: normal;
+				font-size: 18px;
+				color: #7d96d7;
+				cursor: pointer;
+			}
 
-.NonRadioQuestion
-{
-	margin-left: 25px;
-}
+		#MapContainer
+		{
+			position: relative;
+			grid-column-start: 1;
+			grid-column-end: 2;
+			grid-row-start: 2;
+			grid-row-end: 3;
+			border: 1px solid #1e1e1e;
+			overflow: hidden;
+		}
+		
+			#SvgObject
+			{
+				position: relative;
+				left: 0;
+				top: 0;
+				z-index: 2;
+			}
+			
+			#DragMap
+			{
+				display: block;
+				position: absolute;
+				left: 0;
+				top: 0;
+				z-index: 3;
+				opacity: 0.5;
+			}
+			
+			#ZoomButtonContainer
+			{
+				position: absolute;
+				right: 10px;
+				bottom: 10px;
+				z-index: 5;
+			}
 
-#ConfigurationButtons
-{
-	margin-top: 14px;
-	text-align: center;
-}
+				#BtnZoomIn, #BtnZoomOut, #BtnZoomFull
+				{
+					width: 24px;
+					height: 24px;
+					font-size: 14px;
+					padding: 1px 6px 1px 6px;
+					border: 2px;
+				}
+				
+				#BtnZoomFull
+				{
+					padding-left: 4px;
+				}
+	
+		#TimelineContainer
+		{
+			grid-column-start: 1;
+			grid-column-end: 2;
+			grid-row-start: 3;
+			grid-row-end: 4;
+			box-sizing: border-box;
+			overflow: hidden;
+			border: 1px solid #1e1e1e;
+			background-color: #333;
+			position: relative;
+		}
 
-#GrowthAbsoluteChoiceCell
-{
-	border-top: 1px solid white;
-}
+			#Timeline
+			{
+				width: 100%;
+				margin-left: 50%;
+				transform: translateX(-50%);
+				padding: 0;
+				list-style-type: none;
+				white-space: nowrap;
+				font-size: 0;
+				color: #1e1e1e;
+				transition-property: width;
+				transition-duration: 0.2s;
+			}
 
-#GrowthRangeChoiceCell
-{
-	border-left: 1px solid white;
-	padding-left: 5px;
-}
+				li.TimeLineDateBox, #TimeLineLeftBufferBox, #TimeLineRightBufferBox
+				{
+					display: inline-block;
+					box-sizing: border-box;
+					width: 90px;
+					height: 90px;
+				}
 
-#GrowthProportionalChoiceCell
-{
-	border-bottom: 1px solid white;
-}
+				#TimeLineLeftBufferBox, #TimeLineRightBufferBox
+				{
+					background-color: #333;
+					width: 0;
+					transition-property: width;
+					transition-duration: 0.2s;
+					border: 0;
+				}
 
-#PageInfoBoxBackground, #WaitBox
-{
-	position: absolute;
-	top: 0;
-	left: 0;
-	width: 100%;
-	height: 100%;
-	background-color: rgba(170,170,170,0.87);
-	color: #1e1e1e;
-}
+				li.TimeLineDateBox
+				{
+					text-align: center;
+					padding-top: 24px;
+					font-size: 16px;
+					line-height: 20px;
+					background-color: #7777be;
+					border: 1px solid black;
+				}
 
-#PageInfoBoxBackground
-{
-	z-index: 998;
-}
+			#TimelineFrame
+			{
+				position: absolute;
+				top: 0;
+				left: 0;
+				width: 100%;
+				height: 100%;
+				z-index: 2;
+				display: grid;
+				grid-template-columns: 1fr 90px 1fr;
+			}
 
-#PageInfoBox
-{
-	position: absolute;
-	left: 50%;
-	top: 10px;
-	width: 1000px;
-	height: auto;
-	margin: 0 0 0 -500px;
-	padding: 12px;
-	border: none;
-	border-radius: 6px;
-	background-color: #303030;
-	z-index: 999;
-}
+				.TimelineCover
+				{
+					height: 100%;
+					background-color: rgba(255,255,255,0.47);
+					top: 0;
+				}
+
+				#TimelineCoverLeft
+				{
+					grid-column-start: 1;
+					grid-column-end: 2;
+					border-right: 2px solid black;
+				}
+
+				#TimelineCoverCenter
+				{
+					grid-column-start: 2;
+					grid-column-end: 3;
+					opacity: 0;
+				}
+
+				#TimelineCoverRight
+				{
+					grid-column-start: 3;
+					grid-column-end: 4;
+					border-left: 2px solid black;
+				}
+
+		#AnimationSliderContainer
+		{
+			grid-column-start: 1;
+			grid-column-end: 2;
+			grid-row-start: 4;
+			grid-row-end: 5;
+		}
+	
+			#AnimationSlider
+			{
+				box-sizing: border-box;
+				width: 100%;
+				height: 25px;
+			}
+		
+		#ControlButtonsContainer
+		{
+			grid-column-start: 1;
+			grid-column-end: 2;
+			grid-row-start: 5;
+			grid-row-end: 6;
+			text-align: center;
+		}
+		
+		#RangeKeyPanel
+		{
+			grid-column-start: 1;
+			grid-column-end: 2;
+			grid-row-start: 6;
+			grid-row-end: 7;
+			margin-top: 10px;
+			box-sizing: border-box;
+			width: 100%;
+			border: none;
+			text-align: left;
+		}
+		
+			.ColorKeyContainer
+			{
+				display: inline-block;
+				margin-right: 30px;
+			}
+		
+			.ColorKeyContainer:last-of-type
+			{
+				margin-right: 10px;
+			}
+		
+				div.ColorKey
+				{
+					width: 135px;
+					height: 20px;
+				}
+		
+		#SourcesAndInfoLinkPanel
+		{
+			grid-column-start: 1;
+			grid-column-end: 2;
+			grid-row-start: 7;
+			grid-row-end: 8;
+			padding-top: 8px;
+			text-align: center;
+			text-decoration: underline;
+			text-decoration-style: dotted;
+			font-weight: normal;
+			color: #7d96d7;
+			cursor: pointer;
+		}
+		
+		#InformationPanel
+		{
+			grid-column-start: 2;
+			grid-column-end: 3;
+			grid-row-start: 2;
+			grid-row-end: 8;
+			position: relative;
+			left: 0;
+			top: 0;
+			box-sizing: border-box;
+			border: 1px solid #74818b;
+			padding: 8px;
+			background-color: #d4d8db;
+			overflow-y: auto;
+		}
+
+			.InformationCard
+			{
+				position: relative;
+				border: 1px solid #e1e4e8;
+				border-radius: 6px;
+				box-shadow: 0 1px 1px rgba(27,31,35,.1);
+				background-color: white;
+				color: #555555;
+				box-sizing: border-box;
+				margin-top: 6px;
+				margin-bottom: 6px;
+				padding-left: 3px;
+				padding-right: 3px;
+				width: 515px;
+				left: 8px;
+			}
+
+			.InformationCard.Hovered
+			{
+				border: 1px solid black;
+			}
+
+				.InfoCardLeftMainTitle
+				{
+					width: 40px;
+				}
+
+				.InfoCardLeftSecondaryTitle
+				{
+					width: 90px;
+				}
+
+				.InfoCardLeftSecondaryTitle, .InfoCardPercentageColumn, .InfoCardByPopulationColumn
+				{
+					border-right: 1px solid #1e1e1e;
+					padding-right: 5px;
+				}
+
+				.InfoCardRemovalButton
+				{
+					position: absolute;
+					top: 4px;
+					left: 493px;
+					font-size: 12px;
+					width: 16px;
+					height: 16px;
+					text-align: center;
+					padding-left: 0;
+					padding-right: 0;
+					display: block;
+					box-sizing: border-box;
+					border-width: 0px;
+					border-radius: 2px;
+				}
+
+				.CountyInfoCardTable
+				{
+					width: 100%;
+					font-family: sans-serif;
+					font-size: 12px;
+					text-align: right;
+					border-collapse: collapse;
+				}
+
+				.CountyInfoCardTable thead
+				{
+					font-size: 11px;
+				}
+
+				.CountyInfoCardTable thead th
+				{
+					text-align: center;
+					text-decoration: underline;
+				}
+
+				.DeathRow
+				{
+					border-top: 25px solid white;
+				}
+
+				td.CurrentFact
+				{
+					font-weight: bold;
+					font-size: larger;
+				}
+
+			.TitleCard
+			{
+				background-color: #7777be;
+				color: #1e1e1e;
+				height: 28px;
+			}
+	
+	#ConfigurationModalBackground
+	{
+		position: absolute;
+		top: 0;
+		left: 0;
+		width: 100%;
+		height: 100%;
+		z-index: 998;
+		background-color: rgba(170,170,170,0.87);
+	}
+
+	#ConfigurationBox
+	{
+		position: absolute;
+		left: 50%;
+		top: 50%;
+		width: 600px;
+		height: auto;
+		margin: -227px 0 0 -300px;
+		padding: 12px;
+		border: none;
+		border-radius: 6px;
+		background-color: #808080;
+		z-index: 999;
+	}
+
+		.ConfigurationControlSection
+		{
+			margin-top: 14px;
+			color: #efefef;
+		}
+
+			.NonRadioQuestion
+			{
+				margin-left: 25px;
+			}
+
+			#GrowthAbsoluteChoiceCell
+			{
+				border-top: 1px solid white;
+			}
+			
+			#GrowthRangeChoiceCell
+			{
+				border-left: 1px solid white;
+				padding-left: 5px;
+			}
+			
+			#GrowthProportionalChoiceCell
+			{
+				border-bottom: 1px solid white;
+			}
+
+		.ConfigurationErrorSection
+		{
+			font-weight: bold;
+			color: #820000;
+		}
 
 
-#PageInfoBoxCloseButton
-{
-	cursor: pointer;
-	border-width: 1px;
-	border-style: solid;
-	border-radius: 2px;
-	position: absolute;
-	top: 10px;
-	left: 10px;
-	font-size: smaller;
-}
+		#ConfigurationButtons
+		{
+			margin-top: 14px;
+			text-align: center;
+		}
+
+
+	#PageInfoBoxBackground, #WaitBox
+	{
+		position: absolute;
+		top: 0;
+		left: 0;
+		width: 100%;
+		height: 100%;
+		background-color: rgba(170,170,170,0.87);
+		color: #1e1e1e;
+	}
+
+	#PageInfoBoxBackground
+	{
+		z-index: 998;
+	}
+
+	#PageInfoBox
+	{
+		position: absolute;
+		left: 50%;
+		top: 10px;
+		width: 1000px;
+		height: auto;
+		margin: 0 0 0 -500px;
+		padding: 12px;
+		border: none;
+		border-radius: 6px;
+		background-color: #303030;
+		z-index: 999;
+	}
+
+		#PageInfoBoxCloseButton
+		{
+			cursor: pointer;
+			border-width: 1px;
+			border-style: solid;
+			border-radius: 2px;
+			position: absolute;
+			top: 10px;
+			left: 10px;
+			font-size: smaller;
+		}
   
+		.PageInfoSection
+		{
+			margin-top: 14px;
+			color: #efefef;
+			border: 1px solid #ababab;
+			border-radius: 6px;
+		}
 
-.PageInfoSection
-{
-	margin-top: 14px;
-	color: #efefef;
-	border: 1px solid #ababab;
-	border-radius: 6px;
-}
+			.PageInfoSection a
+			{
+				color: #7d96d7;
+			}
 
-.PageInfoSection a
-{
-	color: #7d96d7;
-}
+			.PageInfoSection h4
+			{
+				text-align: center;
+			}
 
-.PageInfoSection h4
-{
-	text-align: center;
-}
+			.PageInfoSection li
+			{
+				margin-bottom: 10px;
+			}
 
-.PageInfoSection li
-{
-	margin-bottom: 10px;
-}
+			.ComponentsUsedSection
+			{
+				display: inline-block;
+			}
 
-.ComponentsUsedSection
-{
-	display: inline-block;
-}
+	#WaitBox
+	{
+		z-index: 1000;
+		text-align: center;
+		font-size: 28pt;
+	}
 
-#WaitBox
-{
-	z-index: 1000;
-	text-align: center;
-	font-size: 28pt;
-}
-
-#WaitMessageBox
-{
-	position: relative;
-	top: 50%;
-	left: 0;
-	width: 100%;
-	transform: translate(0%, -50%);
-}
-
-#ColumnsContainer
-{
-	position: relative;
-}
-
-#MapColumn
-{
-	position: absolute;
-	left: 0;
-	top: 0;
-	width: 992px;
-}
-
-#InformationColumn
-{
-	position: absolute;
-	left: 992px;
-	top: 0;
-	width: 550px;
-}
-
-#InformationPanel
-{
-	position: absolute;
-	left: 0;
-	top: 80px;
-	box-sizing: border-box;
-	width: 550px;
-	height: 873px;
-	border: 1px solid #74818b;
-	padding: 8px;
-	background-color: #d4d8db;
-	overflow-y: auto;
-}
-
-.InformationCard
-{
-	position: relative;
-	border: 1px solid #e1e4e8;
-	border-radius: 6px;
-	box-shadow: 0 1px 1px rgba(27,31,35,.1);
-	background-color: white;
-	color: #555555;
-	box-sizing: border-box;
-	margin-top: 6px;
-	margin-bottom: 6px;
-	padding-left: 3px;
-	padding-right: 3px;
-	width: 515px;
-	left: 8px;
-}
-
-.InformationCard.Hovered
-{
-	border: 1px solid black;
-}
-
-.InfoCardLeftMainTitle
-{
-	width: 40px;
-}
-
-.InfoCardLeftSecondaryTitle
-{
-	width: 90px;
-}
-
-.InfoCardLeftSecondaryTitle, .InfoCardPercentageColumn, .InfoCardByPopulationColumn
-{
-	border-right: 1px solid #1e1e1e;
-	padding-right: 5px;
-}
-
-.InfoCardRemovalButton
-{
-	position: absolute;
-	top: 4px;
-	left: 493px;
-	font-size: 12px;
-	width: 16px;
-	height: 16px;
-	text-align: center;
-	padding-left: 0;
-	padding-right: 0;
-	display: block;
-	box-sizing: border-box;
-	border-width: 0px;
-	border-radius: 2px;
-}
-
-.TitleCard
-{
-	background-color: #7777be;
-	color: #1e1e1e;
-	height: 28px;
-}
-
-.CountyInfoCardTable
-{
-	width: 100%;
-	font-family: sans-serif;
-	font-size: 12px;
-	text-align: right;
-	border-collapse: collapse;
-}
-
-.CountyInfoCardTable thead
-{
-	font-size: 11px;
-}
-
-.CountyInfoCardTable thead th
-{
-	text-align: center;
-	text-decoration: underline;
-}
-
-.DeathRow
-{
-	border-top: 25px solid white;
-}
-
-td.CurrentFact
-{
-	font-weight: bold;
-	font-size: larger;
-}
-
-#MapContainer
-{
-	position: relative;
-	width: 990px;
-	height: 628px;
-	border: 1px solid #1e1e1e;
-	overflow: hidden;
-}
-
-#TimelineContainer
-{
-	position: relative;
-	box-sizing: border-box;
-	width: 100%;
-	overflow: hidden;
-	border: 1px solid #1e1e1e;
-	background-color: #333;
-}
-
-#Timeline
-{
-	width: 100%;
-	margin: 0 0 0 541px;
-	padding: 0;
-	list-style-type: none;
-	white-space: nowrap;
-	font-size: 0;
-	color: #1e1e1e;
-	transition-property: margin-left;
-	transition-duration: 0.2s;
-}
-
-li.TimeLineDateBox
-{
-	display: inline-block;
-	box-sizing: border-box;
-	width: 90px;
-	height: 90px;
-	border: 1px solid black;
-	text-align: center;
-	padding-top: 24px;
-	font-size: 16px;
-	line-height: 20px;
-	background-color: #7777be;
-}
-
-#TimelineFrame
-{
-	position: absolute;
-	top: 0;
-	left: 0;
-	width: 100%;
-	height: 100%;
-	z-index: 2;
-}
-
-.TimelineCover
-{
-	position: absolute;
-	height: 100%;
-	background-color: rgba(255,255,255,0.47);
-	width: 450px;
-	top: 0;
-}
-
-#TimelineCoverLeft
-{
-	left: 0;
-	border-right: 2px solid black;
-}
-#TimelineCoverRight
-{
-	left: 540px;
-	border-left: 2px solid black;
-}
-
-#AnimationSlider
-{
-	box-sizing: border-box;
-	width: 100%;
-	height: 25px;
-}
-
-#ControlButtonsContainer
-{
-	text-align: center;
-}
-
-#RangeKeyPanel
-{
-	margin-top: 10px;
-	box-sizing: border-box;
-	width: 100%;
-	border: none;
-	text-align: left;
-}
-
-.ColorKeyContainer
-{
-	display: inline-block;
-	margin-right: 30px;
-}
-
-.ColorKeyContainer:last-of-type
-{
-	margin-right: 10px;
-}
-
-div.ColorKey
-{
-	width: 135px;
-	height: 20px;
-}
-
-#SourcesAndInfoLinkPanel
-{
-	margin-top: 15px;
-	text-align: center;
-	text-decoration: underline;
-	text-decoration-style: dotted;
-	font-weight: normal;
-	color: #7d96d7;
-	cursor: pointer;
-}
-
-#SvgObject
-{
-	position: absolute;
-	left: 0;
-	top: 0;
-	width: 990px;
-	height: 628px;
-	z-index: 2;
-}
-
-#DragMap
-{
-	display: block;
-	position: absolute;
-	left: 0;
-	top: 0;
-	width: 990px;
-	height: 628px;
-	z-index: 1;
-	opacity: 0.5;
-}
-
-#ZoomButtonContainer
-{
-	position: absolute;
-	left: 900px;
-	top: 595px;
-	z-index: 5;
-}
-
-#BtnZoomIn, #BtnZoomOut, #BtnZoomFull
-{
-	width: 24px;
-	height: 24px;
-	font-size: 13.33px;
-	padding: 1px 6px 1px 6px;
-	border: 2px;
-}
-
-#BtnZoomFull
-{
-	padding-left: 4px;
-}
+		#WaitMessageBox
+		{
+			position: relative;
+			top: 50%;
+			left: 0;
+			width: 100%;
+			transform: translate(0%, -50%);
+		}

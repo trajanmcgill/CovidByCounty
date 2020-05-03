@@ -73,7 +73,7 @@ let mapControls = (function()
 		let totalDragDistance = { x: eventObject.screenX - mapMouseDownPosition.x, y: eventObject.screenY - mapMouseDownPosition.y };
 		if (Math.abs(totalDragDistance.x) > MouseClickMovementTolerance || Math.abs(totalDragDistance.y) > MouseClickMovementTolerance)
 		{
-			mapDragObject.style.zIndex = 3;
+			vueObject.dragMapDisplay = "block";
 			draggingMap = true;
 			mapDragObject.onmousemove = monitorMapMouseMove;
 			document.onmouseup = svgDocument.onmouseup = mapDragObject.onmouseup = function() { endMapDrag(false); };
@@ -90,7 +90,7 @@ let mapControls = (function()
 			setMapPosition(MapType.RealMap, mapDragPosition);
 		document.onmousemove = svgDocument.onmousemove = mapDragObject.onmousemove = null;
 		document.onmouseup = svgDocument.onmouseup = mapDragObject.onmouseup = null;
-		mapDragObject.style.zIndex = 1;
+		vueObject.dragMapDisplay = "none";
 		draggingMap = false;
 	}
 

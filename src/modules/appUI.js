@@ -5,7 +5,7 @@ import {Concert} from "./Concert.js?ver=1.0.0";
 
 let appUI = (function()
 {
-	const TimelineDateBoxWidth = 90, TimelineStartingOffset = 541;
+	const TimelineDateBoxWidth = 90;
 	const DefaultAnimationTimeRatio = 500;
 
 	let svgObject = null, svgDocument = null;
@@ -48,6 +48,7 @@ let appUI = (function()
 					waitMessageDisplay: "block",
 					configurationBoxDisplay: "none",
 					pageInfoBoxDisplay: "none",
+					dragMapDisplay: "none",
 					displayDateNumber: null,
 					firstDateNumber: null,
 					totalDays: 0,
@@ -135,6 +136,32 @@ let appUI = (function()
 									list.push(appLogic.data.getDateFromDateNumber(firstDateNumber + i));
 							}
 							return list;
+						},
+
+					timelineLeftBufferWidth:
+						function()
+						{
+							let firstDateNumber = this.firstDateNumber,
+								displayDateNumber = this.displayDateNumber,
+								totalDays = this.totalDays,
+								currentTimelinePosition = (displayDateNumber === null) ? 0 : (displayDateNumber - firstDateNumber + 1);
+							return (Math.max(totalDays + 1 - 2 * currentTimelinePosition, 0) * TimelineDateBoxWidth);
+						},
+					
+					timelineRightBufferWidth:
+						function()
+						{
+							let firstDateNumber = this.firstDateNumber,
+								displayDateNumber = this.displayDateNumber,
+								totalDays = this.totalDays,
+								currentTimelinePosition = (displayDateNumber === null) ? 0 : (displayDateNumber - firstDateNumber + 1);
+							return (Math.max(totalDays - 1 - 2 * (totalDays - currentTimelinePosition), 0) * TimelineDateBoxWidth);
+						},
+					
+					timelineWidth:
+						function()
+						{
+							return TimelineDateBoxWidth * this.totalDays + this.timelineLeftBufferWidth + this.timelineRightBufferWidth;
 						},
 
 					infoCards:
@@ -436,31 +463,6 @@ let appUI = (function()
 		return transformations;
 	} // getMapAnimationTransformations
 
-
-	function getTimelineAnimationTransformations()
-	{
-		let totalDays = VueApp.totalDays,
-			timelineTimes = [0], timelinePositions = [TimelineStartingOffset];
-		for (let i = 1; i <= totalDays; i++)
-		{
-			timelineTimes.push(i * animationTimeRatio);
-			timelinePositions.push(TimelineStartingOffset - i * TimelineDateBoxWidth);
-		}
-
-		let transformationSet =
-		{
-			target: document.getElementById("Timeline"),
-			feature: "margin-left",
-			applicator: Concert.Applicators.Style,
-			calculator: Concert.Calculators.Discrete,
-			easing: Concert.EasingFunctions.ConstantRate,
-			unit: "px",
-			keyframes: { times: timelineTimes, values: timelinePositions }
-		};
-
-		return transformationSet;
-	} // end getTimelineAnimationTransformations()
-	
 	
 	function getSliderAnimationTransformations()
 	{
@@ -541,7 +543,7 @@ let appUI = (function()
 		sequence.addTransformations(getMapAnimationTransformations(animationData));
 
 		// Set up timeline animation.
-		sequence.addTransformations(getTimelineAnimationTransformations());
+//		sequence.addTransformations(getTimelineAnimationTransformations());
 		
 		// Set up slider control animation.
 		sequence.addTransformations(getSliderAnimationTransformations());

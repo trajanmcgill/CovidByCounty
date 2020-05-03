@@ -319,7 +319,6 @@ let appLogic = (function()
 			data:
 			{
 				load: loadData,
-				//cullCounties: cullCounties,
 				prepareDataForAnimation: prepareDataForAnimation,
 				getCountyByID: getCountyByID,
 				getDateFromDateNumber: getDateFromDateNumber,
