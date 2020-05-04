@@ -288,6 +288,16 @@ let mapControls = (function()
 		return fractionalMapCoordinates;
 	} // end mapFractionalCoordsFromContainerCoords()
 
+	function mapContainerCoordsFromFractionalContainerCoords(fractionalCoordinates)
+	{
+		let containerCoordinates =
+		{
+			x: mapContainer.clientWidth * fractionalCoordinates.x,
+			y: mapContainer.clientHeight * fractionalCoordinates.y
+		}
+		return containerCoordinates;
+	} // end mapContainerCoordsFromFractionalContainerCoords()
+
 	function zoom(scaleAmount, zoomPointFractional)
 	{
 		let rawMapSize = getMapSizeRaw(),
@@ -303,21 +313,33 @@ let mapControls = (function()
 				x: mapCommittedPosition.x - zoomPointFractional.x * (scaleAmount * rawMapSize.width - rawMapSize.width),
 				y: mapCommittedPosition.y - zoomPointFractional.y * (scaleAmount * rawMapSize.height - rawMapSize.height)
 			});
-	}
+	} // end zoom()
 
 	function zoomInOneStepCentered()
 	{
-		zoom(ZoomStepRatio, { x: 0.5, y: 0.5 });
-	}
+		zoom(
+			ZoomStepRatio,
+			mapFractionalCoordsFromContainerCoords(
+				mapContainerCoordsFromFractionalContainerCoords({ x: 0.5, y: 0.5 })));
+	} // end zoomInOneStepCentered()
 
 	function zoomOutOneStepCentered()
 	{
-		zoom(1 / ZoomStepRatio, { x: 0.5, y: 0.5 });
-	}
+		zoom(
+			1 / ZoomStepRatio,
+			mapFractionalCoordsFromContainerCoords(
+				mapContainerCoordsFromFractionalContainerCoords({ x: 0.5, y: 0.5 })));
+	} // end zoomOutOneStepCentered()
+
 	function zoomFull()
-	{}
+	{
+		// ADD CODE HERE
+	}
+
 	function handleMouseWheel()
-	{}
+	{
+		// ADD CODE HERE
+	}
 
 
 	let objectInterface =
