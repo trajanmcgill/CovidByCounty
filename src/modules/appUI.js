@@ -377,7 +377,7 @@ let appUI = (function()
 		svgDocument = svgObject.getSVGDocument();
 
 		// Set up map and controls.
-		sizeMapContainer({ width: mapContainer.clientWidth, height: mapContainer.clientHeight });
+		//sizeMapContainer({ width: mapContainer.clientWidth, height: mapContainer.clientHeight });
 		mapControls.initializeMapUI(VueApp);
 
 		// Set up page info box display.
@@ -400,11 +400,11 @@ let appUI = (function()
 
 	function resizeMapContainer()
 	{
-		// Move the map so that the focal position will still be in the same screen location after the zoom.
-		let currentContainerSize = { width: VueApp.mapContainerWidth, height: VueApp.mapContainerHeight },
-			newContainerSize = { width: mapContainer.clientWidth, height: mapContainer.clientHeight };
+		// Move the map so that the focal position will still be in the same screen location.
+//		let currentContainerSize = { width: VueApp.mapContainerWidth, height: VueApp.mapContainerHeight },
+let			newContainerSize = { width: mapContainer.clientWidth, height: mapContainer.clientHeight };
 		sizeMapContainer(newContainerSize);
-		mapControls.recenterMapForNewContainerSize(currentContainerSize, newContainerSize);
+//		mapControls.recenterMapForNewContainerSize(currentContainerSize, newContainerSize); CHANGE CODE HERE
 	} // end resizeMapContainer()
 
 
@@ -421,6 +421,8 @@ let appUI = (function()
 
 		let animationSequence = setupDataAnimation();
 		animationSequence.seek(animationSequence.getStartTime());
+
+		Vue.nextTick(function() { sizeMapContainer({ width: mapContainer.clientWidth, height: mapContainer.clientHeight }); });
 
 		setWaitMessage(appLogic.AppWaitType.None);
 	} // end buildInitialVisualization()
