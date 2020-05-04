@@ -15,7 +15,7 @@ let mapControls = (function()
 		};
 	
 	const MouseClickMovementTolerance = 5,
-		ZoomStepRatio = 1.4, MaxZoom = 21, MinZoom = 1, DragMapAspectRatio = 990 / 628,
+		ZoomStepRatio = 2, MaxZoom = 21, MinZoom = 1, DragMapAspectRatio = 990 / 628,
 		CountyBorderColorNormal = "#000000", CountyBorderColorSelected = "#00ffcf", CountyBorderColorHovered = "#000000",
 		CountyBorderWidthNormal = "0.17828999", CountyBorderWidthSelected = "1.25", CountyBorderWidthHovered = "2";
 
@@ -216,10 +216,10 @@ let mapControls = (function()
 	} // end getMapSize()
 
 
-	function getMapFractionalPosition(mapContainerPosition, mapPosition, mapSize)
+	function getMapFractionalPosition(mapContainerPosition, mapSize)
 	{
-		let fractionalX = (mapContainerPosition.x - mapPosition.x) / mapSize.width,
-			fractionalY = (mapContainerPosition.y - mapPosition.y) / mapSize.height;
+		let fractionalX = (mapContainerPosition.x - mapCommittedPosition.x) / mapSize.width,
+			fractionalY = (mapContainerPosition.y - mapCommittedPosition.y) / mapSize.height;
 		return { x: fractionalX, y: fractionalY };
 	} // end getMapFractionalPosition()
 
@@ -243,12 +243,12 @@ let mapControls = (function()
 
 		// Move the map so that the focal position will still be in the same screen location after the zoom.
 		let currentMapSize = getMapSize(),
-			focalPositionFractional = getMapFractionalPosition(focalPosition, mapCommittedPosition, currentMapSize);
+			focalPositionFractional = getMapFractionalPosition(focalPosition, currentMapSize);
 		setMapPosition(
 			MapType.RealAndDragMaps,
 			{
-				x: focalPosition.x - focalPositionFractional.x * currentMapSize.width * scaleRatio,
-				y: focalPosition.y - focalPositionFractional.y * currentMapSize.height * scaleRatio
+				x: mapCommittedPosition.x - (focalPositionFractional.x * currentMapSize.width * newMagnificationRatio / 2),
+				y: mapCommittedPosition.y - (focalPositionFractional.y * currentMapSize.height * newMagnificationRatio / 2)
 			});
 
 		// Resize the map itself.
@@ -266,15 +266,27 @@ let mapControls = (function()
 
 	function zoomInOneStepCentered()
 	{
-		let currentMapSize = getMapSize();
-		zoom({ x: currentMapSize.width / 2, y: currentMapSize.height / 2 }, ZoomStepRatio);
+		let mapContainer = document.getElementById("MapContainer");
+		zoom(
+			{
+				x: mapContainer.clientWidth / 2 - mapCommittedPosition.x,
+				y: mapContainer.clientHeight / 2 - mapCommittedPosition.y
+			},
+			ZoomStepRatio);
 	} // end zoomInOneStepCentered()
 
 
 	function zoomOutOneStepCentered()
 	{
-		let currentMapSize = getMapSize();
-		zoom({ x: currentMapSize.width / 2, y: currentMapSize.height / 2 }, 1 / ZoomStepRatio);
+		let mapContainer = document.getElementById("MapContainer");
+		zoom(
+			{
+				x: mapContainer.clientWidth / 2 - mapCommittedPosition.x,
+				y: mapContainer.clientHeight / 2 - mapCommittedPosition.y
+			},
+			1 / ZoomStepRatio);
+//		let currentMapSize = getMapSize();
+//		zoom({ x: currentMapSize.width / 2, y: currentMapSize.height / 2 }, 1 / ZoomStepRatio);
 	} // end zoomOutOneStepCentered()
 
 
@@ -294,6 +306,20 @@ let mapControls = (function()
 	} // end handleMouseWheel()
 
 
+	function recenterMapForNewContainerSize(startingContainerSize, endingContainerSize)
+	{
+		let currentMapSize = getMapSize(),
+			containerCenter = { x: Math.round(startingContainerSize.width / 2), y: Math.round(startingContainerSize.height / 2) },
+			focalPositionFractional = getMapFractionalPosition(containerCenter, currentMapSize);
+		setMapPosition(
+			MapType.RealAndDragMaps,
+			{
+				x: containerCenter.x - focalPositionFractional.x * endingContainerSize.width,
+				y: containerCenter.y - focalPositionFractional.y * endingContainerSize.height
+			});
+	} // end recenterMapForNewContainerSize()
+
+
 	function setPagewideKeyDownController(keyDownHandler)
 	{
 		pagewideKeyDownHandler = keyDownHandler;
@@ -307,7 +333,6 @@ let mapControls = (function()
 		vueObject = vueAppObject;
 		svgObject = document.getElementById("SvgObject");
 		svgDocument = svgObject.getSVGDocument();
-		svgDocument.onkeydown = pagewideKeyDownHandler;
 		mapDragObject = document.getElementById("DragMap");
 
 		btnZoomIn = document.getElementById("BtnZoomIn");
@@ -317,7 +342,9 @@ let mapControls = (function()
 		btnZoomIn.onclick = zoomInOneStepCentered;
 		btnZoomOut.onclick = zoomOutOneStepCentered;
 		btnZoomFull.onclick = zoomFull;
+		
 		svgDocument.onwheel = handleMouseWheel;
+		svgDocument.onkeydown = pagewideKeyDownHandler;
 		svgDocument.onmousedown = handleMapMouseDown;
 		svgDocument.ondblclick = handleMapDoubleClick;
 		svgDocument.querySelectorAll("path[id^='c']").forEach(
@@ -332,11 +359,13 @@ let mapControls = (function()
 	let objectInterface =
 	{
 		CountyHighlightType: CountyHighlightType,
+		
 		initializeMapUI: initializeMapUI,
 		setPagewideKeyDownController: setPagewideKeyDownController,
 		zoomInOneStepCentered: zoomInOneStepCentered,
 		zoomOutOneStepCentered: zoomOutOneStepCentered,
 		zoomFull: zoomFull,
+		recenterMapForNewContainerSize: recenterMapForNewContainerSize,
 		setCountyHighlightingByID: setCountyHighlightingByFipsCode
 	};
 	return objectInterface;

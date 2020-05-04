@@ -377,7 +377,7 @@ let appUI = (function()
 		svgDocument = svgObject.getSVGDocument();
 
 		// Set up map and controls.
-		resizeMapContainer();
+		sizeMapContainer({ width: mapContainer.clientWidth, height: mapContainer.clientHeight });
 		mapControls.initializeMapUI(VueApp);
 
 		// Set up page info box display.
@@ -392,10 +392,19 @@ let appUI = (function()
 	} // end doPostDataLoadInitialization()
 
 
+	function sizeMapContainer(newContainerSize)
+	{
+		VueApp.mapContainerWidth = newContainerSize.width;
+		VueApp.mapContainerHeight = newContainerSize.height;
+	}
+
 	function resizeMapContainer()
 	{
-		VueApp.mapContainerWidth = mapContainer.clientWidth;
-		VueApp.mapContainerHeight = mapContainer.clientHeight;
+		// Move the map so that the focal position will still be in the same screen location after the zoom.
+		let currentContainerSize = { width: VueApp.mapContainerWidth, height: VueApp.mapContainerHeight },
+			newContainerSize = { width: mapContainer.clientWidth, height: mapContainer.clientHeight };
+		sizeMapContainer(newContainerSize);
+		mapControls.recenterMapForNewContainerSize(currentContainerSize, newContainerSize);
 	} // end resizeMapContainer()
 
 
