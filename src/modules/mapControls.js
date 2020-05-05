@@ -222,9 +222,9 @@ let mapControls = (function()
 			trueMapSize = { width: rawMapSize.width, height: rawMapSize.height },
 			rawMapAspectRatio = rawMapSize.width / rawMapSize.height;
 		if (rawMapAspectRatio < MapAspectRatio)
-			trueMapSize.height /= MapAspectRatio;
+			trueMapSize.height = trueMapSize.width / MapAspectRatio;
 		else if (rawMapAspectRatio > MapAspectRatio)
-			trueMapSize.width *= MapAspectRatio;
+			trueMapSize.width = trueMapSize.height * MapAspectRatio;
 		return trueMapSize;
 	} // end getMapSizeTrue()
 
