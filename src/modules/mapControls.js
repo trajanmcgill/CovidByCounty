@@ -15,7 +15,7 @@ let mapControls = (function()
 		};
 	
 	const MouseClickMovementTolerance = 5,
-		ZoomStepRatio = 2, MaxZoom = 21, MinZoom = 1, MapAspectRatio = 990 / 628,
+		ZoomStepRatio = 1.4, MaxZoom = 21, MinZoom = 1, MapAspectRatio = 990 / 628,
 		CountyBorderColorNormal = "#000000", CountyBorderColorSelected = "#00ffcf", CountyBorderColorHovered = "#000000",
 		CountyBorderWidthNormal = "0.17828999", CountyBorderWidthSelected = "1.25", CountyBorderWidthHovered = "2";
 
@@ -268,6 +268,17 @@ let mapControls = (function()
 
 	function zoom(scaleAmount, containerFocalPoint)
 	{
+		let newMagnification = vueObject.mapMagnification * scaleAmount;
+		if (newMagnification > MaxZoom)
+			return;
+		else if (newMagnification < MinZoom)
+		{
+			if (vueObject.mapMagnification === MinZoom)
+				return;
+			else
+				newMagnification = MinZoom;
+		}
+
 		const mapFocalPoint =
 			{
 				x: containerFocalPoint.x - mapCommittedPosition.x,
@@ -294,7 +305,6 @@ let mapControls = (function()
 				x: containerFocalPoint.x - newMapFocalPoint.x,
 				y: containerFocalPoint.y - newMapFocalPoint.y
 			};
-		const newMagnification = vueObject.mapMagnification * scaleAmount;
 
 		// Increase zoom level
 		vueObject.mapMagnification = newMagnification;
@@ -308,6 +318,7 @@ let mapControls = (function()
 			});
 	} // end zoom()
 
+
 	function containerCoordinatesFromFraction(fractionalCoordinates)
 	{
 		const containerCoordinates =
@@ -318,25 +329,58 @@ let mapControls = (function()
 		return containerCoordinates;
 	} // end containerCoordinatesFromFraction()
 
+
+	function zoomInOneStep(containerFocalPoint)
+	{
+		zoom(ZoomStepRatio, containerFocalPoint);
+	} // end zoomInOneStep()
+
+
+	function zoomOutOneStep(containerFocalPoint)
+	{
+		zoom(1 / ZoomStepRatio, containerFocalPoint);
+	} // end zoomOutOneStep()
+
+
 	function zoomInOneStepCentered()
 	{
-		zoom(ZoomStepRatio, containerCoordinatesFromFraction({ x: 0.5, y: 0.5 }));
+		zoomInOneStep(containerCoordinatesFromFraction({ x: 0.5, y: 0.5 }))
 	} // end zoomInOneStepCentered()
+
 
 	function zoomOutOneStepCentered()
 	{
-		zoom(1 / ZoomStepRatio, containerCoordinatesFromFraction({ x: 0.5, y: 0.5 }));
+		zoomOutOneStep(containerCoordinatesFromFraction({ x: 0.5, y: 0.5 }));
 	} // end zoomOutOneStepCentered()
+
 
 	function zoomFull()
 	{
-		// ADD CODE HERE
-	}
+		vueObject.mapMagnification = 1;
+		setMapPosition(MapType.RealAndDragMaps, { x: 0, y: 0 });
+	} // end zoomFull()
 
-	function handleMouseWheel()
+
+	function handleMouseWheel(eventObject)
 	{
-		// ADD CODE HERE
-	}
+		const documentFocalPoint =
+			{
+				x: eventObject.clientX,
+				y: eventObject.clientY
+			};
+		const containerFocalPoint =
+			{
+				x: documentFocalPoint.x + mapCommittedPosition.x,
+				y: documentFocalPoint.y + mapCommittedPosition.y
+			};
+
+		eventObject.preventDefault();
+
+		if (eventObject.deltaY < 0)
+			zoomInOneStep(containerFocalPoint);
+		else
+			zoomOutOneStep(containerFocalPoint);
+	} // end handleMouseWheel()
 
 
 	let objectInterface =
