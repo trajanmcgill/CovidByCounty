@@ -15,7 +15,7 @@
 
 			<div id="MapContainer">
 				<object id="SvgObject"
-					v-bind:style="{ width:((mapContainerWidth * mapMagnification) + 'px'), height:((mapContainerHeight * mapMagnification) + 'px') }"
+					v-bind:style="{ width:mapObjectWidth, height:mapObjectHeight, left:mapObjectLeftPosition, top:mapObjectTopPosition }"
 					type="image/svg+xml"
 					data="images/Usa_counties_large.svg?ver=4">
 					Browser not supported.
@@ -26,7 +26,6 @@
 					<button id="BtnZoomOut" type="button">-</button>
 					<button id="BtnZoomFull" type="button">&#9635;</button>
 				</div>
-				<div id="CenterDot"></div>
 			</div>
 
 			<div id="TimelineContainer">

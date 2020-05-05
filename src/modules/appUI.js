@@ -52,6 +52,7 @@ let appUI = (function()
 					mapMagnification: 1,
 					mapContainerWidth: 0,
 					mapContainerHeight: 0,
+					mapObjectPosition: { x: 0, y: 0 },
 					displayDateNumber: null,
 					firstDateNumber: null,
 					totalDays: 0,
@@ -276,7 +277,12 @@ let appUI = (function()
 							else if (this.configDataView === appLogic.DataViewType.ChangeProportional)
 								configPhrase += " (Last " + this.growthRangeDays + " Days Percentage Increase)"
 							return configPhrase;
-						}
+						},
+					
+					mapObjectLeftPosition: function () { return (this.mapObjectPosition.x + "px"); },
+					mapObjectTopPosition: function () { return (this.mapObjectPosition.y + "px"); },
+					mapObjectWidth: function() { return ((this.mapContainerWidth * this.mapMagnification) + "px"); },
+					mapObjectHeight: function() { return ((this.mapContainerHeight * this.mapMagnification) + "px"); }
 				},
 
 			methods:

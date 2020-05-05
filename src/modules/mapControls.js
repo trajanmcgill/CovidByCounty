@@ -22,8 +22,7 @@ let mapControls = (function()
 	let vueObject = null,
 		mapContainer = null, svgObject = null, svgDocument = null, mapDragObject = null,
 		btnZoomIn = null, btnZoomOut = null, btnZoomFull = null,
-		mapCommittedPosition = { x: 0, y: 0 },
-		mapDragPosition = mapCommittedPosition,
+		mapDragPosition = { x: 0, y: 0 },
 		mapMouseDownPosition = null,
 		draggingMap = false,
 		pagewideKeyDownHandler = null;
@@ -72,20 +71,13 @@ let mapControls = (function()
 
 	function showDragMap()
 	{
-		let svgMapSize = getMapSizeRaw(),
-			svgMapAspectRatio = svgMapSize.width / svgMapSize.height;
-		
 		// Size the drag map to match the main map
-		if (svgMapAspectRatio < MapAspectRatio)
-		{
-			mapDragObject.style.width = svgMapSize.width + "px";
-			mapDragObject.style.height = svgMapSize.width / MapAspectRatio;
-		}
-		else
-		{
-			mapDragObject.style.height = svgMapSize.height + "px";
-			mapDragObject.style.width = svgMapSize.height * MapAspectRatio;
-		}
+		let trueMapSize = getMapSizeTrue();
+		mapDragObject.style.width = trueMapSize.width + "px";
+		mapDragObject.style.height = trueMapSize.height + "px";
+
+		// Move the drag map to match the main map position
+		setMapPosition(MapType.DragMap, vueObject.mapObjectPosition);
 
 		// Make it visible.
 		vueObject.dragMapDisplay = "block";
@@ -103,14 +95,17 @@ let mapControls = (function()
 			document.onmouseup = svgDocument.onmouseup = mapDragObject.onmouseup = function() { endMapDrag(false); };
 		}
 		if (draggingMap)
-			setMapPosition(MapType.DragMap, { x: mapCommittedPosition.x + totalDragDistance.x, y: mapCommittedPosition.y + totalDragDistance.y });
+		{
+			let mapPosition = vueObject.mapObjectPosition;
+			setMapPosition(MapType.DragMap, { x: mapPosition.x + totalDragDistance.x, y: mapPosition.y + totalDragDistance.y });
+		}
 	} // end monitorMapMouseMove()
 
 
 	function endMapDrag(cancel)
 	{
 		if (cancel)
-			setMapPosition(MapType.DragMap, mapCommittedPosition);
+			setMapPosition(MapType.DragMap, vueObject.mapObjectPosition);
 		else
 			setMapPosition(MapType.RealMap, mapDragPosition);
 		document.onmousemove = svgDocument.onmousemove = mapDragObject.onmousemove = null;
@@ -195,11 +190,7 @@ let mapControls = (function()
 	function setMapPosition(map, newPosition)
 	{
 		if (map === MapType.RealMap || map === MapType.RealAndDragMaps)
-		{
-			mapCommittedPosition = newPosition;
-			svgObject.style.left = newPosition.x + "px";
-			svgObject.style.top = newPosition.y + "px";
-		}
+			vueObject.mapObjectPosition = newPosition;
 		if (map === MapType.DragMap || map === MapType.RealAndDragMaps)
 		{
 			mapDragPosition = newPosition;
@@ -279,10 +270,11 @@ let mapControls = (function()
 				newMagnification = MinZoom;
 		}
 
+		const mapPosition = vueObject.mapObjectPosition;
 		const mapFocalPoint =
 			{
-				x: containerFocalPoint.x - mapCommittedPosition.x,
-				y: containerFocalPoint.y - mapCommittedPosition.y
+				x: containerFocalPoint.x - mapPosition.x,
+				y: containerFocalPoint.y - mapPosition.y
 			};
 		const trueMapSize = getMapSizeTrue();
 		const mapFocalFraction =
@@ -311,7 +303,7 @@ let mapControls = (function()
 
 		// Recenter map
 		setMapPosition(
-			MapType.RealAndDragMaps,
+			MapType.RealMap,
 			{
 				x: newMapOffset.x,
 				y: newMapOffset.y
@@ -363,6 +355,7 @@ let mapControls = (function()
 
 	function handleMouseWheel(eventObject)
 	{
+		const mapPosition = vueObject.mapObjectPosition;
 		const documentFocalPoint =
 			{
 				x: eventObject.clientX,
@@ -370,8 +363,8 @@ let mapControls = (function()
 			};
 		const containerFocalPoint =
 			{
-				x: documentFocalPoint.x + mapCommittedPosition.x,
-				y: documentFocalPoint.y + mapCommittedPosition.y
+				x: documentFocalPoint.x + mapPosition.x,
+				y: documentFocalPoint.y + mapPosition.y
 			};
 
 		eventObject.preventDefault();
