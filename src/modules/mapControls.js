@@ -266,42 +266,35 @@ let mapControls = (function()
 	} // end initializeMapUI()
 
 
-	function mapCoordsFromContainerCoords(containerCoordinates)
+	function zoom(scaleAmount, containerFocalPoint)
 	{
-		let mapCoordinates =
-		{
-			x: containerCoordinates.x - mapCommittedPosition.x,
-			y: containerCoordinates.y - mapCommittedPosition.y
-		};
-		return mapCoordinates;
-	} // end mapCoordsFromContainerCoords()
-
-	function mapFractionalCoordsFromContainerCoords(containerCoordinates)
-	{
-		let trueMapSize = getMapSizeTrue(),
-			absoluteMapCoordinates = mapCoordsFromContainerCoords(containerCoordinates),
-			fractionalMapCoordinates =
+		const mapFocalPoint =
 			{
-				x: absoluteMapCoordinates.x / trueMapSize.width,
-				y: absoluteMapCoordinates.y / trueMapSize.height
+				x: containerFocalPoint.x - mapCommittedPosition.x,
+				y: containerFocalPoint.y - mapCommittedPosition.y
 			};
-		return fractionalMapCoordinates;
-	} // end mapFractionalCoordsFromContainerCoords()
-
-	function mapContainerCoordsFromFractionalContainerCoords(fractionalCoordinates)
-	{
-		let containerCoordinates =
-		{
-			x: mapContainer.clientWidth * fractionalCoordinates.x,
-			y: mapContainer.clientHeight * fractionalCoordinates.y
-		}
-		return containerCoordinates;
-	} // end mapContainerCoordsFromFractionalContainerCoords()
-
-	function zoom(scaleAmount, zoomPointFractional)
-	{
-		let rawMapSize = getMapSizeRaw(),
-			newMagnification = vueObject.mapMagnification * scaleAmount;
+		const trueMapSize = getMapSizeTrue();
+		const mapFocalFraction =
+			{
+				x: mapFocalPoint.x / trueMapSize.width,
+				y: mapFocalPoint.y / trueMapSize.height
+			};
+		const newTrueMapSize =
+			{
+				width: trueMapSize.width * scaleAmount,
+				height: trueMapSize.height * scaleAmount
+			};
+		const newMapFocalPoint =
+			{
+				x: mapFocalFraction.x * newTrueMapSize.width,
+				y: mapFocalFraction.y * newTrueMapSize.height
+			};
+		const newMapOffset =
+			{
+				x: containerFocalPoint.x - newMapFocalPoint.x,
+				y: containerFocalPoint.y - newMapFocalPoint.y
+			};
+		const newMagnification = vueObject.mapMagnification * scaleAmount;
 
 		// Increase zoom level
 		vueObject.mapMagnification = newMagnification;
@@ -310,25 +303,29 @@ let mapControls = (function()
 		setMapPosition(
 			MapType.RealAndDragMaps,
 			{
-				x: mapCommittedPosition.x - zoomPointFractional.x * (scaleAmount * rawMapSize.width - rawMapSize.width),
-				y: mapCommittedPosition.y - zoomPointFractional.y * (scaleAmount * rawMapSize.height - rawMapSize.height)
+				x: newMapOffset.x,
+				y: newMapOffset.y
 			});
 	} // end zoom()
 
+	function containerCoordinatesFromFraction(fractionalCoordinates)
+	{
+		const containerCoordinates =
+			{
+				x: mapContainer.clientWidth * fractionalCoordinates.x,
+				y: mapContainer.clientHeight * fractionalCoordinates.y
+			};
+		return containerCoordinates;
+	} // end containerCoordinatesFromFraction()
+
 	function zoomInOneStepCentered()
 	{
-		zoom(
-			ZoomStepRatio,
-			mapFractionalCoordsFromContainerCoords(
-				mapContainerCoordsFromFractionalContainerCoords({ x: 0.5, y: 0.5 })));
+		zoom(ZoomStepRatio, containerCoordinatesFromFraction({ x: 0.5, y: 0.5 }));
 	} // end zoomInOneStepCentered()
 
 	function zoomOutOneStepCentered()
 	{
-		zoom(
-			1 / ZoomStepRatio,
-			mapFractionalCoordsFromContainerCoords(
-				mapContainerCoordsFromFractionalContainerCoords({ x: 0.5, y: 0.5 })));
+		zoom(1 / ZoomStepRatio, containerCoordinatesFromFraction({ x: 0.5, y: 0.5 }));
 	} // end zoomOutOneStepCentered()
 
 	function zoomFull()
