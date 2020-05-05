@@ -385,7 +385,6 @@ let mapControls = (function()
 		zoomInOneStepCentered: zoomInOneStepCentered,
 		zoomOutOneStepCentered: zoomOutOneStepCentered,
 		zoomFull: zoomFull,
-//		recenterMapForNewContainerSize: recenterMapForNewContainerSize, CHANGE CODE HERE
 		setCountyHighlightingByID: setCountyHighlightingByFipsCode
 	};
 	return objectInterface;

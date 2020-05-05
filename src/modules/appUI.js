@@ -406,11 +406,8 @@ let appUI = (function()
 
 	function resizeMapContainer()
 	{
-		// Move the map so that the focal position will still be in the same screen location.
-//		let currentContainerSize = { width: VueApp.mapContainerWidth, height: VueApp.mapContainerHeight },
-let			newContainerSize = { width: mapContainer.clientWidth, height: mapContainer.clientHeight };
+		let newContainerSize = { width: mapContainer.clientWidth, height: mapContainer.clientHeight };
 		sizeMapContainer(newContainerSize);
-//		mapControls.recenterMapForNewContainerSize(currentContainerSize, newContainerSize); CHANGE CODE HERE
 	} // end resizeMapContainer()
 
 
