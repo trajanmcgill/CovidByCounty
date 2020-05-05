@@ -472,11 +472,12 @@ h3, h4
 	#PageInfoBox
 	{
 		position: absolute;
-		left: 50%;
-		top: 10px;
-		width: 1000px;
-		height: auto;
-		margin: 0 0 0 -500px;
+		left: 0;
+		top: 0;
+		box-sizing: border-box;
+		width: 100%;
+		height: 100%;
+		overflow: scroll;
 		padding: 12px;
 		border: none;
 		border-radius: 6px;
