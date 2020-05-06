@@ -215,7 +215,9 @@ let appUI = (function()
 											deathsPerCase = (currentDeaths === 0) ? 0 : currentDeaths / currentCases,
 											previousDeathsPerCase = (previousDeaths === 0) ? 0 : previousDeaths / previousCases,
 											deathsPerCaseChange = deathsPerCase - previousDeathsPerCase,
-											deathsPerCaseChangePercentage = (deathsPerCaseChange === 0) ? 0 : ((previousDeathsPerCase === 0) ? Number.POSITIVE_INFINITY : 100 * deathsPerCaseChange / previousDeathsPerCase);
+											deathsPerCaseChangePercentage = (deathsPerCaseChange === 0) ? 0 : ((previousDeathsPerCase === 0) ? Number.POSITIVE_INFINITY : 100 * deathsPerCaseChange / previousDeathsPerCase),
+											mapElement = svgDocument.getElementById("c" + county.id.toString().padStart(appLogic.FIPS_Length, "0")),
+											currentColoration = mapElement.getAttribute("fill");
 										cards.push(
 											{
 												id: countyCard.id,
@@ -234,7 +236,8 @@ let appUI = (function()
 												deathsByPopulationChange: deathsByPopulationChange,
 												deathsPerCase: deathsPerCase,
 												deathsPerCaseChange: deathsPerCaseChange,
-												deathsPerCaseChangePercentage: deathsPerCaseChangePercentage
+												deathsPerCaseChangePercentage: deathsPerCaseChangePercentage,
+												coloration: currentColoration
 											});
 									}
 								});

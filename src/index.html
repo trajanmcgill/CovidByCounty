@@ -89,7 +89,11 @@
 					<div v-for="item in infoCards" class="InformationCard" v-bind:id="'InfoCard_' + item.id" v-bind:key="item.id"
 						 v-on:mouseenter="mouseenterInfoCard" v-on:mouseleave="mouseleaveInfoCard">
 
-						<h4>{{ item.placeName }} <span class="InfoCardPopulation">(population {{ item.population }})</span></h4>
+						<h4>
+							<span class="InfoCardColorBlock" v-bind:style="{ backgroundColor:item.coloration }"></span>
+							{{ item.placeName }}
+							<span class="InfoCardPopulation">(population {{ item.population }})</span>
+						</h4>
 						<button v-bind:id="'BtnRemoveCard_' + item.id" class="InfoCardRemovalButton">X</button>
 
 						<table v-if="item.dataExists" class="CountyInfoCardTable">

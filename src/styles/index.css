@@ -315,6 +315,13 @@ h3, h4
 				border: 1px solid black;
 			}
 
+				.InfoCardColorBlock
+				{
+					display: inline-block;
+					width: 2em;
+					height: 1em;
+				}
+
 				.InfoCardLeftMainTitle
 				{
 					width: 40px;
