@@ -331,6 +331,12 @@ h3, h4
 					padding-right: 5px;
 				}
 
+				.InfoCardPopulation
+				{
+					font-size: smaller;
+					font-weight: normal;
+				}
+
 				.InfoCardRemovalButton
 				{
 					position: absolute;

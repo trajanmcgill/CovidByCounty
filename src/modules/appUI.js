@@ -220,6 +220,7 @@ let appUI = (function()
 											{
 												id: countyCard.id,
 												placeName: countyCard.placeName,
+												population: formatNumberWithCommas(county.population),
 												dataExists: true,
 												casesAbsolute: currentCases,
 												casesAbsoluteChange: casesAbsoluteChange,
