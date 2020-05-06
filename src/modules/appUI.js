@@ -1,7 +1,7 @@
-import appLogic from "./appLogic.js?ver=1.1.1";
-import mapControls from "./mapControls.js?ver=1.1.1";
-import Vue from "./vue.js?ver=1.1.1";
-import {Concert} from "./Concert.js?ver=1.1.1";
+import appLogic from "./appLogic.js?ver=1.2.1";
+import mapControls from "./mapControls.js?ver=1.2.1";
+import Vue from "./vue.js?ver=1.2.1";
+import {Concert} from "./Concert.js?ver=1.2.1";
 
 let appUI = (function()
 {
