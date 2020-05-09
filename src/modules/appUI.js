@@ -578,9 +578,6 @@ let appUI = (function()
 		// Set up map animation.
 		sequence.addTransformations(getMapAnimationTransformations(animationData));
 
-		// Set up timeline animation.
-//		sequence.addTransformations(getTimelineAnimationTransformations());
-		
 		// Set up slider control animation.
 		sequence.addTransformations(getSliderAnimationTransformations());
 		

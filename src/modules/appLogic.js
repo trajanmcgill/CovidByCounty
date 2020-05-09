@@ -301,6 +301,14 @@ let appLogic = (function()
 	} // end prepareDataForAnimation()
 
 
+	function getHistogramData(totalWidth, minValue, maxValue)
+	{
+		// WORKING HERE: ADD CODE HERE
+		//const binWidth = totalWidth / (maxValue - minValue);
+		//allCountyData.counties
+	} // end getHistogramData()
+
+
 	let publicInterface =
 		{
 			FIPS_Length: FIPS_Length,
