@@ -1,14 +1,14 @@
-import appLogic from "./appLogic.js?ver=2";
-import mapControls from "./mapControls.js?ver=2";
-import Vue from "./vue.js?ver=2";
-import {Concert} from "./Concert.js?ver=2";
+import appLogic from "./appLogic.js?ver=1.2.1";
+import mapControls from "./mapControls.js?ver=1.2.1";
+import Vue from "./vue.js?ver=1.2.1";
+import {Concert} from "./Concert.js?ver=1.2.1";
 
 let appUI = (function()
 {
-	const TimelineDateBoxWidth = 90, TimelineStartingOffset = 541;
+	const TimelineDateBoxWidth = 90;
 	const DefaultAnimationTimeRatio = 500;
 
-	let svgObject = null, svgDocument = null;
+	let mapContainer = null, svgObject = null, svgDocument = null;
 	let animationTimeRatio = DefaultAnimationTimeRatio;
 	let sequence = null;
 	let animationEnabled = false, animationTimeout = null, currentAnimationDay = 0;
@@ -49,6 +49,11 @@ let appUI = (function()
 					configurationBoxDisplay: "none",
 					colorationConfigDisplay: "none",
 					pageInfoBoxDisplay: "none",
+					dragMapDisplay: "none",
+					mapMagnification: 1,
+					mapContainerWidth: 0,
+					mapContainerHeight: 0,
+					mapObjectPosition: { x: 0, y: 0 },
 					displayDateNumber: null,
 					firstDateNumber: null,
 					totalDays: 0,
@@ -138,6 +143,32 @@ let appUI = (function()
 							return list;
 						},
 
+					timelineLeftBufferWidth:
+						function()
+						{
+							let firstDateNumber = this.firstDateNumber,
+								displayDateNumber = this.displayDateNumber,
+								totalDays = this.totalDays,
+								currentTimelinePosition = (displayDateNumber === null) ? 0 : (displayDateNumber - firstDateNumber + 1);
+							return (Math.max(totalDays + 1 - 2 * currentTimelinePosition, 0) * TimelineDateBoxWidth);
+						},
+					
+					timelineRightBufferWidth:
+						function()
+						{
+							let firstDateNumber = this.firstDateNumber,
+								displayDateNumber = this.displayDateNumber,
+								totalDays = this.totalDays,
+								currentTimelinePosition = (displayDateNumber === null) ? 0 : (displayDateNumber - firstDateNumber + 1);
+							return (Math.max(totalDays - 1 - 2 * (totalDays - currentTimelinePosition), 0) * TimelineDateBoxWidth);
+						},
+					
+					timelineWidth:
+						function()
+						{
+							return TimelineDateBoxWidth * this.totalDays + this.timelineLeftBufferWidth + this.timelineRightBufferWidth;
+						},
+
 					infoCards:
 						function()
 						{
@@ -185,11 +216,14 @@ let appUI = (function()
 											deathsPerCase = (currentDeaths === 0) ? 0 : currentDeaths / currentCases,
 											previousDeathsPerCase = (previousDeaths === 0) ? 0 : previousDeaths / previousCases,
 											deathsPerCaseChange = deathsPerCase - previousDeathsPerCase,
-											deathsPerCaseChangePercentage = (deathsPerCaseChange === 0) ? 0 : ((previousDeathsPerCase === 0) ? Number.POSITIVE_INFINITY : 100 * deathsPerCaseChange / previousDeathsPerCase);
+											deathsPerCaseChangePercentage = (deathsPerCaseChange === 0) ? 0 : ((previousDeathsPerCase === 0) ? Number.POSITIVE_INFINITY : 100 * deathsPerCaseChange / previousDeathsPerCase),
+											mapElement = svgDocument.getElementById("c" + county.id.toString().padStart(appLogic.FIPS_Length, "0")),
+											currentColoration = mapElement.getAttribute("fill");
 										cards.push(
 											{
 												id: countyCard.id,
 												placeName: countyCard.placeName,
+												population: formatNumberWithCommas(county.population),
 												dataExists: true,
 												casesAbsolute: currentCases,
 												casesAbsoluteChange: casesAbsoluteChange,
@@ -203,7 +237,8 @@ let appUI = (function()
 												deathsByPopulationChange: deathsByPopulationChange,
 												deathsPerCase: deathsPerCase,
 												deathsPerCaseChange: deathsPerCaseChange,
-												deathsPerCaseChangePercentage: deathsPerCaseChangePercentage
+												deathsPerCaseChangePercentage: deathsPerCaseChangePercentage,
+												coloration: currentColoration
 											});
 									}
 								});
@@ -247,7 +282,12 @@ let appUI = (function()
 							else if (this.configDataView === appLogic.DataViewType.ChangeProportional)
 								configPhrase += " (Last " + this.growthRangeDays + " Days Percentage Increase)"
 							return configPhrase;
-						}
+						},
+					
+					mapObjectLeftPosition: function () { return (this.mapObjectPosition.x + "px"); },
+					mapObjectTopPosition: function () { return (this.mapObjectPosition.y + "px"); },
+					mapObjectWidth: function() { return ((this.mapContainerWidth * this.mapMagnification) + "px"); },
+					mapObjectHeight: function() { return ((this.mapContainerHeight * this.mapMagnification) + "px"); }
 				},
 
 			methods:
@@ -343,24 +383,41 @@ let appUI = (function()
 
 	function doPostDataLoadInitialization()
 	{
+		mapContainer = document.getElementById("MapContainer");
 		svgObject = document.getElementById("SvgObject");
 		svgDocument = svgObject.getSVGDocument();
 
-		// Set up map controls.
+		// Set up map and controls.
+		//sizeMapContainer({ width: mapContainer.clientWidth, height: mapContainer.clientHeight });
 		mapControls.initializeMapUI(VueApp);
 
 		// Set up coloration config box display
 		document.getElementById("ColorationConfigLink").onclick = showColorationConfigBox;
-		document.getElementById("PageInfoBoxBackground").onclick = hideColorationConfigBox;
-		document.getElementById("PageInfoBoxCloseButton").onclick = hideColorationConfigBox;
+
 
 		// Set up page info box display.
 		document.getElementById("SourcesAndInfoLink").onclick = showPageInfoBox;
+		document.getElementById("PageInfoBoxBackground").onclick = hidePageInfoBox;
+		document.getElementById("PageInfoBoxCloseButton").onclick = hidePageInfoBox;
+		window.onresize = resizeMapContainer;
 
 		 // Update user message display, then build visualization.
 		setWaitMessage(appLogic.AppWaitType.BuildingVisualization);
 		setTimeout(buildInitialVisualization, 0);
 	} // end doPostDataLoadInitialization()
+
+
+	function sizeMapContainer(newContainerSize)
+	{
+		VueApp.mapContainerWidth = newContainerSize.width;
+		VueApp.mapContainerHeight = newContainerSize.height;
+	}
+
+	function resizeMapContainer()
+	{
+		let newContainerSize = { width: mapContainer.clientWidth, height: mapContainer.clientHeight };
+		sizeMapContainer(newContainerSize);
+	} // end resizeMapContainer()
 
 
 	function buildInitialVisualization()
@@ -376,6 +433,8 @@ let appUI = (function()
 
 		let animationSequence = setupDataAnimation();
 		animationSequence.seek(animationSequence.getStartTime());
+
+		Vue.nextTick(function() { sizeMapContainer({ width: mapContainer.clientWidth, height: mapContainer.clientHeight }); });
 
 		setWaitMessage(appLogic.AppWaitType.None);
 	} // end buildInitialVisualization()
@@ -440,31 +499,6 @@ let appUI = (function()
 		return transformations;
 	} // getMapAnimationTransformations
 
-
-	function getTimelineAnimationTransformations()
-	{
-		let totalDays = VueApp.totalDays,
-			timelineTimes = [0], timelinePositions = [TimelineStartingOffset];
-		for (let i = 1; i <= totalDays; i++)
-		{
-			timelineTimes.push(i * animationTimeRatio);
-			timelinePositions.push(TimelineStartingOffset - i * TimelineDateBoxWidth);
-		}
-
-		let transformationSet =
-		{
-			target: document.getElementById("Timeline"),
-			feature: "margin-left",
-			applicator: Concert.Applicators.Style,
-			calculator: Concert.Calculators.Discrete,
-			easing: Concert.EasingFunctions.ConstantRate,
-			unit: "px",
-			keyframes: { times: timelineTimes, values: timelinePositions }
-		};
-
-		return transformationSet;
-	} // end getTimelineAnimationTransformations()
-	
 	
 	function getSliderAnimationTransformations()
 	{
@@ -545,7 +579,7 @@ let appUI = (function()
 		sequence.addTransformations(getMapAnimationTransformations(animationData));
 
 		// Set up timeline animation.
-		sequence.addTransformations(getTimelineAnimationTransformations());
+//		sequence.addTransformations(getTimelineAnimationTransformations());
 		
 		// Set up slider control animation.
 		sequence.addTransformations(getSliderAnimationTransformations());
@@ -707,7 +741,7 @@ let appUI = (function()
 	function getTimelineClickDayPosition(eventObject, invert)
 	{
 		let boundingRect = eventObject.target.getBoundingClientRect(),
-			clickPositionX = eventObject.clientX - boundingRect.x,
+			clickPositionX = eventObject.clientX - boundingRect.left,
 			dayPosition = Math.trunc(clickPositionX / TimelineDateBoxWidth) + 1,
 			invertedDayPosition = eventObject.target.clientWidth / TimelineDateBoxWidth + 1 - dayPosition;
 		return (invert ? invertedDayPosition : dayPosition);
@@ -769,9 +803,9 @@ let appUI = (function()
 			else if (keyCode === 35 || keyCode === 40) // end key or down arrow
 				animationUserSeekEnd();
 			else if (keyCode === 107 || keyCode === 61) // plus key
-				mapControls.zoomInOneStep();
+				mapControls.zoomInOneStepCentered();
 			else if (keyCode === 109 || keyCode === 173) // minus key
-				mapControls.zoomOutOneStep();
+				mapControls.zoomOutOneStepCentered();
 			else if (keyCode === 220) // backslash key
 				mapControls.zoomFull();
 		}

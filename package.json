@@ -1,14 +1,15 @@
 {
   "name": "covidbycounty",
-  "description": "Covid-19 Data Analysis by  County",
+  "description": "Covid-19 Data Analysis by County",
   "author": "Trajan McGill <code@trajanmcgill.com>",
   "license": "MIT",
-  "version": "1.0.0-alpha01",
+  "version": "1.0.0",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/trajanmcgill/CovidByCounty.git"
   },
   "bugs": "https://github.com/trajanmcgill/CovidByCounty/issues",
+  "homepage": "https://www.unboxedmind.com/covidbycounty/",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },

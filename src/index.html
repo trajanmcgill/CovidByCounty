@@ -8,88 +8,98 @@
 </head>
 <body>
 	<div v-cloak id="Everything">
-		<div id="ColumnsContainer">
-			<div id="MapColumn">
-				<div>
-					<h1>COVID-19 by U.S. County: <span id="ConfigPhrase">{{ mapConfigPhrase }}</span></h1>
-				</div>
+		<div id="GridContainer">
+			<div id="ConfigPhraseContainer">
+				<h1>COVID-19 by U.S. County: <span id="ConfigPhrase">{{ mapConfigPhrase }}</span></h1>
+			</div>
 
-				<div id="MapContainer">
-					<object id="SvgObject" type="image/svg+xml" data="images/Usa_counties_large.svg?ver=4">
-						Browser not supported.
-					</object>
-					<img id="DragMap" src="images/Usa_counties_large.png">
-					<div id="ZoomButtonContainer">
-						<button id="BtnZoomIn" type="button">+</button>
-						<button id="BtnZoomOut" type="button">-</button>
-						<button id="BtnZoomFull" type="button">&#9635</button>
-					</div>
-				</div>
-
-				<div id="TimelineContainer">
-					<ul id="Timeline">
-						<li v-for="item in dateList" class="TimeLineDateBox">
-							{{ item.toLocaleString("en-us", { month: "long" }) }}
-							<br>
-							{{ item.getDate() }}
-						</li>
-					</ul>
-					<div id="TimelineFrame">
-						<div id="TimelineCoverLeft" class="TimelineCover"></div>
-						<div id="TimelineCoverRight" class="TimelineCover"></div>
-					</div>
-				</div>
-
-				<input id="AnimationSlider" type="range" min="0" v-bind:max="totalDays" value="0">
-
-				<div id="ControlButtonsOuterContainer">
-					<div id="ColorationControlContainer">
-						<span id="ColorationConfigLink">Coloration: Auto</span>
-					</div>
-					<div id="ControlButtonsContainer">
-						<button id="BtnSeekStart" type="button">|&lt;</button>
-						<button id="BtnStepBack" type="button">&lt;</button>
-						<button id="BtnPlay" type="button">&#9658;</button>
-						<button id="BtnStepForward" type="button">></button>
-						<button id="BtnPause" type="button">||</button>
-						<button id="BtnSeekEnd" type="button">>|</button>
-					</div>
-					<div id="ControlButtonSpacer"></div>
-				</div>
-				
-				<div id="RangeKeyPanel">
-					<div class="ColorKeyContainer">
-						<div class="ColorKey" v-bind:style="{ backgroundColor: coloration.unknown }"></div>
-						<div>Unknown</div>
-					</div>
-					<div v-if="coloration.zero" class="ColorKeyContainer">
-						<div class="ColorKey" v-bind:style="{ backgroundColor: coloration.zero }"></div>
-						<div>Zero</div>
-					</div>
-					<div class="ColorKeyContainer" v-for="item in coloration.ranges">
-						<div class="ColorKey" v-bind:style="{ backgroundImage:'linear-gradient(to right,' + item.colorRange.start + ',' + item.colorRange.end + ')' }"></div>
-						<div>>{{ formatDataRangeDisplayNumber(item.dataRange.min) }} to {{ formatDataRangeDisplayNumber(item.dataRange.max) }}</div>
-					</div>
-					<div class="ColorKeyContainer">
-						<div class="ColorKey" v-bind:style="{ backgroundColor: coloration.exceedsMax }"></div>
-						<div>Exceeds {{ formatDataRangeDisplayNumber(maxColorRangeDataValue) }}</div>
-					</div>
-				</div>
-
-				<div id="SourcesAndInfoLinkPanel">
-					<span id="SourcesAndInfoLink">Page Info, Data Sources, Components, and Feedback</span>
+			<div id="MapContainer">
+				<object id="SvgObject"
+					v-bind:style="{ width:mapObjectWidth, height:mapObjectHeight, left:mapObjectLeftPosition, top:mapObjectTopPosition }"
+					type="image/svg+xml"
+					data="images/Usa_counties_large.svg?ver=1.2.1">
+					Browser not supported.
+				</object>
+				<img id="DragMap" src="images/Usa_counties_large.png" v-bind:style="{ display: dragMapDisplay }">
+				<div id="ZoomButtonContainer">
+					<button id="BtnZoomIn" type="button">+</button>
+					<button id="BtnZoomOut" type="button">-</button>
+					<button id="BtnZoomFull" type="button">&#9635;</button>
 				</div>
 			</div>
+
+			<div id="TimelineContainer">
+				<ul id="Timeline" v-bind:style="{ width: (timelineWidth + 'px') }">
+					<li id="TimeLineLeftBufferBox" v-bind:style="{ width: (timelineLeftBufferWidth + 'px') }"></li>
+					<li v-for="item in dateList" class="TimeLineDateBox">
+						{{ item.toLocaleString("en-us", { month: "long" }) }}
+						<br>
+						{{ item.getDate() }}
+					</li>
+					<li id="TimeLineRightBufferBox" v-bind:style="{ width: (timelineRightBufferWidth + 'px') }"></li>
+				</ul>
+				<div id="TimelineFrame">
+					<div id="TimelineCoverLeft" class="TimelineCover"></div>
+					<div id="TimelineCoverCenter" class="TimelineCover"></div>
+					<div id="TimelineCoverRight" class="TimelineCover"></div>
+				</div>
+			</div>
+
+			<div id="AnimationSliderContainer">
+				<input id="AnimationSlider" type="range" min="0" v-bind:max="totalDays" value="0">
+			</div>
+
+			<div id="ControlButtonsOuterContainer">
+				<div id="ColorationControlContainer">
+					<span id="ColorationConfigLink">Coloration: Auto</span>
+				</div>
+				<div id="ControlButtonsContainer">
+					<button id="BtnSeekStart" type="button">|&lt;</button>
+					<button id="BtnStepBack" type="button">&lt;</button>
+					<button id="BtnPlay" type="button">&#9658;</button>
+					<button id="BtnStepForward" type="button">></button>
+					<button id="BtnPause" type="button">||</button>
+					<button id="BtnSeekEnd" type="button">>|</button>
+				</div>
+				<div id="ControlButtonSpacer"></div>
+			</div>
 			
-			<div id="InformationColumn">
-				<div id="InformationPanel">
+			<div id="RangeKeyPanel">
+				<div class="ColorKeyContainer">
+					<div class="ColorKey" v-bind:style="{ backgroundColor: coloration.unknown }"></div>
+					<div>Unknown</div>
+				</div>
+				<div v-if="coloration.zero" class="ColorKeyContainer">
+					<div class="ColorKey" v-bind:style="{ backgroundColor: coloration.zero }"></div>
+					<div>Zero</div>
+				</div>
+				<div class="ColorKeyContainer" v-for="item in coloration.ranges">
+					<div class="ColorKey" v-bind:style="{ backgroundImage:'linear-gradient(to right,' + item.colorRange.start + ',' + item.colorRange.end + ')' }"></div>
+					<div>>{{ formatDataRangeDisplayNumber(item.dataRange.min) }} to {{ formatDataRangeDisplayNumber(item.dataRange.max) }}</div>
+				</div>
+				<div class="ColorKeyContainer">
+					<div class="ColorKey" v-bind:style="{ backgroundColor: coloration.exceedsMax }"></div>
+					<div>Exceeds {{ formatDataRangeDisplayNumber(maxColorRangeDataValue) }}</div>
+				</div>
+			</div>
+
+			<div id="SourcesAndInfoLinkPanel">
+				<span id="SourcesAndInfoLink">Page Info, Data Sources, Components, and Feedback</span>
+			</div>
+			
+			<div id="InformationPanel">
 					<div class="InformationCard TitleCard">
 						<h3>{{ displayDateString }}</h3>
 					</div>
+
 					<div v-for="item in infoCards" class="InformationCard" v-bind:id="'InfoCard_' + item.id" v-bind:key="item.id"
 						 v-on:mouseenter="mouseenterInfoCard" v-on:mouseleave="mouseleaveInfoCard">
 
-						<h4>{{ item.placeName }}</h4>
+						<h4>
+							<span class="InfoCardColorBlock" v-bind:style="{ backgroundColor:item.coloration }"></span>
+							{{ item.placeName }}
+							<span class="InfoCardPopulation">(population {{ item.population }})</span>
+						</h4>
 						<button v-bind:id="'BtnRemoveCard_' + item.id" class="InfoCardRemovalButton">X</button>
 
 						<table v-if="item.dataExists" class="CountyInfoCardTable">
@@ -168,9 +178,10 @@
 					</div>
 
 					<div class="InformationCard" v-bind:style="{ display: infoCardInstructionDisplay }">
-						Double-click any county on the map to track its data here.
+						<p>Click the report title to change the data view.</p>
+						<p>Double-click any county on the map to track its data here.</p>
+						<p>Click the play button below the map or drag the slider to move across the date range from beginning to end.</p>
 					</div>
-				</div>
 			</div>
 		</div>
 
@@ -291,7 +302,7 @@
 				<ul>
 					<li>
 						<strong>Daily case and death reports by county:</strong>
-						Case and death data used in this project is built from the public New York Times data set housed here:
+						Case and death data is assembled from a public data set built by the New York Times and housed here:
 						<a href="https://github.com/nytimes/covid-19-data">https://github.com/nytimes/covid-19-data</a>
 						<br>
 						<ul>
@@ -306,6 +317,9 @@
 							<li>
 								All five counties which make up New York City are combined in the data set, and so they are treated as combined by this visualization as well.
 								Each county can be individually viewed, but all five show the same (combined) population, case counts, and death numbers.
+							</li>
+							<li>
+								Case and fatality data is used under <a href="https://github.com/nytimes/covid-19-data/blob/master/LICENSE">this license.</a>
 							</li>
 						</ul>
 					</li>
@@ -380,7 +394,6 @@
 		</div>
 	</div>
 
-	<script type="text/javascript" src="scripts/papaparse.js"></script>
 	<script type="module" src="modules/appUI.js"></script>
 </body>
 </html>
