@@ -276,10 +276,19 @@
 			</div>
 		</div>
 
-		<div id="ColorationConfigBackground" v-bind:style="{ display: colorationConfigDisplay }"></div>
-		<div id="ColorationConfigBox" v-bind:style="{ display: colorationConfigDisplay }">
+		<div id="ColorationConfigBackground" v-show="showColorationConfigBox"></div>
+		<div id="ColorationConfigBox" v-show="showColorationConfigBox">
 			<h3>Coloration Configuration</h3>
-			
+			<div id="ColorationHistogram" v-bind:style="{ height: histogramBarContainerHeight }">
+				<!-- CHANGE CODE HERE: replace this with a chart.js chart or something similar -->
+				<div v-for="(bin, index) in valueDistributions.bins"
+					class="HistogramBar"
+					v-bind:style="{ height: histogramBarHeight(bin), width: histogramBarWidth, left: histogramBarLeftPosition(index) }">
+				</div>
+			</div>
+			<div>
+				<button id="ColorationConfigCloseButton" type="button">Cancel</button>
+			</div>
 		</div>
 
 		<div id="PageInfoBoxBackground" v-bind:style="{ display: pageInfoBoxDisplay }"></div>

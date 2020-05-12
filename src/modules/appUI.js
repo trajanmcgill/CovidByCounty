@@ -7,6 +7,9 @@ let appUI = (function()
 {
 	const TimelineDateBoxWidth = 90;
 	const DefaultAnimationTimeRatio = 500;
+	const ColorationHistogramBinCount = 100;
+	const HistogramBarWidth = 8;
+	const HistogramBarContainerHeight = 300;
 
 	let mapContainer = null, svgObject = null, svgDocument = null;
 	let animationTimeRatio = DefaultAnimationTimeRatio;
@@ -47,7 +50,7 @@ let appUI = (function()
 					waitMessage: "Loading Map...",
 					waitMessageDisplay: "block",
 					configurationBoxDisplay: "none",
-					colorationConfigDisplay: "none",
+					showColorationConfigBox: false,
 					pageInfoBoxDisplay: "none",
 					dragMapDisplay: "none",
 					mapMagnification: 1,
@@ -57,7 +60,10 @@ let appUI = (function()
 					displayDateNumber: null,
 					firstDateNumber: null,
 					totalDays: 0,
+					minOverallValue: null,
 					maxOverallValue: 0,
+					noDataMapCountyCount: 0,
+					valueDistributions: { infinityCount: 0, unknownCount: 0, bins: [], biggestBinSize: 0 },
 					coloration: { unknown: null, zero: null, ranges: [] },
 					BasicFactType: appLogic.BasicFactType,
 					MeasurementType: appLogic.MeasurementType,
@@ -287,7 +293,10 @@ let appUI = (function()
 					mapObjectLeftPosition: function () { return (this.mapObjectPosition.x + "px"); },
 					mapObjectTopPosition: function () { return (this.mapObjectPosition.y + "px"); },
 					mapObjectWidth: function() { return ((this.mapContainerWidth * this.mapMagnification) + "px"); },
-					mapObjectHeight: function() { return ((this.mapContainerHeight * this.mapMagnification) + "px"); }
+					mapObjectHeight: function() { return ((this.mapContainerHeight * this.mapMagnification) + "px"); },
+
+					histogramBarContainerHeight: function () { return (HistogramBarContainerHeight + "px"); },
+					histogramBarWidth: function() { return (HistogramBarWidth + "px"); }
 				},
 
 			methods:
@@ -368,6 +377,19 @@ let appUI = (function()
 							else
 								card.classList.remove("Hovered");
 						}
+					},
+
+					histogramBarHeight(bin)
+					{
+						let height = 0;
+						if (typeof bin.occurrences !== "undefined")
+							height = HistogramBarContainerHeight * bin.occurrences / this.valueDistributions.biggestBinSize;
+						return (height + "px");
+					},
+
+					histogramBarLeftPosition(barNumber)
+					{
+						return ((HistogramBarWidth * barNumber) + "px");
 					}
 				},
 
@@ -391,14 +413,17 @@ let appUI = (function()
 		//sizeMapContainer({ width: mapContainer.clientWidth, height: mapContainer.clientHeight });
 		mapControls.initializeMapUI(VueApp);
 
-		// Set up coloration config box display
+		// Set up report config box display link
+		document.getElementById("ConfigPhrase").onclick = showConfigDialog;
+		
+		// Set up coloration config box display link
 		document.getElementById("ColorationConfigLink").onclick = showColorationConfigBox;
-
 
 		// Set up page info box display.
 		document.getElementById("SourcesAndInfoLink").onclick = showPageInfoBox;
 		document.getElementById("PageInfoBoxBackground").onclick = hidePageInfoBox;
 		document.getElementById("PageInfoBoxCloseButton").onclick = hidePageInfoBox;
+		document.getElementById("ColorationConfigCloseButton").onclick = hideColorationConfigBox;
 		window.onresize = resizeMapContainer;
 
 		 // Update user message display, then build visualization.
@@ -572,6 +597,7 @@ let appUI = (function()
 		let animationData =
 			appLogic.data.prepareDataForAnimation(
 				VueApp.configBasicFact, VueApp.configMeasurement, VueApp.configDataView, VueApp.populationScale, VueApp.growthRangeDays, null);
+		VueApp.minOverallValue = animationData.minOverallDisplayFactValue;
 		VueApp.maxOverallValue = animationData.maxOverallDisplayFactValue;
 		VueApp.coloration = animationData.coloration;
 
@@ -584,8 +610,9 @@ let appUI = (function()
 		// Animate info title card.
 		sequence.addTransformations(getInfoTitleCardAnimationTransformations());
 
-		// Give all counties with no data the "unknown" color.
+		// Count all counties with no data and give them all the "unknown" color.
 		let colorForUnknown = VueApp.coloration.unknown;
+		let noDataMapCountyCount = 0;
 		if (colorForUnknown !== null)
 		{
 			let allCountyPathElements = svgDocument.querySelectorAll("[id^='c']");
@@ -593,12 +620,15 @@ let appUI = (function()
 				countyPathElement =>
 				{
 					if (appLogic.data.getCountyByID(countyPathElement.id.substring(1)) === null)
+					{
 						countyPathElement.style.fill = colorForUnknown;
+						noDataMapCountyCount++;
+					}
 				});
 		}
+		VueApp.noDataMapCountyCount = noDataMapCountyCount;
 
 		// Wire up controls.
-		document.getElementById("ConfigPhrase").onclick = showConfigDialog;
 		InformationPanel.onclick = informationPanelClick;
 		BtnSeekStart.onclick = animationUserSeekStart;
 		BtnStepBack.onclick = animationUserStepBack;
@@ -811,13 +841,23 @@ let appUI = (function()
 
 	function showColorationConfigBox()
 	{
-		VueApp.colorationConfigDisplay = "block";
+		let histogramData = appLogic.data.getHistogramData(ColorationHistogramBinCount, VueApp.minOverallValue, VueApp.maxOverallValue);
+		if (histogramData.belowMinCount > 0 || histogramData.aboveMaxCount > 0)
+			throw "Unexpected values found in generating histogram. Please report this error.";
+		VueApp.valueDistributions =
+			{
+				infinityCount: histogramData.infinityCount,
+				unknownCount: VueApp.noDataMapCountyCount,
+				bins: histogramData.bins,
+				biggestBinSize: histogramData.biggestBinSize
+			};
+		VueApp.showColorationConfigBox = true;
 	} // end showColorationConfigBox()
 
 
 	function hideColorationConfigBox()
 	{
-		VueApp.colorationConfigDisplay = "none";
+		VueApp.showColorationConfigBox = false;
 	} // end hideColorationConfigBox()
 
 

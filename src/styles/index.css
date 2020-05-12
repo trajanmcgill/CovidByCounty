@@ -501,15 +501,30 @@ h3, h4
 		position: absolute;
 		left: 50%;
 		top: 50%;
-		width: 600px;
+		width: 800px;
 		height: auto;
-		margin: -227px 0 0 -300px;
+		margin: -300px 0 0 -400px;
 		padding: 12px;
 		border: none;
 		border-radius: 6px;
 		background-color: #808080;
 		z-index: 999;	
 	}
+
+		#ColorationHistogram
+		{
+			box-sizing: content-box;
+			border: 1px solid orange;
+			width: 800px;
+			position: relative;
+		}
+
+			.HistogramBar
+			{
+				position: absolute;
+				bottom: 0;
+				background-color: black;
+			}
 
 	#PageInfoBoxBackground, #WaitBox
 	{

@@ -200,6 +200,7 @@ let appLogic = (function()
 	{
 		let animationData =
 		{
+			minOverallDisplayFactValue: null,
 			minValueGreaterThanZero: null,
 			maxOverallDisplayFactValue: 0,
 			firstDate: allCountyData.firstDate,
@@ -278,6 +279,8 @@ let appLogic = (function()
 							else
 								throw "Invalid data view parameter";
 							
+							if (animationData.minOverallDisplayFactValue === null || displayFactValue < animationData.minOverallDisplayFactValue)
+								animationData.minOverallDisplayFactValue = displayFactValue;
 							if (displayFactValue > 0 && (animationData.minValueGreaterThanZero === null || displayFactValue < animationData.minValueGreaterThanZero))
 								animationData.minValueGreaterThanZero = displayFactValue;
 							if (displayFactValue > animationData.maxOverallDisplayFactValue && displayFactValue !== Number.POSITIVE_INFINITY)
@@ -301,11 +304,47 @@ let appLogic = (function()
 	} // end prepareDataForAnimation()
 
 
-	function getHistogramData(totalWidth, minValue, maxValue)
+	function getHistogramData(binCount, minValue, maxValue)
 	{
-		// WORKING HERE: ADD CODE HERE
-		//const binWidth = totalWidth / (maxValue - minValue);
-		//allCountyData.counties
+		const binWidth = (maxValue - minValue) / binCount;
+		const data =
+			{
+				infinityCount: 0,
+				belowMinCount: 0,
+				aboveMaxCount: 0,
+				biggestBinSize: 0,
+				bins: []
+			};
+		for(let i = 0; i < binCount; i++)
+			data.bins[i] = { rangeStart: i * binWidth + minValue, rangeEnd: (i + 1) * binWidth + minValue, occurrences: 0 };
+
+		allCountyData.counties.forEach(
+			county =>
+			{
+				county.dailyRecords.forEach(
+					dailyRecord =>
+					{
+						let currentValue = dailyRecord.displayFactValue;
+						if (currentValue === Number.POSITIVE_INFINITY)
+							data.infinityCount++;
+						else if (currentValue < minValue)
+							data.belowMinCount++;
+						else if (currentValue > maxValue)
+							data.aboveMaxCount++;
+						else
+						{
+							let amountAboveMin = currentValue - minValue,
+								binIndex = Math.max(Math.ceil(amountAboveMin / binWidth) - 1, 0);
+							data.bins[binIndex].occurrences++;
+							if (data.bins[binIndex].occurrences > data.biggestBinSize)
+								data.biggestBinSize = data.bins[binIndex].occurrences;
+						}
+					});
+			});
+		if (data.infinityCount > data.biggestBinSize)
+			data.biggestBinSize = data.infinityCount;
+		// WORKING HERE:: CHANGE CODE: include unknown count here?
+		return data;
 	} // end getHistogramData()
 
 
@@ -330,6 +369,7 @@ let appLogic = (function()
 				prepareDataForAnimation: prepareDataForAnimation,
 				getCountyByID: getCountyByID,
 				getDateFromDateNumber: getDateFromDateNumber,
+				getHistogramData: getHistogramData,
 				get firstReportedDate() { return allCountyData.firstDate; },
 				get lastReportedDate() { return allCountyData.lastDate; }
 			}
