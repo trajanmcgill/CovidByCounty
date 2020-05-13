@@ -63,7 +63,6 @@ let appUI = (function()
 					minOverallValue: null,
 					maxOverallValue: 0,
 					noDataMapCountyCount: 0,
-					valueDistributions: { infinityCount: 0, unknownCount: 0, bins: [], biggestBinSize: 0 },
 					coloration: { unknown: null, zero: null, ranges: [] },
 					BasicFactType: appLogic.BasicFactType,
 					MeasurementType: appLogic.MeasurementType,
@@ -377,19 +376,6 @@ let appUI = (function()
 							else
 								card.classList.remove("Hovered");
 						}
-					},
-
-					histogramBarHeight(bin)
-					{
-						let height = 0;
-						if (typeof bin.occurrences !== "undefined")
-							height = HistogramBarContainerHeight * bin.occurrences / this.valueDistributions.biggestBinSize;
-						return (height + "px");
-					},
-
-					histogramBarLeftPosition(barNumber)
-					{
-						return ((HistogramBarWidth * barNumber) + "px");
 					}
 				},
 
@@ -844,13 +830,55 @@ let appUI = (function()
 		let histogramData = appLogic.data.getHistogramData(ColorationHistogramBinCount, VueApp.minOverallValue, VueApp.maxOverallValue);
 		if (histogramData.belowMinCount > 0 || histogramData.aboveMaxCount > 0)
 			throw "Unexpected values found in generating histogram. Please report this error.";
-		VueApp.valueDistributions =
-			{
-				infinityCount: histogramData.infinityCount,
-				unknownCount: VueApp.noDataMapCountyCount,
-				bins: histogramData.bins,
-				biggestBinSize: histogramData.biggestBinSize
-			};
+		// REMOVE CODE HERE
+		//VueApp.valueDistributions =
+		//	{
+		//		infinityCount: histogramData.infinityCount,
+		//		unknownCount: VueApp.noDataMapCountyCount,
+		//		bins: histogramData.bins,
+		//		biggestBinSize: histogramData.biggestBinSize
+		//	};
+		
+		let labels = histogramData.bins.map(bin => (VueApp.formatDataRangeDisplayNumber(bin.rangeEnd)));
+		let values = histogramData.bins.map(bin => bin.occurrences);
+		
+		let chart =
+			new Chart(
+				document.getElementById("HistogramCanvas"),
+				{
+					type: "bar",
+					data:
+					{
+						labels: labels,
+						datasets:
+						[{
+							label: "Display Values Histogram for the Current Report",
+							data: values,
+							backgroundColor: "rgba(0,0,0,1)"
+						}]
+					},
+					options:
+					{
+						responsive: true,
+						maintainAspectRatio: false,
+						legend: { labels: { boxWidth: 0, fontColor: "black" } },
+						scales: 
+						{
+							xAxes: [{ ticks: { maxTicksLimit: 10, fontColor: "black" } }],
+							yAxes:
+							[{
+								type: "logarithmic",
+								ticks:
+								{
+									maxTicksLimit: 10,
+									fontColor: "black",
+									callback: function(tick) { return tick.toLocaleString(); }
+								}
+							}]
+						}
+					}
+				});
+		
 		VueApp.showColorationConfigBox = true;
 	} // end showColorationConfigBox()
 

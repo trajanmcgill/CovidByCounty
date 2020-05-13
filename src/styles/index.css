@@ -516,6 +516,7 @@ h3, h4
 			box-sizing: content-box;
 			border: 1px solid orange;
 			width: 800px;
+			height: 300px;
 			position: relative;
 		}
 

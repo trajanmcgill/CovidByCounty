@@ -9,7 +9,7 @@
 	
 	"extends": "eslint:recommended",
 	
-	"globals": { "Papa": "readonly" },
+	"globals": { "Papa": "readonly", "Chart": "readonly" },
 	
 	"parserOptions":
 	{
@@ -33,6 +33,6 @@
 		"no-mixed-spaces-and-tabs": ["error", "smart-tabs"],
 		"strict": ["error", "function"],
 		"no-use-before-define": ["error", { "variables": true, "classes": true, "functions": false }],
-		"no-unused-vars": ["error", { "vars": "all", "args": "after-used", "ignoreRestSiblings": false,  "varsIgnorePattern": "VueApp" }]
+		"no-unused-vars": ["error", { "vars": "all", "args": "after-used", "ignoreRestSiblings": false,  "varsIgnorePattern": "VueApp|chart" }]
     }
 }

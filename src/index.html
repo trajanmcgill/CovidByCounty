@@ -280,11 +280,7 @@
 		<div id="ColorationConfigBox" v-show="showColorationConfigBox">
 			<h3>Coloration Configuration</h3>
 			<div id="ColorationHistogram" v-bind:style="{ height: histogramBarContainerHeight }">
-				<!-- CHANGE CODE HERE: replace this with a chart.js chart or something similar -->
-				<div v-for="(bin, index) in valueDistributions.bins"
-					class="HistogramBar"
-					v-bind:style="{ height: histogramBarHeight(bin), width: histogramBarWidth, left: histogramBarLeftPosition(index) }">
-				</div>
+				<canvas id="HistogramCanvas"></canvas>
 			</div>
 			<div>
 				<button id="ColorationConfigCloseButton" type="button">Cancel</button>
@@ -403,6 +399,7 @@
 		</div>
 	</div>
 
+	<script type="text/JavaScript" src="scripts/Chart.js"></script>
 	<script type="module" src="modules/appUI.js"></script>
 </body>
 </html>

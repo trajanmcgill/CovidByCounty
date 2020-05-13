@@ -176,9 +176,11 @@ module.exports = function(grunt)
 					[
 						{ src: "node_modules/concert.js/dist/Concert.mjs", dest: "dist/dev/modules/Concert.js" },
 						{ src: "node_modules/vue/dist/vue.esm.browser.js", dest: "dist/dev/modules/vue.js" },
+						{ src: "node_modules/chart.js/dist/Chart.bundle.js", dest: "dist/dev/scripts/Chart.js" },
 
 						{ src: "node_modules/concert.js/dist/Concert.min.mjs", dest: "dist/prod/modules/Concert.js" },
-						{ src: "node_modules/vue/dist/vue.esm.browser.min.js", dest: "dist/prod/modules/vue.js" }
+						{ src: "node_modules/vue/dist/vue.esm.browser.min.js", dest: "dist/prod/modules/vue.js" },
+						{ src: "node_modules/chart.js/dist/Chart.bundle.min.js", dest: "dist/prod/scripts/Chart.js" },
 					]
 				},
 
