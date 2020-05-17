@@ -278,12 +278,95 @@
 
 		<div id="ColorationConfigBackground" v-show="showColorationConfigBox"></div>
 		<div id="ColorationConfigBox" v-show="showColorationConfigBox">
-			<h3>Coloration Configuration</h3>
-			<div id="ColorationHistogram" v-bind:style="{ height: histogramBarContainerHeight }">
-				<canvas id="HistogramCanvas"></canvas>
-			</div>
-			<div>
-				<button id="ColorationConfigCloseButton" type="button">Cancel</button>
+			<div id="ColorationConfigGrid">
+				<div id="ColorationConfigTitle">
+					<h3>Coloration Configuration</h3>
+				</div> 
+				<div id="ColorationHistogram" v-bind:style="{ height: histogramBarContainerHeight }">
+					<canvas id="HistogramCanvas"></canvas>
+				</div>
+				<div id="ColorationConfigControlSection">
+					<table id="ColorationConfigControlTable">
+						<tr>
+							<th rowspan="2" class="ColorationConfigTableCol0">
+								<input type="checkbox" checked disabled>
+							</th>
+							<th rowspan="2" class="ColorationConfigTableCol1">&lt;= 0</th>
+							<td class="ColorationConfigTableCol2"><input id="RdoZeroColoration" type="radio"></td>
+							<td class="ColorationConfigTableCol3">
+								<div class="ColorKey Standout" v-bind:style="{ backgroundColor: manualConfigColoration.zero }"></div>
+							</td>
+							<td class="ColorationConfigTableCol4"></td>
+						</tr>
+						<tr>
+							<td><input id="RdoNegativeColoration" type="radio"></td>
+							<td>
+								<div class="ColorKey Standout" v-bind:style="{ backgroundImage:'linear-gradient(to right,' + manualConfigColoration.negative.colorRange.start + ',' + manualConfigColoration.negative.colorRange.end + ')' }"></div>
+							</td>
+						</tr>
+						<tr>
+							<th>
+								<input type="checkbox" checked disabled>
+							</th>
+							<th colspan="2">Range 1</th>
+							<td>
+								<div class="ColorKey Standout" v-bind:style="{ backgroundImage:'linear-gradient(to right,' + manualConfigColoration.positive.colorRanges[0].start + ',' + manualConfigColoration.positive.colorRanges[0].end + ')' }"></div>
+								<!-- <div>>{{ formatDataRangeDisplayNumber(item.dataRange.min) }} to {{ formatDataRangeDisplayNumber(item.dataRange.max) }}</div> -->
+							</td>
+							<td class="ColorationConfigTableCol4">
+								<input class="ColorRangeSlider" type="range" min="0" max="100" value="0">
+							</td>
+						</tr>
+						<tr>
+							<th>
+								<input type="checkbox" v-bind:disabled="colorThirdPositiveRangeUsed" v-model="colorSecondPositiveRangeUsed">
+							</th>
+							<th colspan="2">Range 2</th>
+							<td>
+								<div class="ColorKey Standout" v-bind:style="{ backgroundImage:'linear-gradient(to right,' + manualConfigColoration.positive.colorRanges[1].start + ',' + manualConfigColoration.positive.colorRanges[1].end + ')' }"></div>
+							</td>
+							<td class="ColorationConfigTableCol4">
+								<input class="ColorRangeSlider" type="range" min="0" max="100" value="0">
+							</td>
+						</tr>
+						<tr>
+							<th>
+								<input type="checkbox" v-bind:disabled="!colorSecondPositiveRangeUsed" v-model="colorThirdPositiveRangeUsed">
+							</th>
+							<th colspan="2">Range 3</th>
+							<td>
+								<div class="ColorKey Standout" v-bind:style="{ backgroundImage:'linear-gradient(to right,' + manualConfigColoration.positive.colorRanges[2].start + ',' + manualConfigColoration.positive.colorRanges[2].end + ')' }"></div>
+							</td>
+							<td class="ColorationConfigTableCol4">
+								<input class="ColorRangeSlider" type="range" min="0" max="100" value="0">
+							</td>
+						</tr>
+						<tr>
+							<th>
+								<input type="checkbox" checked disabled>
+							</th>
+							<th colspan="2">Offscale High</th>
+							<td>
+								<div class="ColorKey Standout" v-bind:style="{ backgroundColor: manualConfigColoration.exceedsMax }"></div>
+							</td>
+							<td class="ColorationConfigTableCol4">
+								<input class="ColorRangeSlider" type="range" min="0" max="100" value="0">
+							</td>
+						</tr>
+						<tr>
+							<th>
+								<input type="checkbox" checked disabled>
+							</th>
+							<th colspan="2">Unknown</th>
+							<td>
+								<div class="ColorKey Standout" v-bind:style="{ backgroundColor: manualConfigColoration.unknown }"></div>
+							</td>
+						</tr>
+					</table>
+				</div>
+				<div id="ColorationConfigButtonSection">
+					<button id="ColorationConfigCloseButton" type="button">Cancel</button>
+				</div>
 			</div>
 		</div>
 

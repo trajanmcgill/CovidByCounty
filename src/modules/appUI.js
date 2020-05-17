@@ -64,6 +64,21 @@ let appUI = (function()
 					maxOverallValue: 0,
 					noDataMapCountyCount: 0,
 					coloration: { unknown: null, zero: null, ranges: [] },
+					manualConfigColoration:
+						{
+							unknown: null,
+							zero: null,
+							exceedsMax: null,
+							negative: { dataRange: { min: 0, max: 0 }, colorRange: { start: "rgb(0,0,0)", end: "rgb(0,0,0)"}},
+							positive: 
+								{
+									firstInUse: false,
+									secondInUse: false,
+									thirdInUse: false,
+									dataRanges: [{ min: 0, max: 0 }, { min: 0, max: 0 }, { min: 0, max: 0 }],
+									colorRanges: [{ start: "rgb(0,0,0)", end: "rgb(0,0,0)"}, { start: "rgb(0,0,0)", end: "rgb(0,0,0)"}, { start: "rgb(0,0,0)", end: "rgb(0,0,0)"}]
+								}
+						},
 					BasicFactType: appLogic.BasicFactType,
 					MeasurementType: appLogic.MeasurementType,
 					DataViewType: appLogic.DataViewType,
@@ -77,6 +92,26 @@ let appUI = (function()
 
 			computed:
 				{
+					colorSecondPositiveRangeUsed:
+						{
+							get: function () { return this.manualConfigColoration.positive.firstInUse; },
+							set:
+								function(newValue)
+								{
+									this.manualConfigColoration.positive.firstInUse = newValue;
+								}
+						},
+
+					colorThirdPositiveRangeUsed:
+						{
+							get: function () { return this.manualConfigColoration.positive.secondInUse; },
+							set:
+								function(newValue)
+								{
+									this.manualConfigColoration.positive.secondInUse = newValue;
+								}
+						},
+
 					configurationErrors:
 						function()
 						{
@@ -879,6 +914,9 @@ let appUI = (function()
 					}
 				});
 		
+		
+		let manualConfigColoration = appLogic.data.createColorationForManualConfig(VueApp.coloration, VueApp.minOverallValue);
+		VueApp.manualConfigColoration = manualConfigColoration;
 		VueApp.showColorationConfigBox = true;
 	} // end showColorationConfigBox()
 

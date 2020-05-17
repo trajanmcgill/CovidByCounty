@@ -196,6 +196,52 @@ let appLogic = (function()
 	} // end colorationIsValid()
 
 
+	function createColorationForManualConfig(existingColoration, minOverallValue)
+	{
+		const existingDataRanges = existingColoration.ranges.map(range => range.dataRange);
+
+		let negativeColoration =
+			{
+				used: (existingDataRanges[0].max === 0),
+				dataRange: { min: (minOverallValue < 0) ? minOverallValue : 0, max: 0 },
+				colorRange: { start: DefaultColorGradients.negative[0].start, end: DefaultColorGradients.negative[0].end }
+			};
+		let positiveColoration =
+			{
+				inUse: [],
+				dataRanges: [],
+				colorRanges:
+					[
+						{ start: DefaultColorGradients.positive[0].start, end: DefaultColorGradients.positive[0].end },
+						{ start: DefaultColorGradients.positive[1].start, end: DefaultColorGradients.positive[1].end },
+						{ start: DefaultColorGradients.positive[2].start, end: DefaultColorGradients.positive[2].end }
+					]
+			};
+		existingDataRanges
+			.filter(existingDataRange => (existingDataRange.max > 0))
+			.forEach(
+				existingDataRange =>
+				{
+					positiveColoration.dataRanges.push({ min: existingDataRange.min, max: existingDataRange.max });
+				});
+		while (positiveColoration.dataRanges.length < 3)
+			positiveColoration.dataRanges.push(null);
+		positiveColoration.firstInUse = (positiveColoration.dataRanges[0] !== null);
+		positiveColoration.secondInUse = (positiveColoration.dataRanges[1] !== null);
+		positiveColoration.thirdInUse = (positiveColoration.dataRanges[2] !== null);
+
+		let manualConfigColoration =
+			{
+				unknown: (existingColoration.unknown === null) ? DefaultSingleValueColors.Unknown : existingColoration.unknown,
+				zero: (existingColoration.zero === null) ? DefaultSingleValueColors.Zero : existingColoration.zero,
+				exceedsMax: (existingColoration.exceedsMax === null) ? DefaultSingleValueColors.ExceedsMax : existingColoration.exceedsMax,
+				negative: negativeColoration,
+				positive: positiveColoration
+			};
+		return manualConfigColoration;
+	} // end createColorationForManualConfig()
+
+
 	function prepareDataForAnimation(basicFact, measurement, dataView, populationScale, growthRangeDays, coloration)
 	{
 		let animationData =
@@ -370,6 +416,7 @@ let appLogic = (function()
 				getCountyByID: getCountyByID,
 				getDateFromDateNumber: getDateFromDateNumber,
 				getHistogramData: getHistogramData,
+				createColorationForManualConfig: createColorationForManualConfig,
 				get firstReportedDate() { return allCountyData.firstDate; },
 				get lastReportedDate() { return allCountyData.lastDate; }
 			}

@@ -269,7 +269,7 @@ h3, h4
 				display: inline-block;
 				margin-right: 30px;
 			}
-		
+
 			.ColorKeyContainer:last-of-type
 			{
 				margin-right: 10px;
@@ -280,7 +280,7 @@ h3, h4
 					width: 135px;
 					height: 20px;
 				}
-		
+
 		#SourcesAndInfoLinkPanel
 		{
 			grid-column-start: 1;
@@ -501,9 +501,9 @@ h3, h4
 		position: absolute;
 		left: 50%;
 		top: 50%;
-		width: 800px;
-		height: auto;
-		margin: -300px 0 0 -400px;
+		width: 1066px;
+		height: 576px;
+		margin: -300px 0 0 -545px;
 		padding: 12px;
 		border: none;
 		border-radius: 6px;
@@ -511,20 +511,91 @@ h3, h4
 		z-index: 999;	
 	}
 
-		#ColorationHistogram
+		#ColorationConfigGrid
 		{
-			box-sizing: content-box;
-			border: 1px solid orange;
-			width: 800px;
-			height: 300px;
 			position: relative;
+			height: 100%;
+			display: grid;
+			grid-template-columns: 266px 800px;
+			grid-template-rows: 28px 300px 208px 40px;
 		}
 
-			.HistogramBar
+			#ColorationConfigTitle
 			{
-				position: absolute;
-				bottom: 0;
-				background-color: black;
+				display: block;
+				grid-column-start: 1;
+				grid-column-end: 3;
+				grid-row-start: 1;
+				grid-row-end: 2;
+			}
+
+			#ColorationHistogram
+			{
+				box-sizing: content-box;
+				border: 1px solid orange;
+				width: 800px;
+				height: 300px;
+				grid-column-start: 2;
+				grid-column-end: 3;
+				grid-row-start: 2;
+				grid-row-end: 3;
+			}
+
+			#ColorationConfigControlSection
+			{
+				color: #efefef;
+				grid-column-start: 1;
+				grid-column-end: 3;
+				grid-row-start: 3;
+				grid-row-end: 4;
+			}
+
+				#ColorationConfigControlTable
+				{
+					table-layout: fixed;
+					border-collapse: collapse;
+				}
+				
+					.ColorationConfigTableCol0
+					{	width: 20px;	}
+
+					.ColorationConfigTableCol1
+					{	width: 60px;	}
+
+					.ColorationConfigTableCol2
+					{	width: 36px;	}
+
+					.ColorationConfigTableCol3
+					{	width: 135px;	}
+
+					.ColorationConfigTableCol4
+					{
+						width: 700px;
+						padding-left: 60px;
+						padding-right: 0;
+					}
+				
+						.ColorRangeSlider
+						{
+							margin-left: 0;
+							margin-right: 0;
+							margin-top: 6px;
+							width: 745px;
+						}
+
+				.Standout
+				{
+					box-sizing: border-box;
+					border: 1px solid black;
+				}
+
+			#ColorationConfigButtonSection
+			{
+				grid-column-start: 1;
+				grid-column-end: 3;
+				grid-row-start: 4;
+				grid-row-end: 5;
+				text-align: center;
 			}
 
 	#PageInfoBoxBackground, #WaitBox
