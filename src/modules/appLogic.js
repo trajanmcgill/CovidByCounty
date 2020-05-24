@@ -208,7 +208,6 @@ let appLogic = (function()
 			};
 		let positiveColoration =
 			{
-				inUse: [],
 				dataRanges: [],
 				colorRanges:
 					[
@@ -389,7 +388,7 @@ let appLogic = (function()
 			});
 		if (data.infinityCount > data.biggestBinSize)
 			data.biggestBinSize = data.infinityCount;
-		// WORKING HERE:: CHANGE CODE: include unknown count here?
+		
 		return data;
 	} // end getHistogramData()
 

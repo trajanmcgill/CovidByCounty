@@ -94,21 +94,21 @@ let appUI = (function()
 				{
 					colorSecondPositiveRangeUsed:
 						{
-							get: function () { return this.manualConfigColoration.positive.firstInUse; },
-							set:
-								function(newValue)
-								{
-									this.manualConfigColoration.positive.firstInUse = newValue;
-								}
-						},
-
-					colorThirdPositiveRangeUsed:
-						{
 							get: function () { return this.manualConfigColoration.positive.secondInUse; },
 							set:
 								function(newValue)
 								{
 									this.manualConfigColoration.positive.secondInUse = newValue;
+								}
+						},
+
+					colorThirdPositiveRangeUsed:
+						{
+							get: function () { return this.manualConfigColoration.positive.thirdInUse; },
+							set:
+								function(newValue)
+								{
+									this.manualConfigColoration.positive.thirdInUse = newValue;
 								}
 						},
 
@@ -862,7 +862,7 @@ let appUI = (function()
 
 	function showColorationConfigBox()
 	{
-		let histogramData = appLogic.data.getHistogramData(ColorationHistogramBinCount, VueApp.minOverallValue, VueApp.maxOverallValue);
+		let histogramData = appLogic.data.getHistogramData(ColorationHistogramBinCount, 0, VueApp.maxOverallValue);
 		if (histogramData.belowMinCount > 0 || histogramData.aboveMaxCount > 0)
 			throw "Unexpected values found in generating histogram. Please report this error.";
 		// REMOVE CODE HERE

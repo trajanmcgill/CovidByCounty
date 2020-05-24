@@ -296,7 +296,7 @@
 							<td class="ColorationConfigTableCol3">
 								<div class="ColorKey Standout" v-bind:style="{ backgroundColor: manualConfigColoration.zero }"></div>
 							</td>
-							<td class="ColorationConfigTableCol4"></td>
+							<td rowspan="2" class="ColorationConfigTableCol4"></td>
 						</tr>
 						<tr>
 							<td><input id="RdoNegativeColoration" type="radio"></td>
@@ -304,43 +304,73 @@
 								<div class="ColorKey Standout" v-bind:style="{ backgroundImage:'linear-gradient(to right,' + manualConfigColoration.negative.colorRange.start + ',' + manualConfigColoration.negative.colorRange.end + ')' }"></div>
 							</td>
 						</tr>
+						
 						<tr>
-							<th>
+							<th rowspan="2">
 								<input type="checkbox" checked disabled>
 							</th>
-							<th colspan="2">Range 1</th>
-							<td>
+							<th colspan="2" class="RangeInfoTopHalf">Range 1</th>
+							<td class="RangeInfoTopHalf">
 								<div class="ColorKey Standout" v-bind:style="{ backgroundImage:'linear-gradient(to right,' + manualConfigColoration.positive.colorRanges[0].start + ',' + manualConfigColoration.positive.colorRanges[0].end + ')' }"></div>
-								<!-- <div>>{{ formatDataRangeDisplayNumber(item.dataRange.min) }} to {{ formatDataRangeDisplayNumber(item.dataRange.max) }}</div> -->
 							</td>
-							<td class="ColorationConfigTableCol4">
+							<td rowspan="2" class="ColorationConfigTableCol4">
 								<input class="ColorRangeSlider" type="range" min="0" max="100" value="0">
 							</td>
 						</tr>
 						<tr>
-							<th>
+							<td colspan="3" class="RangeInfoBottomHalf">
+								<span v-if="manualConfigColoration.positive.firstInUse">
+									{{ formatDataRangeDisplayNumber(manualConfigColoration.positive.dataRanges[0].min) }}
+									to
+									{{ formatDataRangeDisplayNumber(manualConfigColoration.positive.dataRanges[0].max) }}
+								</span>
+							</td>
+						</tr>
+						
+						<tr>
+							<th rowspan="2">
 								<input type="checkbox" v-bind:disabled="colorThirdPositiveRangeUsed" v-model="colorSecondPositiveRangeUsed">
 							</th>
-							<th colspan="2">Range 2</th>
-							<td>
+							<th colspan="2" class="RangeInfoTopHalf">Range 2</th>
+							<td class="RangeInfoTopHalf">
 								<div class="ColorKey Standout" v-bind:style="{ backgroundImage:'linear-gradient(to right,' + manualConfigColoration.positive.colorRanges[1].start + ',' + manualConfigColoration.positive.colorRanges[1].end + ')' }"></div>
 							</td>
-							<td class="ColorationConfigTableCol4">
-								<input class="ColorRangeSlider" type="range" min="0" max="100" value="0">
+							<td rowspan="2" class="ColorationConfigTableCol4">
+								<input class="ColorRangeSlider" type="range" min="0" max="100" value="0" v-if="manualConfigColoration.positive.secondInUse">
 							</td>
 						</tr>
 						<tr>
-							<th>
-								<input type="checkbox" v-bind:disabled="!colorSecondPositiveRangeUsed" v-model="colorThirdPositiveRangeUsed">
-							</th>
-							<th colspan="2">Range 3</th>
-							<td>
-								<div class="ColorKey Standout" v-bind:style="{ backgroundImage:'linear-gradient(to right,' + manualConfigColoration.positive.colorRanges[2].start + ',' + manualConfigColoration.positive.colorRanges[2].end + ')' }"></div>
-							</td>
-							<td class="ColorationConfigTableCol4">
-								<input class="ColorRangeSlider" type="range" min="0" max="100" value="0">
+							<td colspan="3" class="RangeInfoBottomHalf">
+								<span v-if="manualConfigColoration.positive.secondInUse">
+									{{ formatDataRangeDisplayNumber(manualConfigColoration.positive.dataRanges[1].min) }}
+									to
+									{{ formatDataRangeDisplayNumber(manualConfigColoration.positive.dataRanges[1].max) }}
+								</span>
 							</td>
 						</tr>
+
+						<tr>
+							<th rowspan="2">
+								<input type="checkbox" v-bind:disabled="!colorSecondPositiveRangeUsed" v-model="colorThirdPositiveRangeUsed">
+							</th>
+							<th colspan="2" class="RangeInfoTopHalf">Range 3</th>
+							<td class="RangeInfoTopHalf">
+								<div class="ColorKey Standout" v-bind:style="{ backgroundImage:'linear-gradient(to right,' + manualConfigColoration.positive.colorRanges[2].start + ',' + manualConfigColoration.positive.colorRanges[2].end + ')' }"></div>
+							</td>
+							<td rowspan="2" class="ColorationConfigTableCol4">
+								<input class="ColorRangeSlider" type="range" min="0" max="100" value="0" v-if="manualConfigColoration.positive.thirdInUse">
+							</td>
+						</tr>
+						<tr>
+							<td colspan="3" class="RangeInfoBottomHalf">
+								<span v-if="manualConfigColoration.positive.thirdInUse">
+									{{ formatDataRangeDisplayNumber(manualConfigColoration.positive.dataRanges[2].min) }}
+									to
+									{{ formatDataRangeDisplayNumber(manualConfigColoration.positive.dataRanges[2].max) }}
+								</span>
+							</td>
+						</tr>
+
 						<tr>
 							<th>
 								<input type="checkbox" checked disabled>

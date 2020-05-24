@@ -502,8 +502,8 @@ h3, h4
 		left: 50%;
 		top: 50%;
 		width: 1066px;
-		height: 576px;
-		margin: -300px 0 0 -545px;
+		height: 604px;
+		margin: -302px 0 0 -545px;
 		padding: 12px;
 		border: none;
 		border-radius: 6px;
@@ -517,7 +517,7 @@ h3, h4
 			height: 100%;
 			display: grid;
 			grid-template-columns: 266px 800px;
-			grid-template-rows: 28px 300px 208px 40px;
+			grid-template-rows: 28px 300px 236px 40px;
 		}
 
 			#ColorationConfigTitle
@@ -554,6 +554,7 @@ h3, h4
 				{
 					table-layout: fixed;
 					border-collapse: collapse;
+					border: 1px solid black;
 				}
 				
 					.ColorationConfigTableCol0
@@ -583,6 +584,21 @@ h3, h4
 							width: 745px;
 						}
 
+				#ColorationConfigControlTable th
+				{	border: 1px solid black;	}
+
+				#ColorationConfigControlTable td
+				{	border: 1px solid black;	}
+
+				#ColorationConfigControlTable th.RangeInfoTopHalf, #ColorationConfigControlTable td.RangeInfoTopHalf
+				{	border-bottom: 0;	}
+
+				#ColorationConfigControlTable td.RangeInfoBottomHalf
+				{
+					text-align: center;
+					border-top: 0;
+				}
+
 				.Standout
 				{
 					box-sizing: border-box;
@@ -596,6 +612,8 @@ h3, h4
 				grid-row-start: 4;
 				grid-row-end: 5;
 				text-align: center;
+				box-sizing: border-box;
+				padding-top: 15px;
 			}
 
 	#PageInfoBoxBackground, #WaitBox
