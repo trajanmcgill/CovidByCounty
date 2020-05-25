@@ -514,6 +514,7 @@ h3, h4
 		#ColorationConfigGrid
 		{
 			position: relative;
+			z-index: 1000;
 			height: 100%;
 			display: grid;
 			grid-template-columns: 266px 800px;
@@ -531,9 +532,8 @@ h3, h4
 
 			#ColorationHistogram
 			{
-				box-sizing: content-box;
-				border: 1px solid orange;
-				width: 800px;
+				box-sizing: border-box;
+				width: 797px;
 				height: 300px;
 				grid-column-start: 2;
 				grid-column-end: 3;
@@ -571,17 +571,17 @@ h3, h4
 
 					.ColorationConfigTableCol4
 					{
-						width: 700px;
-						padding-left: 60px;
+						width: 801px;
+						padding-left: 0;
 						padding-right: 0;
 					}
 				
 						.ColorRangeSlider
 						{
-							margin-left: 0;
+							margin-left: 58px;
 							margin-right: 0;
 							margin-top: 6px;
-							width: 745px;
+							width: 741px;
 						}
 
 				#ColorationConfigControlTable th
@@ -615,6 +615,17 @@ h3, h4
 				box-sizing: border-box;
 				padding-top: 15px;
 			}
+		
+		.ColorationRangeOverlay
+		{
+			position: absolute;
+			z-index: 1001;
+			top: 74px;
+			height: 224px;
+			opacity: 0.5;
+			box-sizing: border-box;
+			border: 1px solid black;
+		}
 
 	#PageInfoBoxBackground, #WaitBox
 	{

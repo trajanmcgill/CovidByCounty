@@ -10,6 +10,9 @@ let appUI = (function()
 	const ColorationHistogramBinCount = 100;
 	const HistogramBarWidth = 8;
 	const HistogramBarContainerHeight = 300;
+	const RangeSliderMax = 741;
+	const ColorOverlayLeftOffset = 340;
+	const HistogramBarAreaWidth = 734;
 
 	let mapContainer = null, svgObject = null, svgDocument = null;
 	let animationTimeRatio = DefaultAnimationTimeRatio;
@@ -110,6 +113,127 @@ let appUI = (function()
 								{
 									this.manualConfigColoration.positive.thirdInUse = newValue;
 								}
+						},
+					
+					colorFirstRangeSlider:
+						{
+							get: function()
+								{
+									let proportion = this.manualConfigColoration.positive.dataRanges[0].max / this.maxOverallValue,
+										sliderPosition = Math.round(proportion * RangeSliderMax);
+									return sliderPosition;
+								},
+							set: function(newValue)
+								{
+									const slider = document.getElementById("FirstColorRangeSlider");
+									let proportion = newValue / slider.max,
+										dataValue = proportion * this.maxOverallValue,
+										dataRanges = this.manualConfigColoration.positive.dataRanges,
+										firstRange = dataRanges[0], secondRange = dataRanges[1], thirdRange = dataRanges[2];
+
+									secondRange.min = firstRange.max = dataValue;
+									if (secondRange.min > secondRange.max)
+									{
+										thirdRange.min = secondRange.max = secondRange.min;
+										if (thirdRange.min > thirdRange.max)
+											thirdRange.max = thirdRange.min;
+									}
+								}
+						},
+
+					colorSecondRangeSlider:
+						{
+							get: function()
+								{
+									let proportion = this.manualConfigColoration.positive.dataRanges[1].max / this.maxOverallValue,
+										sliderPosition = Math.round(proportion * RangeSliderMax);
+									return sliderPosition;
+								},
+							set: function(newValue)
+								{
+									const slider = document.getElementById("SecondColorRangeSlider");
+									let proportion = newValue / slider.max,
+										dataValue = proportion * this.maxOverallValue,
+										dataRanges = this.manualConfigColoration.positive.dataRanges,
+										firstRange = dataRanges[0], secondRange = dataRanges[1], thirdRange = dataRanges[2];
+
+									thirdRange.min = secondRange.max = dataValue;
+									if (secondRange.max < secondRange.min)
+										secondRange.min = firstRange.max = secondRange.max;
+									if (thirdRange.min > thirdRange.max)
+										thirdRange.max = thirdRange.min;
+								}
+						},
+
+					colorThirdRangeSlider:
+						{
+							get: function()
+								{
+									let proportion = this.manualConfigColoration.positive.dataRanges[2].max / this.maxOverallValue,
+										sliderPosition = Math.round(proportion * RangeSliderMax);
+									return sliderPosition;
+								},
+							set: function(newValue)
+								{
+									const slider = document.getElementById("ThirdColorRangeSlider");
+									let proportion = newValue / slider.max,
+										dataValue = proportion * this.maxOverallValue,
+										dataRanges = this.manualConfigColoration.positive.dataRanges,
+										firstRange = dataRanges[0], secondRange = dataRanges[1], thirdRange = dataRanges[2];
+
+									thirdRange.max = dataValue;
+									if (thirdRange.max < thirdRange.min)
+									{
+										thirdRange.min = secondRange.max = thirdRange.max;
+										if (secondRange.max < secondRange.min)
+											firstRange.max = secondRange.min = secondRange.max;
+									}
+								}
+						},
+
+					colorFirstOverlayPosition:
+						function()
+						{
+							let position =
+								{
+									left: ColorOverlayLeftOffset,
+									width: Math.round(HistogramBarAreaWidth * this.colorFirstRangeSlider / RangeSliderMax)
+								};
+							return position;
+						},
+
+					colorSecondOverlayPosition:
+						function()
+						{
+							let position =
+								{
+									left: this.colorFirstOverlayPosition.left + this.colorFirstOverlayPosition.width,
+									width: Math.round(HistogramBarAreaWidth * (this.colorSecondRangeSlider - this.colorFirstRangeSlider) / RangeSliderMax)
+								};
+							return position;
+						},
+
+					colorThirdOverlayPosition:
+						function()
+						{
+							let position =
+								{
+									left: this.colorSecondOverlayPosition.left + this.colorSecondOverlayPosition.width,
+									width: Math.round(HistogramBarAreaWidth * (this.colorThirdRangeSlider - this.colorSecondRangeSlider) / RangeSliderMax)
+								};
+							return position;
+						},
+
+					colorHighOverlayPosition:
+						function()
+						{
+							let leftPosition = this.colorThirdOverlayPosition.left + this.colorThirdOverlayPosition.width;
+							let position = 
+								{
+									left: leftPosition,
+									width: ColorOverlayLeftOffset + HistogramBarAreaWidth - leftPosition
+								};
+							return position;
 						},
 
 					configurationErrors:

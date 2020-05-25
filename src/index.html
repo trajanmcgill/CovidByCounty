@@ -314,13 +314,15 @@
 								<div class="ColorKey Standout" v-bind:style="{ backgroundImage:'linear-gradient(to right,' + manualConfigColoration.positive.colorRanges[0].start + ',' + manualConfigColoration.positive.colorRanges[0].end + ')' }"></div>
 							</td>
 							<td rowspan="2" class="ColorationConfigTableCol4">
-								<input class="ColorRangeSlider" type="range" min="0" max="100" value="0">
+								<input id="FirstColorRangeSlider" class="ColorRangeSlider" type="range"
+									min="0" max="741" value="0"
+									v-model="colorFirstRangeSlider">
 							</td>
 						</tr>
 						<tr>
 							<td colspan="3" class="RangeInfoBottomHalf">
 								<span v-if="manualConfigColoration.positive.firstInUse">
-									{{ formatDataRangeDisplayNumber(manualConfigColoration.positive.dataRanges[0].min) }}
+									> {{ formatDataRangeDisplayNumber(manualConfigColoration.positive.dataRanges[0].min) }}
 									to
 									{{ formatDataRangeDisplayNumber(manualConfigColoration.positive.dataRanges[0].max) }}
 								</span>
@@ -336,13 +338,16 @@
 								<div class="ColorKey Standout" v-bind:style="{ backgroundImage:'linear-gradient(to right,' + manualConfigColoration.positive.colorRanges[1].start + ',' + manualConfigColoration.positive.colorRanges[1].end + ')' }"></div>
 							</td>
 							<td rowspan="2" class="ColorationConfigTableCol4">
-								<input class="ColorRangeSlider" type="range" min="0" max="100" value="0" v-if="manualConfigColoration.positive.secondInUse">
+								<input id="SecondColorRangeSlider" class="ColorRangeSlider" type="range"
+									min="0" max="741" value="0"
+									v-if="manualConfigColoration.positive.secondInUse"
+									v-model="colorSecondRangeSlider">
 							</td>
 						</tr>
 						<tr>
 							<td colspan="3" class="RangeInfoBottomHalf">
 								<span v-if="manualConfigColoration.positive.secondInUse">
-									{{ formatDataRangeDisplayNumber(manualConfigColoration.positive.dataRanges[1].min) }}
+									> {{ formatDataRangeDisplayNumber(manualConfigColoration.positive.dataRanges[1].min) }}
 									to
 									{{ formatDataRangeDisplayNumber(manualConfigColoration.positive.dataRanges[1].max) }}
 								</span>
@@ -358,13 +363,16 @@
 								<div class="ColorKey Standout" v-bind:style="{ backgroundImage:'linear-gradient(to right,' + manualConfigColoration.positive.colorRanges[2].start + ',' + manualConfigColoration.positive.colorRanges[2].end + ')' }"></div>
 							</td>
 							<td rowspan="2" class="ColorationConfigTableCol4">
-								<input class="ColorRangeSlider" type="range" min="0" max="100" value="0" v-if="manualConfigColoration.positive.thirdInUse">
+								<input id="ThirdColorRangeSlider" class="ColorRangeSlider" type="range"
+									min="0" max="741" value="0"
+									v-if="manualConfigColoration.positive.thirdInUse"
+									v-model="colorThirdRangeSlider">
 							</td>
 						</tr>
 						<tr>
 							<td colspan="3" class="RangeInfoBottomHalf">
 								<span v-if="manualConfigColoration.positive.thirdInUse">
-									{{ formatDataRangeDisplayNumber(manualConfigColoration.positive.dataRanges[2].min) }}
+									> {{ formatDataRangeDisplayNumber(manualConfigColoration.positive.dataRanges[2].min) }}
 									to
 									{{ formatDataRangeDisplayNumber(manualConfigColoration.positive.dataRanges[2].max) }}
 								</span>
@@ -380,7 +388,6 @@
 								<div class="ColorKey Standout" v-bind:style="{ backgroundColor: manualConfigColoration.exceedsMax }"></div>
 							</td>
 							<td class="ColorationConfigTableCol4">
-								<input class="ColorRangeSlider" type="range" min="0" max="100" value="0">
 							</td>
 						</tr>
 						<tr>
@@ -397,6 +404,18 @@
 				<div id="ColorationConfigButtonSection">
 					<button id="ColorationConfigCloseButton" type="button">Cancel</button>
 				</div>
+			</div>
+			<div id="FirstColorationRangeOverlay" class="ColorationRangeOverlay"
+				v-bind:style="{ left: (colorFirstOverlayPosition.left + 'px'), width: (colorFirstOverlayPosition.width + 'px'), backgroundImage:'linear-gradient(to right,' + manualConfigColoration.positive.colorRanges[0].start + ',' + manualConfigColoration.positive.colorRanges[0].end + ')' }">
+			</div>
+			<div id="SecondColorationRangeOverlay" class="ColorationRangeOverlay"
+				v-bind:style="{ left: (colorSecondOverlayPosition.left + 'px'), width: (colorSecondOverlayPosition.width + 'px'), backgroundImage:'linear-gradient(to right,' + manualConfigColoration.positive.colorRanges[1].start + ',' + manualConfigColoration.positive.colorRanges[1].end + ')' }">
+			</div>
+			<div id="ThirdColorationRangeOverlay" class="ColorationRangeOverlay"
+				v-bind:style="{ left: (colorThirdOverlayPosition.left + 'px'), width: (colorThirdOverlayPosition.width + 'px'), backgroundImage:'linear-gradient(to right,' + manualConfigColoration.positive.colorRanges[2].start + ',' + manualConfigColoration.positive.colorRanges[2].end + ')' }">
+			</div>
+			<div id="HighColorationRangeOverlay" class="ColorationRangeOverlay"
+				v-bind:style="{ left: (colorHighOverlayPosition.left + 'px'), width: (colorHighOverlayPosition.width + 'px'), backgroundColor: manualConfigColoration.exceedsMax }">
 			</div>
 		</div>
 
