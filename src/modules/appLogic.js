@@ -54,10 +54,10 @@ let appLogic = (function()
 		};
 	const DefaultBasicFact = BasicFactType.Cases;
 	const DefaultMeasurementType = MeasurementType.PopulationRelative;
-	const DefaultDataView = DataViewType.DailyValue;
-	const DefaultGrowthRangeDays = 1;
+	const DefaultDataView = DataViewType.ChangeAbsolute;
+	const DefaultGrowthRangeDays = 7;
 	const DefaultPopulationScale = 100000;
-	const OverallStartDateUTC = new Date(Date.UTC(2000, 0, 1)); // All dates will be tracked as number of days since this date.
+	const OverallStartDateUTC = new Date(Date.UTC(2000, 0, 1)); // Not the date the visualization starts; all dates will be tracked as number of days since this date.
 	
 	let allCountyData = null;
 
